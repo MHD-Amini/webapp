@@ -1,0 +1,28 @@
+{
+ "name": "L4_0.5-1.0-1.5-2.5_30_30_20_20_ratchet",
+ "overrides": "tp_levels=0.5|1.0|1.5|2.5,tp_fracs=0.3|0.3|0.2|0.2,ratchet_sl=true",
+ "n": 1270,
+ "pois": 608,
+ "avg_R": 0.2147,
+ "avg_R_poi_w": 0.1879,
+ "total_R": 272.6,
+ "win_%": 78.1,
+ "PF": 1.98,
+ "max_dd_R": -21.2,
+ "t_stat": 10.34,
+ "months_pos": 12,
+ "months": 14,
+ "R_2025H1": 87.6,
+ "R_2025H2": 110.7,
+ "R_2026": 74.2,
+ "M5_avg_R": 0.1009,
+ "other_avg_R": 0.2892,
+ "avg_hold_min": 184.0,
+ "outcomes": {
+  "trail": 462,
+  "partial_be": 423,
+  "sl": 274,
+  "tp2": 111
+ },
+ "secs": 3.0
+}

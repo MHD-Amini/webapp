@@ -1,0 +1,28 @@
+{
+ "name": "L4_0.5-1.0-2.0-R_25x4_be2",
+ "overrides": "tp_levels=0.5|1.0|2.0|0,tp_fracs=0.25|0.25|0.25|0.25,sl_after_leg=x|0|x,trail_r=1.0,trail_after_leg=3",
+ "n": 1270,
+ "pois": 608,
+ "avg_R": 0.2765,
+ "avg_R_poi_w": 0.2426,
+ "total_R": 351.2,
+ "win_%": 64.6,
+ "PF": 1.901,
+ "max_dd_R": -27.0,
+ "t_stat": 10.22,
+ "months_pos": 12,
+ "months": 14,
+ "R_2025H1": 122.7,
+ "R_2025H2": 127.7,
+ "R_2026": 100.8,
+ "M5_avg_R": 0.1052,
+ "other_avg_R": 0.3889,
+ "avg_hold_min": 592.0,
+ "outcomes": {
+  "trail": 433,
+  "partial_be": 390,
+  "sl": 274,
+  "partial_sl": 173
+ },
+ "secs": 9.4
+}

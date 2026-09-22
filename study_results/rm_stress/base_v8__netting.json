@@ -1,0 +1,22 @@
+{
+ "name": "base_v8",
+ "scenario": "netting",
+ "overrides": "",
+ "trades": 132,
+ "win_%": 80.3,
+ "profit_factor": 1.463,
+ "avg_R": 0.0988,
+ "total_R": 13.04,
+ "return_%": 12.54,
+ "max_dd_%": -3.21,
+ "max_dd_R": -3.13,
+ "sharpe_daily": 2.39,
+ "sl_%": 18.9,
+ "partial_be_%": 61.4,
+ "tp2_%": 18.9,
+ "partial_hit_%": 80.3,
+ "avg_hold_min": 43.0,
+ "expectancy_$": 9.5,
+ "end_balance": 11253.69,
+ "secs": 5.0
+}

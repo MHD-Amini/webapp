@@ -1,0 +1,27 @@
+{
+ "name": "ATR3_0.3-0.8-1.5_asc_classic",
+ "overrides": "tp_unit=atr,tp_levels=0.3|0.8|1.5,tp_fracs=1|2|3",
+ "n": 1270,
+ "pois": 608,
+ "avg_R": 0.0735,
+ "avg_R_poi_w": 0.0674,
+ "total_R": 93.3,
+ "win_%": 78.3,
+ "PF": 1.59,
+ "max_dd_R": -20.7,
+ "t_stat": 5.06,
+ "months_pos": 11,
+ "months": 14,
+ "R_2025H1": 47.5,
+ "R_2025H2": 22.6,
+ "R_2026": 23.2,
+ "M5_avg_R": 0.0106,
+ "other_avg_R": 0.1147,
+ "avg_hold_min": 29.0,
+ "outcomes": {
+  "partial_be": 802,
+  "tp2": 312,
+  "sl": 156
+ },
+ "secs": 1.2
+}

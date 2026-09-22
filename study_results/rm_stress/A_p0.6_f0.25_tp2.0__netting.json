@@ -1,0 +1,22 @@
+{
+ "name": "A_p0.6_f0.25_tp2.0",
+ "scenario": "netting",
+ "overrides": "partial_r=0.6,partial_frac=0.25,tp2_r=2.0",
+ "trades": 132,
+ "win_%": 67.4,
+ "profit_factor": 1.527,
+ "avg_R": 0.1663,
+ "total_R": 21.96,
+ "return_%": 23.31,
+ "max_dd_%": -4.06,
+ "max_dd_R": -4.31,
+ "sharpe_daily": 2.86,
+ "sl_%": 29.5,
+ "partial_be_%": 42.4,
+ "tp2_%": 25.0,
+ "partial_hit_%": 70.5,
+ "avg_hold_min": 95.0,
+ "expectancy_$": 17.66,
+ "end_balance": 12331.24,
+ "secs": 5.6
+}

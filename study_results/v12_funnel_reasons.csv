@@ -1,0 +1,25 @@
+tf,reason,pois,pct_of_shown
+M5,filter: M5: cost_r,976,49.5
+M5,cancel: no longer shown,323,16.4
+M5,filter: M5: quality,295,15.0
+M5,cancel: replaced,232,11.8
+M5,filter: M5: session,73,3.7
+M5,skip: overlaps open,11,0.6
+M5,cancel: max open positions at fill time,2,0.1
+M10,filter: M10: quality,650,70.7
+M10,cancel: no longer shown,120,13.1
+M10,cancel: replaced,113,12.3
+M10,skip: overlaps open,3,0.3
+M10,cancel: max open positions at fill time,1,0.1
+M15,filter: M15: quality,414,73.5
+M15,cancel: no longer shown,74,13.1
+M15,cancel: replaced,46,8.2
+M15,skip: overlaps open,3,0.5
+M30,filter: M30: quality,164,58.0
+M30,cancel: no longer shown,57,20.1
+M30,cancel: replaced,50,17.7
+M30,cancel: max open positions at fill time,1,0.4
+H1,filter: H1: quality,94,64.8
+H1,cancel: no longer shown,31,21.4
+H1,cancel: replaced,11,7.6
+H1,skip: overlaps open,2,1.4

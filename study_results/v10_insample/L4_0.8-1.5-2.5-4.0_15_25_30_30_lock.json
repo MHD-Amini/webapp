@@ -1,0 +1,29 @@
+{
+ "name": "L4_0.8-1.5-2.5-4.0_15_25_30_30_lock",
+ "overrides": "tp_levels=0.8|1.5|2.5|4.0,tp_fracs=0.15|0.25|0.3|0.3,sl_after_leg=0|0.5|1.5",
+ "n": 1270,
+ "pois": 608,
+ "avg_R": 0.3224,
+ "avg_R_poi_w": 0.2867,
+ "total_R": 409.5,
+ "win_%": 69.1,
+ "PF": 2.04,
+ "max_dd_R": -27.8,
+ "t_stat": 10.13,
+ "months_pos": 13,
+ "months": 14,
+ "R_2025H1": 168.3,
+ "R_2025H2": 140.8,
+ "R_2026": 100.3,
+ "M5_avg_R": 0.1324,
+ "other_avg_R": 0.4471,
+ "avg_hold_min": 427.0,
+ "outcomes": {
+  "trail": 398,
+  "sl": 384,
+  "partial_be": 367,
+  "tp2": 118,
+  "forced": 3
+ },
+ "secs": 6.0
+}

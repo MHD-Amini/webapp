@@ -1,0 +1,29 @@
+{
+ "name": "L4_0.6-1.2-2.0-3.0_40_20_20_20_be2ratchet",
+ "overrides": "tp_levels=0.6|1.2|2.0|3.0,tp_fracs=0.4|0.2|0.2|0.2,sl_after_leg=x|0|1.2",
+ "n": 1270,
+ "pois": 608,
+ "avg_R": 0.2825,
+ "avg_R_poi_w": 0.2585,
+ "total_R": 358.8,
+ "win_%": 60.9,
+ "PF": 1.953,
+ "max_dd_R": -27.2,
+ "t_stat": 10.93,
+ "months_pos": 13,
+ "months": 14,
+ "R_2025H1": 131.2,
+ "R_2025H2": 130.7,
+ "R_2026": 96.9,
+ "M5_avg_R": 0.1273,
+ "other_avg_R": 0.3843,
+ "avg_hold_min": 562.0,
+ "outcomes": {
+  "partial_be": 313,
+  "sl": 296,
+  "trail": 243,
+  "tp2": 217,
+  "partial_sl": 201
+ },
+ "secs": 7.2
+}

@@ -1,0 +1,22 @@
+{
+ "name": "base_v8",
+ "scenario": "commission_x2",
+ "overrides": "",
+ "trades": 122,
+ "win_%": 80.3,
+ "profit_factor": 1.417,
+ "avg_R": 0.0947,
+ "total_R": 11.55,
+ "return_%": 10.88,
+ "max_dd_%": -3.96,
+ "max_dd_R": -3.81,
+ "sharpe_daily": 2.09,
+ "sl_%": 19.7,
+ "partial_be_%": 59.8,
+ "tp2_%": 20.5,
+ "partial_hit_%": 80.3,
+ "avg_hold_min": 46.0,
+ "expectancy_$": 8.92,
+ "end_balance": 11087.7,
+ "secs": 4.9
+}

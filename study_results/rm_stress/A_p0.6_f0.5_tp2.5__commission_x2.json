@@ -1,0 +1,22 @@
+{
+ "name": "A_p0.6_f0.5_tp2.5",
+ "scenario": "commission_x2",
+ "overrides": "partial_r=0.6,partial_frac=0.5,tp2_r=2.5",
+ "trades": 122,
+ "win_%": 68.9,
+ "profit_factor": 1.373,
+ "avg_R": 0.1284,
+ "total_R": 15.66,
+ "return_%": 15.31,
+ "max_dd_%": -4.34,
+ "max_dd_R": -4.07,
+ "sharpe_daily": 2.26,
+ "sl_%": 31.1,
+ "partial_be_%": 48.4,
+ "tp2_%": 20.5,
+ "partial_hit_%": 68.9,
+ "avg_hold_min": 132.0,
+ "expectancy_$": 12.55,
+ "end_balance": 11530.94,
+ "secs": 5.4
+}

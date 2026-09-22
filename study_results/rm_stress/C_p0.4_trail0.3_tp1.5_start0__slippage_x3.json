@@ -1,0 +1,22 @@
+{
+ "name": "C_p0.4_trail0.3_tp1.5_start0",
+ "scenario": "slippage_x3",
+ "overrides": "partial_r=0.4,tp2_r=1.5,trail_r=0.3,trail_start_r=0",
+ "trades": 131,
+ "win_%": 80.9,
+ "profit_factor": 1.566,
+ "avg_R": 0.1205,
+ "total_R": 15.78,
+ "return_%": 15.88,
+ "max_dd_%": -2.75,
+ "max_dd_R": -2.66,
+ "sharpe_daily": 3.21,
+ "sl_%": 19.1,
+ "partial_be_%": 1.5,
+ "tp2_%": 6.1,
+ "partial_hit_%": 80.9,
+ "avg_hold_min": 21.0,
+ "expectancy_$": 12.12,
+ "end_balance": 11587.84,
+ "secs": 5.2
+}

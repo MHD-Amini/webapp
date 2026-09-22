@@ -1,0 +1,22 @@
+{
+ "name": "C2_trail2.0_start0_tp0",
+ "scenario": "slippage_x3",
+ "overrides": "partial_frac=0,tp2_r=0,trail_r=2.0,trail_start_r=0,trail_after_partial=false",
+ "trades": 131,
+ "win_%": 33.6,
+ "profit_factor": 1.53,
+ "avg_R": 0.3579,
+ "total_R": 46.88,
+ "return_%": 53.42,
+ "max_dd_%": -12.94,
+ "max_dd_R": -13.31,
+ "sharpe_daily": 2.06,
+ "sl_%": 64.9,
+ "partial_be_%": 0.0,
+ "tp2_%": 0.0,
+ "partial_hit_%": 0.0,
+ "avg_hold_min": 246.0,
+ "expectancy_$": 40.78,
+ "end_balance": 15341.97,
+ "secs": 5.7
+}

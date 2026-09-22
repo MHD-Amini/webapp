@@ -1,0 +1,28 @@
+tf,reason,pois,pct_of_shown
+M5,filter: M5: cost_r,958,48.6
+M5,cancel: no longer shown,310,15.7
+M5,filter: M5: quality,295,15.0
+M5,cancel: replaced,223,11.3
+M5,filter: M5: session,72,3.7
+M5,skip: overlaps pending,27,1.4
+M5,skip: overlaps open,16,0.8
+M10,filter: M10: quality,593,64.5
+M10,skip: overlaps pending,117,12.7
+M10,cancel: no longer shown,99,10.8
+M10,cancel: replaced,95,10.3
+M10,skip: overlaps open,2,0.2
+M15,filter: M15: quality,358,63.6
+M15,skip: overlaps pending,121,21.5
+M15,cancel: no longer shown,47,8.3
+M15,cancel: replaced,32,5.7
+M15,skip: overlaps open,1,0.2
+M30,filter: M30: quality,172,60.8
+M30,skip: overlaps pending,52,18.4
+M30,cancel: replaced,28,9.9
+M30,cancel: no longer shown,27,9.5
+M30,skip: overlaps open,2,0.7
+H1,filter: H1: quality,102,70.3
+H1,skip: overlaps pending,26,17.9
+H1,cancel: no longer shown,11,7.6
+H1,cancel: replaced,4,2.8
+H1,skip: overlaps open,1,0.7

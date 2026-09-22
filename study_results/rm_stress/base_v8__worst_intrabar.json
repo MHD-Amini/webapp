@@ -1,0 +1,22 @@
+{
+ "name": "base_v8",
+ "scenario": "worst_intrabar",
+ "overrides": "",
+ "trades": 131,
+ "win_%": 80.9,
+ "profit_factor": 1.492,
+ "avg_R": 0.1036,
+ "total_R": 13.57,
+ "return_%": 13.25,
+ "max_dd_%": -2.85,
+ "max_dd_R": -2.93,
+ "sharpe_daily": 2.61,
+ "sl_%": 19.1,
+ "partial_be_%": 61.1,
+ "tp2_%": 19.8,
+ "partial_hit_%": 80.9,
+ "avg_hold_min": 44.0,
+ "expectancy_$": 10.11,
+ "end_balance": 11324.8,
+ "secs": 5.2
+}

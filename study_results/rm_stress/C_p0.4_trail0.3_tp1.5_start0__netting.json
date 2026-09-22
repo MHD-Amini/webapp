@@ -1,0 +1,22 @@
+{
+ "name": "C_p0.4_trail0.3_tp1.5_start0",
+ "scenario": "netting",
+ "overrides": "partial_r=0.4,tp2_r=1.5,trail_r=0.3,trail_start_r=0",
+ "trades": 133,
+ "win_%": 51.1,
+ "profit_factor": 1.455,
+ "avg_R": 0.0602,
+ "total_R": 8.01,
+ "return_%": 8.01,
+ "max_dd_%": -2.46,
+ "max_dd_R": -2.66,
+ "sharpe_daily": 2.21,
+ "sl_%": 43.6,
+ "partial_be_%": 1.5,
+ "tp2_%": 3.8,
+ "partial_hit_%": 45.1,
+ "avg_hold_min": 6.0,
+ "expectancy_$": 6.02,
+ "end_balance": 10800.63,
+ "secs": 5.1
+}

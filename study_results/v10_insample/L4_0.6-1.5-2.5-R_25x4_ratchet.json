@@ -1,0 +1,28 @@
+{
+ "name": "L4_0.6-1.5-2.5-R_25x4_ratchet",
+ "overrides": "tp_levels=0.6|1.5|2.5|0,tp_fracs=0.25|0.25|0.25|0.25,ratchet_sl=true,trail_r=1.0,trail_after_leg=3",
+ "n": 1270,
+ "pois": 608,
+ "avg_R": 0.3076,
+ "avg_R_poi_w": 0.2564,
+ "total_R": 390.7,
+ "win_%": 76.0,
+ "PF": 2.29,
+ "max_dd_R": -19.8,
+ "t_stat": 11.35,
+ "months_pos": 12,
+ "months": 14,
+ "R_2025H1": 159.1,
+ "R_2025H2": 142.1,
+ "R_2026": 89.5,
+ "M5_avg_R": 0.1358,
+ "other_avg_R": 0.4203,
+ "avg_hold_min": 369.0,
+ "outcomes": {
+  "partial_be": 517,
+  "trail": 450,
+  "sl": 296,
+  "forced": 7
+ },
+ "secs": 6.2
+}

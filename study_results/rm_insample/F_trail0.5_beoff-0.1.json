@@ -1,0 +1,29 @@
+{
+ "name": "F_trail0.5_beoff-0.1",
+ "overrides": "trail_r=0.5,be_offset_r=-0.1",
+ "n": 1270,
+ "pois": 608,
+ "avg_R": 0.1395,
+ "avg_R_poi_w": 0.1102,
+ "total_R": 177.2,
+ "win_%": 80.9,
+ "PF": 1.744,
+ "max_dd_R": -20.6,
+ "t_stat": 8.3,
+ "months_pos": 12,
+ "months": 14,
+ "R_2025H1": 74.5,
+ "R_2025H2": 57.8,
+ "R_2026": 44.9,
+ "M5_avg_R": 0.0464,
+ "other_avg_R": 0.2005,
+ "avg_hold_min": 119.0,
+ "outcomes": {
+  "trail": 691,
+  "sl": 235,
+  "partial_sl": 181,
+  "tp2": 147,
+  "partial_be": 16
+ },
+ "secs": 2.0
+}

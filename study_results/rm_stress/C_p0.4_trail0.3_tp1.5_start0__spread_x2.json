@@ -1,0 +1,22 @@
+{
+ "name": "C_p0.4_trail0.3_tp1.5_start0",
+ "scenario": "spread_x2",
+ "overrides": "partial_r=0.4,tp2_r=1.5,trail_r=0.3,trail_start_r=0",
+ "trades": 84,
+ "win_%": 79.8,
+ "profit_factor": 1.418,
+ "avg_R": 0.0884,
+ "total_R": 7.43,
+ "return_%": 7.05,
+ "max_dd_%": -3.38,
+ "max_dd_R": -3.99,
+ "sharpe_daily": 1.79,
+ "sl_%": 20.2,
+ "partial_be_%": 2.4,
+ "tp2_%": 2.4,
+ "partial_hit_%": 79.8,
+ "avg_hold_min": 31.0,
+ "expectancy_$": 8.39,
+ "end_balance": 10704.8,
+ "secs": 5.3
+}

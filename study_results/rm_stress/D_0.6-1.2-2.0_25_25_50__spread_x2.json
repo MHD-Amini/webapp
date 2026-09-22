@@ -1,0 +1,22 @@
+{
+ "name": "D_0.6-1.2-2.0_25_25_50",
+ "scenario": "spread_x2",
+ "overrides": "tp_levels=0.6|1.2|2.0,tp_fracs=0.25|0.25|0.5",
+ "trades": 79,
+ "win_%": 65.8,
+ "profit_factor": 1.218,
+ "avg_R": 0.0854,
+ "total_R": 6.75,
+ "return_%": 5.97,
+ "max_dd_%": -6.26,
+ "max_dd_R": -6.56,
+ "sharpe_daily": 0.96,
+ "sl_%": 34.2,
+ "partial_be_%": 43.0,
+ "tp2_%": 22.8,
+ "partial_hit_%": 65.8,
+ "avg_hold_min": 77.0,
+ "expectancy_$": 7.56,
+ "end_balance": 10596.92,
+ "secs": 5.1
+}

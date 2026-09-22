@@ -1,0 +1,28 @@
+{
+ "name": "E_base_hold60",
+ "overrides": "max_hold_min=60",
+ "n": 1270,
+ "pois": 608,
+ "avg_R": 0.1277,
+ "avg_R_poi_w": 0.1007,
+ "total_R": 162.1,
+ "win_%": 74.3,
+ "PF": 1.701,
+ "max_dd_R": -22.2,
+ "t_stat": 7.58,
+ "months_pos": 12,
+ "months": 14,
+ "R_2025H1": 78.0,
+ "R_2025H2": 39.6,
+ "R_2026": 44.5,
+ "M5_avg_R": 0.0439,
+ "other_avg_R": 0.1826,
+ "avg_hold_min": 36.0,
+ "outcomes": {
+  "time": 458,
+  "partial_be": 405,
+  "tp2": 205,
+  "sl": 202
+ },
+ "secs": 1.4
+}

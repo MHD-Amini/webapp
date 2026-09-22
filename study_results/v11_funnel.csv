@@ -1,0 +1,26 @@
+tf,stage,pois,pct_of_shown,shown
+M5,skipped: trade filter,1325,67.2,1972
+M5,"order placed, never filled",429,21.8,1972
+M5,traded,175,8.9,1972
+M5,skipped: overlaps pending,27,1.4,1972
+M5,skipped: overlaps open,16,0.8,1972
+M10,skipped: trade filter,593,64.5,919
+M10,"order placed, never filled",155,16.9,919
+M10,skipped: overlaps pending,117,12.7,919
+M10,traded,52,5.7,919
+M10,skipped: overlaps open,2,0.2,919
+M15,skipped: trade filter,358,63.6,563
+M15,skipped: overlaps pending,121,21.5,563
+M15,"order placed, never filled",69,12.3,563
+M15,traded,14,2.5,563
+M15,skipped: overlaps open,1,0.2,563
+M30,skipped: trade filter,172,60.8,283
+M30,skipped: overlaps pending,52,18.4,283
+M30,"order placed, never filled",49,17.3,283
+M30,traded,8,2.8,283
+M30,skipped: overlaps open,2,0.7,283
+H1,skipped: trade filter,102,70.3,145
+H1,skipped: overlaps pending,26,17.9,145
+H1,"order placed, never filled",14,9.7,145
+H1,traded,2,1.4,145
+H1,skipped: overlaps open,1,0.7,145

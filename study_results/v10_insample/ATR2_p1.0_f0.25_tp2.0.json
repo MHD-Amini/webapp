@@ -1,0 +1,27 @@
+{
+ "name": "ATR2_p1.0_f0.25_tp2.0",
+ "overrides": "tp_unit=atr,partial_r=1.0,partial_frac=0.25,tp2_r=2.0",
+ "n": 1270,
+ "pois": 608,
+ "avg_R": 0.2533,
+ "avg_R_poi_w": 0.2323,
+ "total_R": 321.6,
+ "win_%": 76.9,
+ "PF": 2.097,
+ "max_dd_R": -19.9,
+ "t_stat": 10.37,
+ "months_pos": 12,
+ "months": 14,
+ "R_2025H1": 131.1,
+ "R_2025H2": 90.2,
+ "R_2026": 100.3,
+ "M5_avg_R": 0.1738,
+ "other_avg_R": 0.3054,
+ "avg_hold_min": 127.0,
+ "outcomes": {
+  "tp2": 518,
+  "partial_be": 465,
+  "sl": 287
+ },
+ "secs": 1.9
+}

@@ -1,0 +1,27 @@
+{
+ "name": "F_base_beoff0.05",
+ "overrides": "be_offset_r=0.05",
+ "n": 1270,
+ "pois": 608,
+ "avg_R": 0.1624,
+ "avg_R_poi_w": 0.1267,
+ "total_R": 206.3,
+ "win_%": 81.0,
+ "PF": 1.864,
+ "max_dd_R": -19.9,
+ "t_stat": 9.04,
+ "months_pos": 11,
+ "months": 14,
+ "R_2025H1": 87.4,
+ "R_2025H2": 64.2,
+ "R_2026": 54.6,
+ "M5_avg_R": 0.0682,
+ "other_avg_R": 0.2242,
+ "avg_hold_min": 156.0,
+ "outcomes": {
+  "partial_be": 721,
+  "tp2": 314,
+  "sl": 235
+ },
+ "secs": 2.2
+}

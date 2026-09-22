@@ -1,0 +1,22 @@
+{
+ "name": "A_p0.6_f0.25_tp3.0",
+ "scenario": "no_costs",
+ "overrides": "partial_r=0.6,partial_frac=0.25,tp2_r=3.0",
+ "trades": 155,
+ "win_%": 69.7,
+ "profit_factor": 1.766,
+ "avg_R": 0.2569,
+ "total_R": 39.82,
+ "return_%": 44.65,
+ "max_dd_%": -4.97,
+ "max_dd_R": -4.92,
+ "sharpe_daily": 3.46,
+ "sl_%": 30.3,
+ "partial_be_%": 49.7,
+ "tp2_%": 20.0,
+ "partial_hit_%": 69.7,
+ "avg_hold_min": 110.0,
+ "expectancy_$": 28.81,
+ "end_balance": 14465.09,
+ "secs": 5.2
+}

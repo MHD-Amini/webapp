@@ -1,0 +1,27 @@
+{
+ "name": "B_tp1.5_be0.3",
+ "overrides": "partial_frac=0,tp2_r=1.5,be_trigger_r=0.3",
+ "n": 1270,
+ "pois": 608,
+ "avg_R": 0.1496,
+ "avg_R_poi_w": 0.114,
+ "total_R": 190.0,
+ "win_%": 22.8,
+ "PF": 1.782,
+ "max_dd_R": -23.1,
+ "t_stat": 6.54,
+ "months_pos": 10,
+ "months": 14,
+ "R_2025H1": 46.9,
+ "R_2025H2": 82.6,
+ "R_2026": 60.5,
+ "M5_avg_R": 0.0642,
+ "other_avg_R": 0.2056,
+ "avg_hold_min": 144.0,
+ "outcomes": {
+  "be": 765,
+  "tp2": 290,
+  "sl": 215
+ },
+ "secs": 2.0
+}

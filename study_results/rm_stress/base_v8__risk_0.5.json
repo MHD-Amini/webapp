@@ -1,0 +1,22 @@
+{
+ "name": "base_v8",
+ "scenario": "risk_0.5",
+ "overrides": "",
+ "trades": 126,
+ "win_%": 81.0,
+ "profit_factor": 1.535,
+ "avg_R": 0.101,
+ "total_R": 12.73,
+ "return_%": 6.21,
+ "max_dd_%": -1.39,
+ "max_dd_R": -3.2,
+ "sharpe_daily": 2.59,
+ "sl_%": 19.0,
+ "partial_be_%": 61.1,
+ "tp2_%": 19.8,
+ "partial_hit_%": 81.0,
+ "avg_hold_min": 25.0,
+ "expectancy_$": 4.93,
+ "end_balance": 10620.98,
+ "secs": 4.9
+}

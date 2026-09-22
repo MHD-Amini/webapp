@@ -1,0 +1,3 @@
+dim,value,all_n,all_R,all_win_%,all_sl_%,all_avg_R,weak_n,weak_R,weak_win_%,weak_sl_%,weak_avg_R,good_n,good_R,good_win_%,good_sl_%,good_avg_R,apr26_n,apr26_R,apr26_win_%,apr26_sl_%,apr26_avg_R,sep25_n,sep25_R,sep25_win_%,sep25_sl_%,sep25_avg_R,OOS_n,OOS_R,OOS_win_%,OOS_sl_%,OOS_avg_R
+trend_align,counter,195,28.07,67.2,32.8,0.144,25,-2.92,60.0,40.0,-0.117,170,30.99,68.2,31.8,0.182,17,-3.56,58.8,41.2,-0.209,8,0.64,62.5,37.5,0.08,114,13.91,68.4,31.6,0.122
+trend_align,with,232,86.66,77.2,22.0,0.374,32,5.54,68.8,25.0,0.173,200,81.12,78.5,21.5,0.406,21,2.84,71.4,28.6,0.135,11,2.71,63.6,18.2,0.246,110,36.75,77.3,22.7,0.334

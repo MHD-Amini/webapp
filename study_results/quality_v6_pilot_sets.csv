@@ -1,0 +1,5 @@
+set,n_feat,val_auc_w,val_sd,test_auc_w,iters
+v5,219,0.6619,0.0032,0.6524,19
+v6,258,0.6607,0.0016,0.6406,35
+v6_no_creation,247,0.6651,0.0014,0.6507,22
+"levels_only(+dist,zone,tf)",55,0.66,0.0009,0.6496,44

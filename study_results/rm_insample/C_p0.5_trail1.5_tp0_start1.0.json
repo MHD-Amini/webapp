@@ -1,0 +1,28 @@
+{
+ "name": "C_p0.5_trail1.5_tp0_start1.0",
+ "overrides": "partial_r=0.5,tp2_r=0,trail_r=1.5,trail_start_r=1.0",
+ "n": 1270,
+ "pois": 608,
+ "avg_R": 0.2339,
+ "avg_R_poi_w": 0.1929,
+ "total_R": 297.0,
+ "win_%": 78.3,
+ "PF": 2.068,
+ "max_dd_R": -17.7,
+ "t_stat": 9.5,
+ "months_pos": 11,
+ "months": 14,
+ "R_2025H1": 116.3,
+ "R_2025H2": 128.3,
+ "R_2026": 52.4,
+ "M5_avg_R": 0.0544,
+ "other_avg_R": 0.3516,
+ "avg_hold_min": 356.0,
+ "outcomes": {
+  "partial_be": 585,
+  "trail": 403,
+  "sl": 274,
+  "forced": 8
+ },
+ "secs": 6.3
+}

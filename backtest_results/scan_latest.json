@@ -1,0 +1,825 @@
+{
+ "M5": {
+  "tf": "M5",
+  "time": "2026-09-04 14:55:00",
+  "price": 4467.26,
+  "range_bias": "bearish",
+  "price_zone": "discount",
+  "above": {
+   "id": 38728,
+   "tf": "M5",
+   "type": "UW",
+   "direction": "bearish",
+   "top": 4494.67,
+   "bottom": 4491.87,
+   "mid": 4493.27,
+   "key_level": 4493.27,
+   "status": "unmitigated",
+   "swept_liquidity": [
+    "SH@4494.04"
+   ],
+   "bar_index": 118556,
+   "note": "bearish unmitigated wick; open 4491.87, 50% 4493.27",
+   "features": {
+    "zone_atr": 0.8376,
+    "atr": 3.3429,
+    "n_swept": 1.0,
+    "swept_quality": 1.0,
+    "swept_equal": 0.0,
+    "swept_session": 0.0,
+    "is_leg_origin": 0.0,
+    "prior_move_atr": 3.4162,
+    "displacement_atr": 1.388,
+    "impulse_bars": 1.0,
+    "block_candles": 1.0,
+    "has_imbalance": 0.0,
+    "body_ratio": 0.7427,
+    "wick_candle_agrees": 1.0
+   },
+   "quality": 0.536,
+   "time": "2026-09-03 20:45:00",
+   "context": {
+    "distance_atr": 7.5227,
+    "liq_between_n": 8.0,
+    "liq_between_quality": 3.0,
+    "liq_between_weight": 12.0,
+    "first_pool_gap_atr": 0.2659,
+    "liq_behind_n": 1.0,
+    "liq_behind_quality": 1.0,
+    "liq_stacked_beyond_n": 0.0,
+    "liq_near_edge_n": 1.0,
+    "opp_liq_between_n": 0.0,
+    "of_total": 57.0,
+    "of_near": 4.0,
+    "of_recent": 8.0,
+    "confluence": 3.0,
+    "closer_same_dir": 4.0,
+    "opp_on_path": 0.0,
+    "aligned_bias": 1.0,
+    "in_correct_zone": 1.0,
+    "range_pos": -1.0,
+    "age_bars": 205.0,
+    "away_atr": 9.7603,
+    "min_approach_atr": 0.2659,
+    "near_misses": 2.0,
+    "toward_mom5": 0.3148,
+    "toward_mom20": -1.4764,
+    "atr_ratio": 0.8576,
+    "pos20": 0.7925,
+    "pos100": 0.7643,
+    "bos_recent_n": 3.0,
+    "bos_recent_aligned": 1.0,
+    "ny_hour": 7.0,
+    "dow": 4.0,
+    "is_bull": 0.0,
+    "htf_confluence": 0.0,
+    "htf_confluence_kind": 0.0,
+    "htf_bias_aligned": -1.0,
+    "htf_liq_behind_atr": 3.0,
+    "htf_in_zone": 1.0,
+    "htf_dist_atr": 10.7109
+   },
+   "grade": "C",
+   "distance": 24.61,
+   "distance_atr": 7.52,
+   "liquidity_between": [
+    "EQH@4470.26",
+    "EQH@4470.43",
+    "SH@4476.08",
+    "SH@4480.03",
+    "SH@4482.78",
+    "SH@4484.33",
+    "SH@4486.79",
+    "SH@4491.00"
+   ],
+   "orderflow_support": [
+    {
+     "id": 38782,
+     "type": "IMB",
+     "zone": [
+      4474.74,
+      4476.78
+     ],
+     "respected_at": "2026-09-04 13:35:00"
+    },
+    {
+     "id": 38729,
+     "type": "IMB",
+     "zone": [
+      4490.51,
+      4490.9
+     ],
+     "respected_at": "2026-09-04 10:50:00"
+    },
+    {
+     "id": 38772,
+     "type": "BB",
+     "zone": [
+      4467.38,
+      4473.63
+     ],
+     "respected_at": "2026-09-04 09:45:00"
+    },
+    {
+     "id": 38775,
+     "type": "IMB",
+     "zone": [
+      4466.3,
+      4467.62
+     ],
+     "respected_at": "2026-09-04 09:45:00"
+    },
+    {
+     "id": 38774,
+     "type": "UW",
+     "zone": [
+      4470.87,
+      4472.57
+     ],
+     "respected_at": "2026-09-04 09:30:00"
+    }
+   ],
+   "orderflow_count": 57,
+   "range_zone": "premium",
+   "why": [
+    [
+     "zone_atr",
+     0.523
+    ],
+    [
+     "liq_behind_n",
+     0.052
+    ],
+    [
+     "liq_stacked_beyond_n",
+     0.051
+    ],
+    [
+     "htf_liq_behind_atr",
+     -0.036
+    ],
+    [
+     "of_total",
+     0.027
+    ]
+   ]
+  },
+  "below": null,
+  "candidates_above": 1,
+  "candidates_below": 0
+ },
+ "M10": {
+  "tf": "M10",
+  "time": "2026-09-04 14:50:00",
+  "price": 4467.26,
+  "range_bias": "bearish",
+  "price_zone": "discount",
+  "above": null,
+  "below": {
+   "id": 20104,
+   "tf": "M10",
+   "type": "UW",
+   "direction": "bullish",
+   "top": 4434.12,
+   "bottom": 4426.92,
+   "mid": 4430.52,
+   "key_level": 4430.52,
+   "status": "unmitigated",
+   "swept_liquidity": [],
+   "bar_index": 59247,
+   "note": "bullish unmitigated wick; open 4434.12, 50% 4430.52",
+   "features": {
+    "zone_atr": 1.2928,
+    "atr": 5.5693,
+    "n_swept": 0.0,
+    "swept_quality": 0.0,
+    "swept_equal": 0.0,
+    "swept_session": 0.0,
+    "is_leg_origin": 0.0,
+    "prior_move_atr": 1.932,
+    "displacement_atr": 2.1708,
+    "impulse_bars": 1.0,
+    "block_candles": 1.0,
+    "has_imbalance": 0.0,
+    "body_ratio": 0.743,
+    "wick_candle_agrees": 1.0
+   },
+   "quality": 0.632,
+   "time": "2026-09-03 14:30:00",
+   "context": {
+    "distance_atr": 7.3307,
+    "liq_between_n": 5.0,
+    "liq_between_quality": 1.0,
+    "liq_between_weight": 5.0,
+    "first_pool_gap_atr": 0.7676,
+    "liq_behind_n": 0.0,
+    "liq_behind_quality": 0.0,
+    "liq_stacked_beyond_n": 2.0,
+    "liq_near_edge_n": 0.0,
+    "opp_liq_between_n": 0.0,
+    "of_total": 49.0,
+    "of_near": 16.0,
+    "of_recent": 5.0,
+    "confluence": 0.0,
+    "closer_same_dir": 0.0,
+    "opp_on_path": 0.0,
+    "aligned_bias": -1.0,
+    "in_correct_zone": 1.0,
+    "range_pos": 2.0,
+    "age_bars": 139.0,
+    "away_atr": 16.9464,
+    "min_approach_atr": 0.7676,
+    "near_misses": 0.0,
+    "toward_mom5": 0.8561,
+    "toward_mom20": 2.6965,
+    "atr_ratio": 0.782,
+    "pos20": 0.2265,
+    "pos100": 0.2357,
+    "bos_recent_n": 4.0,
+    "bos_recent_aligned": 0.0,
+    "ny_hour": 7.0,
+    "dow": 4.0,
+    "is_bull": 1.0,
+    "htf_confluence": 1.0,
+    "htf_confluence_kind": 1.0,
+    "htf_bias_aligned": 1.0,
+    "htf_liq_behind_atr": 0.0,
+    "htf_in_zone": 1.0,
+    "htf_dist_atr": 4.4794
+   },
+   "grade": "B",
+   "distance": 33.14,
+   "distance_atr": 7.33,
+   "liquidity_between": [
+    "SL@4437.59",
+    "SL@4456.86",
+    "SL@4459.94",
+    "SL@4463.52",
+    "SL@4464.95"
+   ],
+   "orderflow_support": [
+    {
+     "id": 20144,
+     "type": "IMB",
+     "zone": [
+      4464.19,
+      4466.45
+     ],
+     "respected_at": "2026-09-04 13:10:00"
+    },
+    {
+     "id": 20139,
+     "type": "BB",
+     "zone": [
+      4469.76,
+      4471.44
+     ],
+     "respected_at": "2026-09-04 08:40:00"
+    },
+    {
+     "id": 20130,
+     "type": "OB",
+     "zone": [
+      4468.67,
+      4473.36
+     ],
+     "respected_at": "2026-09-04 06:20:00"
+    },
+    {
+     "id": 20125,
+     "type": "BB",
+     "zone": [
+      4474.97,
+      4480.13
+     ],
+     "respected_at": "2026-09-04 03:50:00"
+    },
+    {
+     "id": 20121,
+     "type": "UW",
+     "zone": [
+      4472.03,
+      4473.41
+     ],
+     "respected_at": "2026-09-04 03:40:00"
+    }
+   ],
+   "orderflow_count": 49,
+   "range_zone": "discount",
+   "why": [
+    [
+     "zone_atr",
+     0.775
+    ],
+    [
+     "liq_behind_n",
+     0.101
+    ],
+    [
+     "confluence",
+     0.042
+    ],
+    [
+     "is_bull",
+     0.031
+    ],
+    [
+     "htf_liq_behind_atr",
+     0.029
+    ]
+   ]
+  },
+  "candidates_above": 0,
+  "candidates_below": 1
+ },
+ "M15": {
+  "tf": "M15",
+  "time": "2026-09-04 14:45:00",
+  "price": 4467.26,
+  "range_bias": "bearish",
+  "price_zone": "discount",
+  "above": null,
+  "below": {
+   "id": 13641,
+   "tf": "M15",
+   "type": "UW",
+   "direction": "bullish",
+   "top": 4443.62,
+   "bottom": 4437.59,
+   "mid": 4440.605,
+   "key_level": 4440.605,
+   "status": "unmitigated",
+   "swept_liquidity": [],
+   "bar_index": 39507,
+   "note": "bullish unmitigated wick; open 4443.62, 50% 4440.60",
+   "features": {
+    "zone_atr": 0.6414,
+    "atr": 9.4014,
+    "n_swept": 0.0,
+    "swept_quality": 0.0,
+    "swept_equal": 0.0,
+    "swept_session": 0.0,
+    "is_leg_origin": 0.0,
+    "prior_move_atr": 1.3041,
+    "displacement_atr": 3.2325,
+    "impulse_bars": 1.0,
+    "block_candles": 1.0,
+    "has_imbalance": 0.0,
+    "body_ratio": 0.5336,
+    "wick_candle_agrees": 1.0
+   },
+   "quality": 0.554,
+   "time": "2026-09-03 15:15:00",
+   "context": {
+    "distance_atr": 4.1835,
+    "liq_between_n": 4.0,
+    "liq_between_quality": 1.0,
+    "liq_between_weight": 4.0,
+    "first_pool_gap_atr": 2.3431,
+    "liq_behind_n": 0.0,
+    "liq_behind_quality": 0.0,
+    "liq_stacked_beyond_n": 1.0,
+    "liq_near_edge_n": 0.0,
+    "opp_liq_between_n": 0.0,
+    "of_total": 56.0,
+    "of_near": 17.0,
+    "of_recent": 10.0,
+    "confluence": 0.0,
+    "closer_same_dir": 0.0,
+    "opp_on_path": 0.0,
+    "aligned_bias": -1.0,
+    "in_correct_zone": 1.0,
+    "range_pos": 1.8339,
+    "age_bars": 89.0,
+    "away_atr": 11.8764,
+    "min_approach_atr": 2.3431,
+    "near_misses": 0.0,
+    "toward_mom5": 1.1521,
+    "toward_mom20": -0.6973,
+    "atr_ratio": 0.8693,
+    "pos20": 0.2007,
+    "pos100": 0.527,
+    "bos_recent_n": 4.0,
+    "bos_recent_aligned": -2.0,
+    "ny_hour": 7.0,
+    "dow": 4.0,
+    "is_bull": 1.0,
+    "htf_confluence": 1.0,
+    "htf_confluence_kind": 1.0,
+    "htf_bias_aligned": 1.0,
+    "htf_liq_behind_atr": 0.0,
+    "htf_in_zone": 1.0,
+    "htf_dist_atr": 5.4719
+   },
+   "grade": "B",
+   "distance": 23.64,
+   "distance_atr": 4.18,
+   "liquidity_between": [
+    "SL@4456.86",
+    "SL@4459.94",
+    "SL@4463.52",
+    "SL@4464.95"
+   ],
+   "orderflow_support": [
+    {
+     "id": 13667,
+     "type": "IMB",
+     "zone": [
+      4464.19,
+      4466.45
+     ],
+     "respected_at": "2026-09-04 13:30:00"
+    },
+    {
+     "id": 13668,
+     "type": "OB",
+     "zone": [
+      4462.7,
+      4471.87
+     ],
+     "respected_at": "2026-09-04 12:15:00"
+    },
+    {
+     "id": 13665,
+     "type": "BB",
+     "zone": [
+      4467.41,
+      4471.81
+     ],
+     "respected_at": "2026-09-04 10:30:00"
+    },
+    {
+     "id": 13666,
+     "type": "BB",
+     "zone": [
+      4469.46,
+      4470.71
+     ],
+     "respected_at": "2026-09-04 10:30:00"
+    },
+    {
+     "id": 13658,
+     "type": "BB",
+     "zone": [
+      4474.72,
+      4474.86
+     ],
+     "respected_at": "2026-09-04 05:00:00"
+    }
+   ],
+   "orderflow_count": 56,
+   "range_zone": "discount",
+   "why": [
+    [
+     "zone_atr",
+     0.313
+    ],
+    [
+     "min_approach_atr",
+     0.224
+    ],
+    [
+     "liq_behind_n",
+     0.069
+    ],
+    [
+     "displacement_atr",
+     -0.053
+    ],
+    [
+     "is_bull",
+     0.025
+    ]
+   ]
+  },
+  "candidates_above": 0,
+  "candidates_below": 2
+ },
+ "M30": {
+  "tf": "M30",
+  "time": "2026-09-04 14:30:00",
+  "price": 4467.26,
+  "range_bias": "bullish",
+  "price_zone": "discount",
+  "above": {
+   "id": 6874,
+   "tf": "M30",
+   "type": "IMB",
+   "direction": "bearish",
+   "top": 4551.9,
+   "bottom": 4529.71,
+   "mid": 4540.805,
+   "key_level": 4551.9,
+   "status": "unmitigated",
+   "swept_liquidity": [],
+   "bar_index": 19580,
+   "note": "bearish imbalance gap 4529.71-4551.90; candle#1 low is the fill level",
+   "features": {
+    "zone_atr": 0.8209,
+    "atr": 27.0307,
+    "n_swept": 0.0,
+    "swept_quality": 0.0,
+    "swept_equal": 0.0,
+    "swept_session": 0.0,
+    "is_leg_origin": 0.0,
+    "prior_move_atr": 1.9533,
+    "displacement_atr": 1.5575,
+    "impulse_bars": 2.0,
+    "block_candles": 1.0,
+    "has_imbalance": 1.0,
+    "body_ratio": 0.9723
+   },
+   "quality": 0.618,
+   "time": "2026-08-28 18:00:00",
+   "context": {
+    "distance_atr": 6.7676,
+    "liq_between_n": 6.0,
+    "liq_between_quality": 3.0,
+    "liq_between_weight": 11.0,
+    "first_pool_gap_atr": 2.0568,
+    "liq_behind_n": 0.0,
+    "liq_behind_quality": 0.0,
+    "liq_stacked_beyond_n": 0.0,
+    "liq_near_edge_n": 0.0,
+    "opp_liq_between_n": 0.0,
+    "of_total": 57.0,
+    "of_near": 1.0,
+    "of_recent": 5.0,
+    "confluence": 0.0,
+    "closer_same_dir": 0.0,
+    "opp_on_path": 0.0,
+    "aligned_bias": -1.0,
+    "in_correct_zone": 1.0,
+    "range_pos": 2.0,
+    "age_bars": 221.0,
+    "away_atr": 26.7906,
+    "min_approach_atr": 2.0568,
+    "near_misses": 0.0,
+    "toward_mom5": 0.0314,
+    "toward_mom20": -1.3199,
+    "atr_ratio": 0.8001,
+    "pos20": 0.7643,
+    "pos100": 0.208,
+    "bos_recent_n": 5.0,
+    "bos_recent_aligned": -1.0,
+    "ny_hour": 7.0,
+    "dow": 4.0,
+    "is_bull": 0.0,
+    "htf_confluence": 0.0,
+    "htf_confluence_kind": 0.0,
+    "htf_bias_aligned": -1.0,
+    "htf_liq_behind_atr": 0.0,
+    "htf_in_zone": 1.0,
+    "htf_dist_atr": 3.5393
+   },
+   "grade": "B",
+   "distance": 62.45,
+   "distance_atr": 6.77,
+   "liquidity_between": [
+    "SH@4476.08",
+    "SH@4491.00",
+    "EQH@4494.67",
+    "EQH@4495.47",
+    "SH@4510.73",
+    "PDH@4510.73"
+   ],
+   "orderflow_support": [
+    {
+     "id": 6952,
+     "type": "OB",
+     "zone": [
+      4473.85,
+      4480.07
+     ],
+     "respected_at": "2026-09-04 09:30:00"
+    },
+    {
+     "id": 6950,
+     "type": "IMB",
+     "zone": [
+      4482.79,
+      4486.55
+     ],
+     "respected_at": "2026-09-04 03:30:00"
+    },
+    {
+     "id": 6875,
+     "type": "IMB",
+     "zone": [
+      4487.68,
+      4524.41
+     ],
+     "respected_at": "2026-09-03 16:00:00"
+    },
+    {
+     "id": 6900,
+     "type": "UW",
+     "zone": [
+      4429.59,
+      4434.87
+     ],
+     "respected_at": "2026-09-03 06:30:00"
+    },
+    {
+     "id": 6919,
+     "type": "OB",
+     "zone": [
+      4321.69,
+      4326.77
+     ],
+     "respected_at": "2026-09-02 12:30:00"
+    }
+   ],
+   "orderflow_count": 57,
+   "range_zone": "premium",
+   "why": [
+    [
+     "zone_atr",
+     0.58
+    ],
+    [
+     "min_approach_atr",
+     0.221
+    ],
+    [
+     "liq_behind_n",
+     0.084
+    ],
+    [
+     "displacement_atr",
+     -0.059
+    ],
+    [
+     "body_ratio",
+     -0.046
+    ]
+   ]
+  },
+  "below": {
+   "id": 6942,
+   "tf": "M30",
+   "type": "OB",
+   "direction": "bullish",
+   "top": 4434.99,
+   "bottom": 4422.34,
+   "mid": 4428.665,
+   "key_level": 4427.27,
+   "status": "unmitigated",
+   "swept_liquidity": [
+    "EQL@4418.84"
+   ],
+   "bar_index": 19754,
+   "note": "bullish OB, 2 candle(s); move swept EQL@4418.84",
+   "features": {
+    "zone_atr": 1.0061,
+    "atr": 12.5736,
+    "n_swept": 1.0,
+    "swept_quality": 3.0,
+    "swept_equal": 1.0,
+    "swept_session": 0.0,
+    "is_leg_origin": 0.0,
+    "prior_move_atr": 1.9446,
+    "displacement_atr": 0.4923,
+    "impulse_bars": 3.0,
+    "block_candles": 2.0,
+    "has_imbalance": 0.0,
+    "body_ratio": 0.6683
+   },
+   "quality": 0.521,
+   "time": "2026-09-03 13:00:00",
+   "context": {
+    "distance_atr": 3.497,
+    "liq_between_n": 3.0,
+    "liq_between_quality": 1.0,
+    "liq_between_weight": 3.0,
+    "first_pool_gap_atr": 2.37,
+    "liq_behind_n": 2.0,
+    "liq_behind_quality": 3.0,
+    "liq_stacked_beyond_n": 0.0,
+    "liq_near_edge_n": 0.0,
+    "opp_liq_between_n": 0.0,
+    "of_total": 69.0,
+    "of_near": 10.0,
+    "of_recent": 14.0,
+    "confluence": 1.0,
+    "closer_same_dir": 3.0,
+    "opp_on_path": 0.0,
+    "aligned_bias": 1.0,
+    "in_correct_zone": 1.0,
+    "range_pos": -1.0,
+    "age_bars": 46.0,
+    "away_atr": 8.2078,
+    "min_approach_atr": 0.2818,
+    "near_misses": 1.0,
+    "toward_mom5": -0.0314,
+    "toward_mom20": 1.3199,
+    "atr_ratio": 0.8001,
+    "pos20": 0.2357,
+    "pos100": 0.792,
+    "bos_recent_n": 5.0,
+    "bos_recent_aligned": 1.0,
+    "ny_hour": 7.0,
+    "dow": 4.0,
+    "is_bull": 1.0,
+    "htf_confluence": 0.0,
+    "htf_confluence_kind": 0.0,
+    "htf_bias_aligned": 1.0,
+    "htf_liq_behind_atr": 0.0,
+    "htf_in_zone": 0.0,
+    "htf_dist_atr": 0.4107
+   },
+   "grade": "C",
+   "distance": 32.27,
+   "distance_atr": 3.5,
+   "liquidity_between": [
+    "SL@4456.86",
+    "SL@4459.94",
+    "SL@4463.52"
+   ],
+   "orderflow_support": [
+    {
+     "id": 6949,
+     "type": "UW",
+     "zone": [
+      4466.07,
+      4477.49
+     ],
+     "respected_at": "2026-09-04 03:30:00"
+    },
+    {
+     "id": 6947,
+     "type": "IMB",
+     "zone": [
+      4449.85,
+      4476.93
+     ],
+     "respected_at": "2026-09-03 18:00:00"
+    },
+    {
+     "id": 6944,
+     "type": "BB",
+     "zone": [
+      4458.64,
+      4461.14
+     ],
+     "respected_at": "2026-09-03 16:00:00"
+    },
+    {
+     "id": 6937,
+     "type": "IMB",
+     "zone": [
+      4415.38,
+      4419.42
+     ],
+     "respected_at": "2026-09-03 09:30:00"
+    },
+    {
+     "id": 6938,
+     "type": "IMB",
+     "zone": [
+      4420.44,
+      4425.42
+     ],
+     "respected_at": "2026-09-03 08:30:00"
+    }
+   ],
+   "orderflow_count": 69,
+   "range_zone": "discount",
+   "why": [
+    [
+     "zone_atr",
+     0.528
+    ],
+    [
+     "of_total",
+     -0.113
+    ],
+    [
+     "liq_behind_n",
+     0.052
+    ],
+    [
+     "liq_stacked_beyond_n",
+     0.043
+    ],
+    [
+     "htf_liq_behind_atr",
+     0.025
+    ]
+   ]
+  },
+  "candidates_above": 1,
+  "candidates_below": 1
+ },
+ "H1": {
+  "tf": "H1",
+  "time": "2026-09-04 14:00:00",
+  "price": 4467.26,
+  "range_bias": "bullish",
+  "price_zone": "discount",
+  "above": null,
+  "below": null,
+  "candidates_above": 0,
+  "candidates_below": 0
+ }
+}

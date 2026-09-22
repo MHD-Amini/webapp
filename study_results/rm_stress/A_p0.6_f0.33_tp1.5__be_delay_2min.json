@@ -1,0 +1,22 @@
+{
+ "name": "A_p0.6_f0.33_tp1.5",
+ "scenario": "be_delay_2min",
+ "overrides": "partial_r=0.6,partial_frac=0.33,tp2_r=1.5",
+ "trades": 126,
+ "win_%": 70.6,
+ "profit_factor": 1.425,
+ "avg_R": 0.1339,
+ "total_R": 16.88,
+ "return_%": 17.13,
+ "max_dd_%": -5.72,
+ "max_dd_R": -6.2,
+ "sharpe_daily": 2.57,
+ "sl_%": 29.4,
+ "partial_be_%": 40.5,
+ "tp2_%": 30.2,
+ "partial_hit_%": 70.6,
+ "avg_hold_min": 38.0,
+ "expectancy_$": 13.6,
+ "end_balance": 11713.05,
+ "secs": 5.2
+}

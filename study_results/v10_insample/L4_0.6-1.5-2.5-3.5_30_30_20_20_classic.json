@@ -1,0 +1,27 @@
+{
+ "name": "L4_0.6-1.5-2.5-3.5_30_30_20_20_classic",
+ "overrides": "tp_levels=0.6|1.5|2.5|3.5,tp_fracs=0.3|0.3|0.2|0.2",
+ "n": 1270,
+ "pois": 608,
+ "avg_R": 0.2869,
+ "avg_R_poi_w": 0.2424,
+ "total_R": 364.4,
+ "win_%": 76.0,
+ "PF": 2.205,
+ "max_dd_R": -18.8,
+ "t_stat": 10.97,
+ "months_pos": 12,
+ "months": 14,
+ "R_2025H1": 155.1,
+ "R_2025H2": 124.4,
+ "R_2026": 84.9,
+ "M5_avg_R": 0.1285,
+ "other_avg_R": 0.3908,
+ "avg_hold_min": 356.0,
+ "outcomes": {
+  "partial_be": 760,
+  "sl": 296,
+  "tp2": 214
+ },
+ "secs": 5.3
+}

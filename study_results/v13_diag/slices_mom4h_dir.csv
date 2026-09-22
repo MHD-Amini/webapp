@@ -1,0 +1,3 @@
+dim,value,all_n,all_R,all_win_%,all_sl_%,all_avg_R,weak_n,weak_R,weak_win_%,weak_sl_%,weak_avg_R,good_n,good_R,good_win_%,good_sl_%,good_avg_R,apr26_n,apr26_R,apr26_win_%,apr26_sl_%,apr26_avg_R,sep25_n,sep25_R,sep25_win_%,sep25_sl_%,sep25_avg_R,OOS_n,OOS_R,OOS_win_%,OOS_sl_%,OOS_avg_R
+mom4h_dir,counter,157,47.39,72.6,27.4,0.302,17,2.45,58.8,41.2,0.144,140,44.94,74.3,25.7,0.321,11,0.1,54.5,45.5,0.009,6,2.35,66.7,33.3,0.391,82,29.47,75.6,24.4,0.359
+mom4h_dir,with,270,67.35,72.6,26.7,0.249,40,0.18,67.5,27.5,0.004,230,67.17,73.5,26.5,0.292,27,-0.82,70.4,29.6,-0.03,13,1.0,61.5,23.1,0.077,142,21.19,71.1,28.9,0.149

@@ -1,0 +1,22 @@
+{
+ "name": "base_v8",
+ "scenario": "slippage_x3",
+ "overrides": "",
+ "trades": 131,
+ "win_%": 80.9,
+ "profit_factor": 1.388,
+ "avg_R": 0.0862,
+ "total_R": 11.29,
+ "return_%": 10.65,
+ "max_dd_%": -3.72,
+ "max_dd_R": -3.54,
+ "sharpe_daily": 2.02,
+ "sl_%": 19.1,
+ "partial_be_%": 61.8,
+ "tp2_%": 19.1,
+ "partial_hit_%": 80.9,
+ "avg_hold_min": 43.0,
+ "expectancy_$": 8.13,
+ "end_balance": 11064.79,
+ "secs": 5.1
+}

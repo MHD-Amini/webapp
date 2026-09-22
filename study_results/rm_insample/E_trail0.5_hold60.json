@@ -1,0 +1,29 @@
+{
+ "name": "E_trail0.5_hold60",
+ "overrides": "trail_r=0.5,max_hold_min=60",
+ "n": 1270,
+ "pois": 608,
+ "avg_R": 0.12,
+ "avg_R_poi_w": 0.0907,
+ "total_R": 152.4,
+ "win_%": 74.3,
+ "PF": 1.659,
+ "max_dd_R": -22.3,
+ "t_stat": 7.42,
+ "months_pos": 10,
+ "months": 14,
+ "R_2025H1": 76.5,
+ "R_2025H2": 37.5,
+ "R_2026": 38.4,
+ "M5_avg_R": 0.0371,
+ "other_avg_R": 0.1743,
+ "avg_hold_min": 32.0,
+ "outcomes": {
+  "trail": 443,
+  "time": 367,
+  "sl": 202,
+  "partial_be": 135,
+  "tp2": 123
+ },
+ "secs": 1.4
+}

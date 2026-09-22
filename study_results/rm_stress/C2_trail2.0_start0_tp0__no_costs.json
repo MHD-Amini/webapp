@@ -1,0 +1,22 @@
+{
+ "name": "C2_trail2.0_start0_tp0",
+ "scenario": "no_costs",
+ "overrides": "partial_frac=0,tp2_r=0,trail_r=2.0,trail_start_r=0,trail_after_partial=false",
+ "trades": 160,
+ "win_%": 35.0,
+ "profit_factor": 1.576,
+ "avg_R": 0.4015,
+ "total_R": 64.24,
+ "return_%": 78.95,
+ "max_dd_%": -14.08,
+ "max_dd_R": -14.54,
+ "sharpe_daily": 2.32,
+ "sl_%": 65.0,
+ "partial_be_%": 0.0,
+ "tp2_%": 0.0,
+ "partial_hit_%": 0.0,
+ "avg_hold_min": 240.0,
+ "expectancy_$": 49.35,
+ "end_balance": 17895.45,
+ "secs": 6.1
+}

@@ -1,0 +1,22 @@
+{
+ "name": "A_p0.6_f0.25_tp2.5",
+ "scenario": "slippage_x3",
+ "overrides": "partial_r=0.6,partial_frac=0.25,tp2_r=2.5",
+ "trades": 127,
+ "win_%": 70.9,
+ "profit_factor": 1.631,
+ "avg_R": 0.2001,
+ "total_R": 25.41,
+ "return_%": 27.38,
+ "max_dd_%": -4.5,
+ "max_dd_R": -4.34,
+ "sharpe_daily": 3.05,
+ "sl_%": 29.1,
+ "partial_be_%": 48.8,
+ "tp2_%": 22.0,
+ "partial_hit_%": 70.9,
+ "avg_hold_min": 118.0,
+ "expectancy_$": 21.56,
+ "end_balance": 12738.22,
+ "secs": 5.2
+}

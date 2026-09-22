@@ -1,0 +1,50 @@
+# prod
+dist/
+
+# dev
+.yarn/
+!.yarn/releases
+.vscode/*
+!.vscode/launch.json
+!.vscode/*.code-snippets
+.idea/workspace.xml
+.idea/usage.statistics.xml
+.idea/shelf
+
+# deps
+node_modules/
+.wrangler
+
+# env
+.env
+.env.production
+.dev.vars
+
+# logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# misc
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+backtest_results/trades.csv
+backtest_results/selections.json
+live_charts/
+study_results/parts/
+study_results/touches.pkl
+study_results/touches.csv
+
+data/
+# v7 per-variant trade lists are reproducible (run_trader_study.py); the json summaries + base trades are kept
+study_results/trader_v7_var_*_trades.csv
+study_results/old_v7_run1/
+study_results/filter_study_*_trades.csv

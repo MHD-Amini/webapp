@@ -1,0 +1,22 @@
+{
+ "name": "B_tp3.0_be1.0",
+ "scenario": "slippage_x3",
+ "overrides": "partial_frac=0,tp2_r=3.0,be_trigger_r=1.0",
+ "trades": 132,
+ "win_%": 23.5,
+ "profit_factor": 1.52,
+ "avg_R": 0.2525,
+ "total_R": 33.33,
+ "return_%": 36.46,
+ "max_dd_%": -6.7,
+ "max_dd_R": -6.82,
+ "sharpe_daily": 2.62,
+ "sl_%": 41.7,
+ "partial_be_%": 0.0,
+ "tp2_%": 23.5,
+ "partial_hit_%": 0.0,
+ "avg_hold_min": 183.0,
+ "expectancy_$": 27.62,
+ "end_balance": 13645.88,
+ "secs": 5.2
+}

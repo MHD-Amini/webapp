@@ -1,0 +1,127 @@
+{
+ "a_price_through_entry_pois": 2,
+ "a_by_tf": {
+  "M5": 2
+ },
+ "a_shown_ge2_events": 2,
+ "b_replaced_pois": 323,
+ "b_no_longer_shown_pois": 522,
+ "b_replaced_by_tf": {
+  "M10": 84,
+  "M15": 33,
+  "M30": 38,
+  "M5": 161,
+  "H1": 7
+ },
+ "b_replaced_then_reshown": 165,
+ "c_quality_rejects": 2106,
+ "c_quality_rejects_confluent_with_a_trade": 324,
+ "c_confluent_by_tf": {
+  "M15": 101,
+  "M10": 126,
+  "M5": 55,
+  "M30": 29,
+  "H1": 13
+ },
+ "c_confluent_quality_quantiles": {
+  "0.1": 0.504,
+  "0.25": 0.512,
+  "0.5": 0.531,
+  "0.75": 0.568,
+  "0.9": 0.603
+ },
+ "d_traded_pois_reshown_after_close": 0,
+ "d_reshown_by_outcome": {},
+ "d_reshown_by_tf": {},
+ "e_traded_by_tf_win": {
+  "H1|loss": {
+   "n": 4,
+   "q_med": 0.61,
+   "zone_med": 42.735,
+   "avg_R": -1.005
+  },
+  "H1|win": {
+   "n": 10,
+   "q_med": 0.607,
+   "zone_med": 28.63,
+   "avg_R": 0.561
+  },
+  "M10|loss": {
+   "n": 17,
+   "q_med": 0.628,
+   "zone_med": 10.64,
+   "avg_R": -0.971
+  },
+  "M10|win": {
+   "n": 63,
+   "q_med": 0.634,
+   "zone_med": 10.62,
+   "avg_R": 0.894
+  },
+  "M15|loss": {
+   "n": 11,
+   "q_med": 0.639,
+   "zone_med": 22.81,
+   "avg_R": -0.928
+  },
+  "M15|win": {
+   "n": 34,
+   "q_med": 0.643,
+   "zone_med": 16.195,
+   "avg_R": 0.986
+  },
+  "M30|loss": {
+   "n": 11,
+   "q_med": 0.634,
+   "zone_med": 20.29,
+   "avg_R": -1.006
+  },
+  "M30|win": {
+   "n": 22,
+   "q_med": 0.608,
+   "zone_med": 21.135,
+   "avg_R": 0.603
+  },
+  "M5|loss": {
+   "n": 56,
+   "q_med": 0.594,
+   "zone_med": 8.15,
+   "avg_R": -1.021
+  },
+  "M5|win": {
+   "n": 120,
+   "q_med": 0.601,
+   "zone_med": 7.78,
+   "avg_R": 0.752
+  }
+ },
+ "e_oos": {
+  "n": 184,
+  "R": 42.05,
+  "PF": 1.732,
+  "win_%": 70.7
+ },
+ "e_trades_per_month": {
+  "2025-09": 16,
+  "2025-10": 38,
+  "2025-11": 27,
+  "2025-12": 24,
+  "2026-01": 32,
+  "2026-02": 27,
+  "2026-03": 31,
+  "2026-04": 32,
+  "2026-05": 26,
+  "2026-06": 25,
+  "2026-07": 32,
+  "2026-08": 34,
+  "2026-09": 4
+ },
+ "e_gap_hours_quantiles": {
+  "0.5": 13.3,
+  "0.75": 32.8,
+  "0.9": 70.8,
+  "0.95": 89.3,
+  "0.99": 135.8
+ },
+ "e_concurrent_max": 4
+}
