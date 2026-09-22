@@ -21,14 +21,18 @@ CH = SR / "charts"
 CH.mkdir(exist_ok=True)
 
 REF = "ref"
-A = "FIB_c3_r3_htfbuy_dn0.5"            # v14-A: the loss-reducing asymmetric martingale (shipped)
-B = "MU_1.25_c3_r3_htf_dn0.5"           # v14-B: 13/13 months, softer
-C = "MU_1.5_c3_r3_htfbuy_dn0.5"         # v14-C: the return-oriented asymmetric variant
+A = "TF_1.5_c3_htfbuy_dn0.5"            # v14-A (shipped): per-TF streaks, x1.5 up on HTF buys, x0.5 down elsewhere
+B = "FIB_c3_r3_htfbuy_dn0.5"            # v14-B: the loss cutter (fib up on HTF buys, x0.5 down)
+C = "MU_1.0_c3_r3_htf_dn0.5"            # v14-C: fewest rules - pure step-DOWN of the weak slices after a loss
+D = "GR_0.5_0.6-0.4_own"                # the zone grid (deep leg) - kept as an option (file key uses - for /)
 CLASSIC = ("MU_2.0_c3_r3", "MU_1.5_c3_r3", "FIB_c3_r3", "ADD_1.5_c3", "DEF_1.0_c3_r3", "ANTI_1.3_c2", "SHR_0.5_c2")
 LABEL = {REF: "v13-A reference (flat 1 %)",
-         A: "v14-A: fib steps on HTF buys after a loss, x0.5 elsewhere",
-         B: "v14-B: x1.25 steps on HTF after a loss, x0.5 elsewhere",
-         C: "v14-C: x1.5 steps on HTF buys after a loss, x0.5 elsewhere",
+         A: "v14-A: per-TF streak, x1.5 up on HTF buys after a loss, x0.5 down elsewhere",
+         B: "v14-B: fib steps up on HTF buys after a loss, x0.5 down elsewhere (loss cutter)",
+         C: "v14-C: pure step-DOWN x0.5 of M5 / sells after a loss (no step-up)",
+         D: "zone grid: deep leg 0.5 R into the zone, budget 60/40, own ladder",
+         "MU_1.5_c3_r3_htfbuy_dn0.5": "x1.5 up on HTF buys (account streak), x0.5 down",
+         "MU_1.25_c3_r3_htf_dn0.5": "x1.25 up on HTF (buys + sells), x0.5 down",
          "MU_2.0_c3_r3": "classic martingale x2 (cap 3 steps, 3 % max)", "MU_1.5_c3_r3": "x1.5 after every loss (cap 3, 3 % max)",
          "FIB_c3_r3": "Fibonacci steps after every loss", "ADD_1.5_c3": "d'Alembert +0.5 x base per loss",
          "DEF_1.0_c3_r3": "deficit recovery (win the deficit back in 1 R)", "ANTI_1.3_c2": "anti-martingale x1.3 after wins",
@@ -78,7 +82,7 @@ def load():
 def charts(lev, runs, trades, shuf):
     # 1. equity
     fig, ax = plt.subplots(figsize=(11, 5))
-    for n in (REF, B, C, A):
+    for n in (REF, C, B, A):
         if n not in runs:
             continue
         e = pd.read_csv(RUNS / f"{n}_equity.csv", index_col=0, parse_dates=True)
@@ -106,7 +110,8 @@ def charts(lev, runs, trades, shuf):
         v = lev[lev.family == f]
         if len(v):
             ax.scatter(-v["gross_loss_$"] / 1000, v["return_%"], c=c, s=22 + 60 * (v["max_dd_%"] < -6.5), alpha=.7, label=f)
-    for n, mk in ((REF, "*"), (A, "D"), (B, "s"), (C, "^")):
+    lev["name"] = lev.name.str.replace("/", "-")
+    for n, mk in ((REF, "*"), (A, "D"), (B, "s"), (C, "^"), (D, "o")):
         if n not in set(lev.name):
             continue
         r = lev[lev.name == n].iloc[0]
@@ -200,17 +205,28 @@ def main():
       f"{len(stress)} stress runs, {len(shuf)} shuffle tests).*\n")
     w("## 1. The question and the answer\n")
     w("**Spec.** Create a Martingale strategy for the v13-A trader that reduces the losses of the trades; be creative; save after every step.\n")
+    b, c = runs[B], runs[C]
     w(f"**Answer.** A *classic* martingale (double the size after every loss) cannot reduce losses on this bot — the diagnosis below shows "
       f"why: the trade after a loss is *weaker*, not stronger, so every step-up puts more money on a worse trade; it buys return with "
-      f"drawdown and more dollars lost (see section 3).  The creative version that does reduce the losses is the **asymmetric, "
-      f"edge-aware martingale (v14-A)**: after a loss the bot steps the size **up** only where the post-loss edge is positive "
-      f"(M10 / M15 / M30 / H1 **buy** plans, Fibonacci steps 1-2-3 × base, capped at 3 steps and 3 % of equity) and steps it **down to "
-      f"half size** everywhere else (M5 plans and sells, the slices that lose money after a loss).  A win resets the streak; break-even "
-      f"exits are neutral.  On the full year it turns {ref['gross_loss_$']:,.0f} $ of losses into {a['gross_loss_$']:,.0f} $ "
-      f"(**{100 * (a['gross_loss_$'] / ref['gross_loss_$'] - 1):+.1f} %**), the average losing trade from {ref['avg_loss_$']:.0f} $ to "
-      f"{a['avg_loss_$']:.0f} $ ({100 * (a['avg_loss_$'] / ref['avg_loss_$'] - 1):+.1f} %), the max drawdown from {ref['max_dd_%']:.2f} % to "
-      f"{a['max_dd_%']:.2f} %, keeps {a['months_pos']}/{a['months']} months positive and the profit factor rises from {ref['profit_factor']:.3f} to "
-      f"{a['profit_factor']:.3f} (OOS {ref['OOS_PF']:.2f} → {a['OOS_PF']:.2f}); the return is {a['return_%']:+.1f} % vs {ref['return_%']:+.1f} %.\n")
+      f"drawdown and more dollars lost (section 3: every ungated step-up variant lost more money than the reference).  The creative "
+      f"version that does reduce the losses is the **asymmetric, edge-aware martingale**: after a loss the bot steps the size **up** only "
+      f"where the post-loss edge is positive (M10 / M15 / M30 / H1 **buy** plans) and steps it **down to half size** everywhere else "
+      f"(M5 plans and sells — the slices that lose money after a loss).  A win resets the streak; break-even exits are neutral; max risk "
+      f"per plan is capped at 3 % of equity.\n")
+    w(f"* **v14-A (shipped in `run_trader.bat`)**: one streak per timeframe, x1.5 per consecutive loss on HTF buys (max 3 steps).  "
+      f"{ref['gross_loss_$']:,.0f} $ lost -> {a['gross_loss_$']:,.0f} $ ({100 * (a['gross_loss_$'] / ref['gross_loss_$'] - 1):+.1f} %), average "
+      f"loss {ref['avg_loss_$']:.0f} -> {a['avg_loss_$']:.0f} $, worst day {ref['worst_day_%eq']:.2f} -> {a['worst_day_%eq']:.2f} % of equity, "
+      f"PF {ref['profit_factor']:.3f} -> **{a['profit_factor']:.3f}**, OOS PF {ref['OOS_PF']:.2f} -> **{a['OOS_PF']:.2f}**, return "
+      f"{ref['return_%']:+.1f} -> **{a['return_%']:+.1f} %**, max DD {ref['max_dd_%']:.2f} -> {a['max_dd_%']:.2f} %, {a['months_pos']}/{a['months']} months "
+      f"positive, max risk {a['max_risk_%eq']:.2f} % of equity.  The only variant of the grid that passes all five criteria with 13/13 months, "
+      f"and the best profit factor of all {len(lev)}.\n")
+    w(f"* **v14-B (the loss cutter)**: Fibonacci steps up on HTF buys, x0.5 down elsewhere, one account streak.  $ lost "
+      f"{100 * (b['gross_loss_$'] / ref['gross_loss_$'] - 1):+.1f} % ({b['gross_loss_$']:,.0f} $), average loss {100 * (b['avg_loss_$'] / ref['avg_loss_$'] - 1):+.1f} %, "
+      f"max DD {b['max_dd_%']:.2f} %, PF {b['profit_factor']:.3f}, return {b['return_%']:+.1f} %, {b['months_pos']}/{b['months']} months.\n")
+    w(f"* **v14-C (fewest rules)**: no step-up at all — after a loss the weak slices (M5, sells) trade at half size until a win.  $ lost "
+      f"{100 * (c['gross_loss_$'] / ref['gross_loss_$'] - 1):+.1f} %, max DD {c['max_dd_%']:.2f} %, max risk {c['max_risk_%eq']:.2f} % of equity, "
+      f"return {c['return_%']:+.1f} %.  This is the honest floor: the loss reduction of every asymmetric variant comes from this step-down; "
+      f"the gated step-up pays the return back.\n")
     w("| variant | trades | return | max DD | PF | win | $ lost | avg loss | worst trade | worst day | max risk | ulcer | ret/DD | OOS PF | months>0 | up | down | deep |")
     w("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
     for _, r in top.iterrows():
@@ -254,7 +270,8 @@ def main():
     w(md(step_table(trades, A)))
     w("\n## 5. Robustness\n")
     if len(stress):
-        st = stress[stress.name.isin((REF, A, B, C))].copy()
+        st = stress[stress.name.isin((REF, A, B, C, "GR_0.5_0.6/0.4_own"))].copy()
+        st["name"] = st.name.str.replace("/", "-")
         st["variant"] = st.name.map(lambda n: LABEL[n].split(":")[0])
         piv = st.pivot_table(index="tag", columns="variant", values=["return_%", "max_dd_%", "gross_loss_$", "OOS_PF"], aggfunc="first")
         w("**Stress** (spread ×2, commission ×2, slippage ×3, worst intrabar path, risk 0.5 % / 2 %) — return / max DD / $ lost / OOS PF:\n")
@@ -262,7 +279,7 @@ def main():
             if tag not in piv.index:
                 continue
             row = [f"**{tag}**"]
-            for n in (REF, A, B, C):
+            for n in (REF, A, B, C, D):
                 v = LABEL[n].split(":")[0]
                 if ("return_%", v) in piv.columns:
                     row.append(f"{v}: {piv.loc[tag, ('return_%', v)]:+.0f} % / {piv.loc[tag, ('max_dd_%', v)]:.1f} / "
@@ -270,7 +287,7 @@ def main():
             w("- " + " | ".join(row))
         w("")
     if len(shuf):
-        w("**Shuffle / bootstrap** (`shuffle_v14.py`): the sizing rule replayed on resampled orders of the reference trades, paired with flat "
+        w("**Shuffle / bootstrap** (`shuffle_v14.py`, n = 1000): the sizing rule replayed on resampled orders of the reference trades, paired with flat "
           "sizing on the same orders.  `p` = share of resampled sequences where the variant beats flat; `hist rank` = where the historical "
           "order sits in the variant's own distribution (near 1 = the historical order was lucky):\n")
         cols = ["name", "hist_ret", "flat_ret", "hist_dd", "flat_dd", "hist_loss", "flat_loss", "shuf_p_ret>flat", "shuf_p_rd>flat", "shuf_p_loss_less",
@@ -281,7 +298,7 @@ def main():
     w("`trader.py` carries the same `Martingale` state machine (`lubot/martingale.py`): every finished plan's realised net P&L is read from the "
       "MT5 deal history and appended to `trader_state.json` (`closed` list); on start the state is rebuilt from that list, so a restart "
       "cannot lose or double a streak.  The status line shows the streak (`mart all:k1`).  `run_trader.bat` ships v14-A "
-      "(`mart_mode=fib,mart_max_steps=3,mart_max_risk_pct=3,mart_tfs=M10|M15|M30|H1,mart_sides=buy,mart_ungated_scale=0.5`); "
+      "(`mart_mode=mult,mart_mult=1.5,mart_max_steps=3,mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10|M15|M30|H1,mart_sides=buy,mart_ungated_scale=0.5`); "
       "`verify_bat_v14.py` replays the bat strings in the simulator and must reproduce the study json.  The zone grid is available with "
       "`grid_add_r=0.5,grid_base_frac=0.5,grid_add_frac=0.5` (deep leg = `<key>+g`, cancelled with its edge plan).\n")
     w("## 7. Honest limits\n")

@@ -1,12 +1,12 @@
 # PROGRESS — v14 MARTINGALE / LOSS-RECOVERY SIZING for the v13-A trader — IN PROGRESS (2026-09-21 21:15)
 
-**Recovery (read this first):** `git clone https://www.genspark.ai/sb-git/me/genspark-0d4424a2-8f72-45e8-bb77-7648bfdfcfa1.git /home/user/webapp`
+**Recovery (read this first):** `git clone https://www.genspark.ai/sb-git/me/genspark-1ad884aa-e169-4dc3-8b9b-7b58c42efb0b.git /home/user/webapp`
 (or extract `lubot_trader_v13_final.tar.gz` from /home/user/uploaded_files into /home/user, then `git pull`), `bash restore.sh`
 (relinks the CSV to `data/xauusd_m1.csv`, pip, tests), read this file, continue from the first unchecked step.  Every step ends
 with `bash save.sh "msg"` (commit + push to the Genspark backup repo).  Long jobs are resumable (they skip outputs that exist).
 If the sandbox migrated: `git remote get-url origin` shows the new repo -> restore.sh `sed`s it into save.sh.
 Data: `/home/user/uploaded_files/XAUUSD.t_M1_202501020100_2026090423581112.csv` (symlink `data/xauusd_m1.csv`).
-Backup repo of this session: genspark-3a30404f-e782-4c57-a611-ba793a393a61 (remote `origin`; migrated 2ffbc30b -> 3c04d283 -> 3a30404f -> 44c9c325 -> 38118422 -> ce480f5a -> 2977f071 -> 7e1a4cbe -> 0d4424a2 during steps 2-4 (9 migrations, nothing lost); every time restore.sh + the resumable grid lost nothing).  Sandbox RAM is ~1 GB: run the
+Backup repo of this session: genspark-3a30404f-e782-4c57-a611-ba793a393a61 (remote `origin`; migrated 2ffbc30b -> 3c04d283 -> 3a30404f -> 44c9c325 -> 38118422 -> ce480f5a -> 2977f071 -> 7e1a4cbe -> 0d4424a2 -> 1ad884aa during steps 2-5 (10 migrations, nothing lost); every time restore.sh + the resumable grid lost nothing).  Sandbox RAM is ~1 GB: run the
 simulator with `--workers 1` (a full-year run needs ~600 MB), never two at once.
 
 ## User spec (v14)

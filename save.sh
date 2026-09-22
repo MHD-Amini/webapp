@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 MSG="${1:-checkpoint $(date -u +%Y-%m-%dT%H:%M:%SZ)}"
 git add -A >/dev/null 2>&1
 git commit -qm "$MSG" >/dev/null 2>&1 && echo "[save] committed: $MSG" || echo "[save] nothing to commit"
-BACKUP_URL="https://www.genspark.ai/sb-git/me/genspark-0d4424a2-8f72-45e8-bb77-7648bfdfcfa1.git"
+BACKUP_URL="https://www.genspark.ai/sb-git/me/genspark-1ad884aa-e169-4dc3-8b9b-7b58c42efb0b.git"
 # prefer whatever remote the platform configured (origin / genspark), strip any embedded credentials
 for R in origin genspark; do
   U=$(git remote get-url "$R" 2>/dev/null) && [ -n "$U" ] && { BACKUP_URL=$(echo "$U" | sed -E 's#^(https?://)[^@]*@#\1#'); break; }
