@@ -5,11 +5,8 @@
 # 2. the M1 CSV is the user upload (symlinked to data/xauusd_m1.csv)
 # 3. PROGRESS.md tells which step to continue from
 cd "$(dirname "$0")"
-# the platform re-creates the backup repo when the sandbox migrates: keep save.sh pointed at the current origin
-NEW=$(git remote get-url origin 2>/dev/null | grep -o "genspark-[0-9a-f-]*")
-[ -n "$NEW" ] && sed -i "s#genspark-[0-9a-f-]*\.git#$NEW.git#" save.sh && echo "save.sh -> $NEW"
-# strip the token the platform embeds in the origin URL (save.sh injects $GSK_TOKEN itself) and keep the recovery line of PROGRESS.md current
-[ -n "$NEW" ] && git remote set-url origin "https://www.genspark.ai/sb-git/me/$NEW.git" && sed -i "1,12s#sb-git/me/genspark-[0-9a-f-]*\.git#sb-git/me/$NEW.git#" PROGRESS.md
+# origin = https://github.com/MHD-Amini/webapp (save.sh pushes there; a Genspark sb-git origin also works via $GSK_TOKEN)
+echo "origin: $(git remote get-url origin 2>/dev/null | sed -E 's#^(https?://)[^@]*@#\1#')"
 CSV="/home/user/uploaded_files/XAUUSD.t_M1_202501020100_2026090423581112.csv"
 mkdir -p data logs models study_results
 [ -f "$CSV" ] && ln -sf "$CSV" data/xauusd_m1.csv || echo "!! CSV not found at $CSV - re-upload it"
