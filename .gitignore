@@ -48,3 +48,9 @@ data/
 study_results/trader_v7_var_*_trades.csv
 study_results/old_v7_run1/
 study_results/filter_study_*_trades.csv
+# EURUSD study (eurusd/): embedded artifacts are re-materialised by the single file; per-variant trade lists are reproducible
+eurusd/models/
+eurusd/study_results/sel_v10_*.pkl
+eurusd/out/study/*_trades.csv
+eurusd/logs/
+eurusd/__pycache__/
