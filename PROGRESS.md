@@ -1,13 +1,12 @@
-# PROGRESS — v14 MARTINGALE / LOSS-RECOVERY SIZING for the v13-A trader — IN PROGRESS (2026-09-21 21:15)
+# PROGRESS — v14 MARTINGALE / LOSS-RECOVERY SIZING for the v13-A trader — ALL STEPS COMPLETE (2026-10-03 15:45)
 
-**Recovery (read this first):** `git clone https://www.genspark.ai/sb-git/me/genspark-1ad884aa-e169-4dc3-8b9b-7b58c42efb0b.git /home/user/webapp`
-(or extract `lubot_trader_v13_final.tar.gz` from /home/user/uploaded_files into /home/user, then `git pull`), `bash restore.sh`
-(relinks the CSV to `data/xauusd_m1.csv`, pip, tests), read this file, continue from the first unchecked step.  Every step ends
-with `bash save.sh "msg"` (commit + push to the Genspark backup repo).  Long jobs are resumable (they skip outputs that exist).
-If the sandbox migrated: `git remote get-url origin` shows the new repo -> restore.sh `sed`s it into save.sh.
+**Recovery (read this first):** `git clone https://github.com/MHD-Amini/webapp.git /home/user/webapp`, `bash restore.sh`
+(relinks the CSV to `data/xauusd_m1.csv`, pip, tests), read this file.  Every step ends with `bash save.sh "msg"` (commit + push to
+GitHub origin).  Long jobs are resumable (they skip outputs that exist).
 Data: `/home/user/uploaded_files/XAUUSD.t_M1_202501020100_2026090423581112.csv` (symlink `data/xauusd_m1.csv`).
-Backup repo of this session: genspark-3a30404f-e782-4c57-a611-ba793a393a61 (remote `origin`; migrated 2ffbc30b -> 3c04d283 -> 3a30404f -> 44c9c325 -> 38118422 -> ce480f5a -> 2977f071 -> 7e1a4cbe -> 0d4424a2 -> 1ad884aa during steps 2-5 (10 migrations, nothing lost); every time restore.sh + the resumable grid lost nothing).  Sandbox RAM is ~1 GB: run the
-simulator with `--workers 1` (a full-year run needs ~600 MB), never two at once.
+History: steps 0-4b ran in Genspark sandboxes with sb-git backup repos (10 migrations, nothing lost); the session died during step 4a stress /
+step 5; 2026-10-03 the project was continued from https://github.com/MHD-Amini/webapp (the last pushed state, commit 63c68a6) and finished there.
+Sandbox RAM is ~1 GB: run the simulator with `--workers 1` (a full-year run needs ~400-600 MB), never two at once.
 
 ## User spec (v14)
 1. Create a MARTINGALE strategy for the trading bot (v13-A, run_trader.bat) that REDUCES THE LOSSES of the trades.  Be creative.
@@ -49,13 +48,29 @@ in a martingale matters: a bootstrap over the trade sequence shows whether the g
         grid (zone-averaging) adds.  Unit tests (tests/test_v14_martingale.py).  Smoke (smoke_v14.py).
 - [x] 3. Grid (`run_v14_levers.py`, resumable, workers 1): every family x parameters on top of v13-A -> study_results/v14_levers/
         + v14_levers.csv.  Judge: DD, $ lost, worst day, avg loss, return, PF, OOS PF, months positive.
-- [ ] 4a. Stress (spread x2, comm x2, slip x3, worst intrabar, risk 0.5/2) + shuffle/bootstrap test of the finalists +
-        walk-forward -> v14_stress.csv, v14_shuffle.csv.
+- [x] 4a. Stress (spread x2, comm x2, slip x3, worst intrabar, risk 0.5/2) + shuffle/bootstrap test of the finalists +
+        walk-forward -> v14_stress.csv, v14_shuffle.csv, v14_halves.csv / v14_walkforward.csv.
 - [x] 4b. Port to trader.py (live sizing reads the closed-trade history from trader_state.json) + run_trader.bat v14-A +
         verify_bat_v14.py (bat strings replayed == study json) + fake-MT5 tests.
-- [ ] 5. Report study_results/MARTINGALE_V14.md + charts (make_v14_report.py), README section 0g, final save + tar link.
+- [x] 5. Report study_results/MARTINGALE_V14.md + charts (make_v14_report.py), README section 0g, final save.
+- [x] 6. FINAL BACKTEST of the shipped v14-A on the CSV (backtest_v14_final.py -> study_results/FINAL_BACKTEST_V14.md), pushed to GitHub.
 
 ## Log (v14)
+- 2026-10-03 15:45 steps 4a / 5 / 6 DONE (session continued from GitHub, commit 63c68a6; 131 tests pass; save.sh/restore.sh now push to origin =
+  github.com/MHD-Amini/webapp).
+  * 4a stress was already complete on disk (42/42 runs in v14_stress.csv: 6 finalists + ref x 6 scenarios).  v14-A ahead of the reference on return
+    and OOS PF in 6/6 scenarios (spread x2 +122 % DD 6.2 OOS 1.68 vs +88 / 7.1 / 1.51; comm x2 +198 / 6.0 / 2.01 vs +162 / 5.1 / 1.86; slip x3
+    +210 / 5.6 / 2.06; worst intrabar +231 / 5.9 / 2.21; risk 0.5 +88 / 3.9; risk 2 +798 / 9.9); v14-B / v14-C lose less $ than ref in 6/6.
+  * 4a walk-forward (walkforward_v14.py, from the trade lists, split on close time at 2026-03-01): Spearman IS->OOS of the d$lost vs ref = +0.98,
+    DD$ +0.88, PF +0.31 -> the loss side of a sizing rule is a population property and carries over; the PF edge only weakly.  70/140 variants
+    pass 3 of 4 IS tests, of those 50 still lose less than ref OOS, 41 keep OOS PF >= ref.  v14-A IS PF 2.46 -> OOS 2.15, $ lost -11 % IS /
+    +1.6 % OOS in dollars (-1.9 % relative to its OOS-start equity: it compounds faster).  v14-B/C: -12/-11 % IS, -13/-11 % OOS.
+  * 5 report: make_v14_report.py (+ walk-forward section) -> study_results/MARTINGALE_V14.md (213 lines) + charts/v14_{equity,drawdown,scatter,
+    losses,risk,monthly,shuffle}.png.  README: title v14, command table (live v14-A string, final backtest, v14 study), section 0g, project layout.
+  * 6 FINAL BACKTEST (backtest_v14_final.py: strings READ from run_trader.bat, v13-A = same strings minus mart_*): 359 813 M1 bars 2025-09-01 ->
+    2026-09-04, 430 trades, +227.53 % ($10 000 -> $32 753), max DD -5.84 %, PF 2.249, win 74.7 %, 13/13 months, worst day -1.99 % eq, max risk
+    2.24 % eq, OOS PF 2.15 (224 tr, +$14 524), 0 halts; stepped up 38 (92 % win, +$7 078) / down 71 (62 %, +$1 257); IDENTICAL to the study json.
+    -> study_results/FINAL_BACKTEST_V14.md, final_v14/{v14A,ref}_{summary.json,trades.csv,equity.csv,monthly.csv,by_tf.csv}, charts/final_v14_equity.png.
 - 2026-09-22 07:05 step 4b DONE: run_trader.bat ships v14-A = TF_1.5_c3_htfbuy_dn0.5 (mart_mode=mult,mart_mult=1.5,mart_max_steps=3,
   mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10|M15|M30|H1,mart_sides=buy,mart_ungated_scale=0.5 on top of the v13-A strings);
   verify_bat_v14.py reads the strings FROM the bat and replays them: 430 tr / +227.53 % / DD -5.84 / PF 2.249 / up 38 / down 71 = IDENTICAL

@@ -1,4 +1,4 @@
-# LU-POI TRADER — Liquidity University POI trading bot for XAUUSD.t (MT5)   *(v13)*
+# LU-POI TRADER — Liquidity University POI trading bot for XAUUSD.t (MT5)   *(v14)*
 
 **v7 turns the POI scanner into a trading bot.**  For every POI the scanner shows (M5 / M10 / M15 / M30 / H1) the
 bot places a **limit order at the start of the zone** with the **stop at the end of the zone**, closes **50 % at
@@ -7,7 +7,9 @@ terminal that is already open and logged in on your Windows PC — **no login op
 
 | what | command |
 |---|---|
-| **Live trading** (Windows, MT5 open) | `run_trader.bat`  or  `python trader.py --symbol XAUUSD.t --risk 1.0 --commission 7 --trader "tp_levels=0.6\|1.2\|2.4\|4.8,tp_fracs=1\|1\|1\|1,ladder_fallback=merge,dedupe_cross_tf=false,keep_replaced_bars=1,keep_replaced_tfs=M10\|M15\|M30\|H1,regime_metric=adr_ratio,regime_threshold=1.0,regime_short=5,regime_long=20,range_tp_levels=0.5\|1.0\|1.5\|2.5,range_tp_fracs=1\|1\|1\|1,range_sl_after_leg=0\|0.3\|x\|x" --trade-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.57/M15:min_quality=0.60/M30\|H1:min_quality=0.57" --confluence-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.50/M15:min_quality=0.60/M30\|H1:min_quality=0.57"` (**v13-A**) |
+| **Live trading** (Windows, MT5 open) | `run_trader.bat`  or  `python trader.py --symbol XAUUSD.t --risk 1.0 --commission 7 --trader "tp_levels=0.6\|1.2\|2.4\|4.8,tp_fracs=1\|1\|1\|1,ladder_fallback=merge,dedupe_cross_tf=false,keep_replaced_bars=1,keep_replaced_tfs=M10\|M15\|M30\|H1,regime_metric=adr_ratio,regime_threshold=1.0,regime_short=5,regime_long=20,range_tp_levels=0.5\|1.0\|1.5\|2.5,range_tp_fracs=1\|1\|1\|1,range_sl_after_leg=0\|0.3\|x\|x,mart_mode=mult,mart_mult=1.5,mart_max_steps=3,mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10\|M15\|M30\|H1,mart_sides=buy,mart_ungated_scale=0.5" --trade-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.57/M15:min_quality=0.60/M30\|H1:min_quality=0.57" --confluence-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.50/M15:min_quality=0.60/M30\|H1:min_quality=0.57"` (**v14-A**; drop every `mart_*` key for v13-A) |
+| **FINAL BACKTEST of v14-A on the CSV** (strings read from `run_trader.bat`, v13-A alongside) | `python backtest_v14_final.py --csv data/xauusd_m1.csv` → **`study_results/FINAL_BACKTEST_V14.md`** + `final_v14/*` + `charts/final_v14_equity.png` |
+| **v14 martingale study** (diagnosis, 140 variants, stress ×6, shuffle/bootstrap, walk-forward) | `python run_v14_diag.py; python run_v14_levers.py; python run_v14_levers.py --stress ...; python shuffle_v14.py; python walkforward_v14.py; python make_v14_report.py; python verify_bat_v14.py` (resumable) → **`study_results/MARTINGALE_V14.md`** |
 | **v13 weak-months study** (diagnosis, 177 variants, stress, walk-forward, neighbourhood) | `python run_v13_diag.py; bash run_v13_all.sh; bash run_v13_stage4.sh; bash run_v13_neigh.sh; python walkforward_v13.py; python make_v13_report.py; python verify_bat_v13.py` (resumable) → **`study_results/WEAK_MONTHS_V13.md`** |
 | **v12 more-trades study, round 2** (funnel, 212 variants, stress, walk-forward) | `python run_v12_funnel.py; bash run_v12_all.sh; bash run_v12_stage4.sh; python rank_v12.py; python make_v12_report.py` (resumable) → **`study_results/MORE_TRADES_V12.md`** |
 | **v11 more-trades study** (funnel, 159 variants, stress) | `python run_v11_funnel.py; bash run_v11_all.sh; python run_v11_combos.py --stress ...; python make_v11_report.py` (resumable) → **`study_results/MORE_TRADES_STUDY.md`** |
@@ -19,7 +21,66 @@ terminal that is already open and logged in on your Windows PC — **no login op
 | Full sensitivity study + report | `python run_trader_study.py --csv data.csv` → `study_results/TRADER_BACKTEST.md` |
 | POI scanner only (v6) | `python bot.py scan --csv data.csv` / `python bot.py live` |
 
-→ **Results: section 0f (v13 weak months / regime-adaptive management), 0e (v12 more trades round 2), 0d (v11 more trades), 0c (v10 multi-TP + full year + loss rules), 0b (v9 management), 0a/0 below, `study_results/MULTI_TP_STUDY.md` (v10), `study_results/RISK_MGMT_STUDY.md` (v9), `TRADER_V8.md` (v8), `TRADER_BACKTEST.md` (v7).**
+→ **Results: section 0g (v14 asymmetric martingale + FINAL BACKTEST), 0f (v13 weak months / regime-adaptive management), 0e (v12 more trades round 2), 0d (v11 more trades), 0c (v10 multi-TP + full year + loss rules), 0b (v9 management), 0a/0 below, `study_results/MULTI_TP_STUDY.md` (v10), `study_results/RISK_MGMT_STUDY.md` (v9), `TRADER_V8.md` (v8), `TRADER_BACKTEST.md` (v7).**
+
+---
+
+## 0g. v14 — a martingale that REDUCES the losses (the asymmetric, edge-aware martingale) + FINAL BACKTEST
+
+**Spec.**  Create a Martingale strategy for the v13-A trader that reduces the losses of the trades; be creative; save after every step.
+
+**Diagnosis** (`run_v14_diag.py` → `study_results/v14_diag/`).  A classic martingale cannot reduce losses on this bot.  The 430 trades of the year
+contain 106 losers in 76 runs, **max run 3** (never 4) — fewer and shorter than independence predicts — so a step 4+ never fires; and **the trade
+after a loss is WEAKER, not stronger**: win 76.5 % / +0.31 R after 0 losses, 68.4 % / +0.13 R after 1, 75 % / +0.09 R after 2.  Per slice the
+post-loss edge is NEGATIVE on M5 (−0.02 R, n 43) and on sells (−0.06 R, n 40) and positive on M10/M15/M30/H1 buys (+0.29 R, n 66).  Every
+step-up scheme on the same sequence (×2, ×1.5, ×1.25, d'Alembert, Fibonacci, deficit recovery) INCREASES the dollars lost and buys return with
+drawdown.  84 % of the losses close with no other position open → the realistic lever is the SIZE OF THE NEXT ORDER.
+
+**Lever** (`lubot/martingale.py` — a `Martingale` state machine; `TraderConfig` keys `mart_mode / mart_mult / mart_max_steps / mart_max_risk_pct /
+mart_scope / mart_tfs / mart_sides / mart_min_quality / mart_regime / mart_ungated_scale / mart_loss_r / mart_tp_levels…`, plus a zone-grid family
+`grid_add_r / grid_base_frac / grid_add_frac / grid_deep_ladder`; defaults byte-identical, parity 430 / +188.65 / −5.45 exact; 18 new tests).  The
+creative part is **asymmetry**: after a loss the next plan is stepped **UP only where the post-loss edge is positive** (HTF buys) and **DOWN to
+half size everywhere else** (M5 plans, sells).  A win resets the streak, break-even exits are neutral (`mart_loss_r=0.2`), max risk per plan is
+capped at 3 % of equity.  140 full-year variants (`run_v14_levers.py`), stress ×6 on 6 finalists + reference (42 runs), shuffle / block-bootstrap
+n = 1000 (`shuffle_v14.py`), walk-forward on the IS/OOS halves (`walkforward_v14.py`).  `run_trader.bat` ships **v14-A**; `verify_bat_v14.py`
+replays its exact strings to 430 / +227.53 % / DD −5.84 % / PF 2.249 = the study json.  The live bot rebuilds the streak state from the
+`closed` list of `trader_state.json` on every start (realised P&L read from the MT5 deal history), so a restart cannot lose or double a streak.
+**131 tests pass.**
+
+**Result** (full year Sep 2025 → Sep 2026, $10 000, 1 % base risk, real costs; OOS = Mar–Sep 2026):
+
+| variant | trades | return | max DD | PF | win | $ lost | avg loss | worst day | max risk | ret/DD | OOS PF | months > 0 | up / down |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| v13-A reference (flat 1 %) | 430 | +188.7 % | 5.45 % | 2.008 | 75.3 % | −18 711 | −177 | −2.04 % | 1.02 % | 34.6 | 1.91 | 13 / 13 | 0 / 0 |
+| **v14-A** (shipped): per-TF streak, ×1.5 up on HTF buys, ×0.5 down elsewhere | **430** | **+227.5 %** | 5.84 % | **2.249** | 74.7 % | −18 220 (−2.6 %) | −167 | **−1.99 %** | 2.24 % | **39.0** | **2.15** | **13 / 13** | 38 / 71 |
+| v14-B (loss cutter): Fibonacci up on HTF buys, ×0.5 down, account streak | 430 | +175.3 % | **4.78 %** | 2.074 | 74.0 % | **−16 327 (−12.7 %)** | **−146** | −1.97 % | 2.96 % | 36.7 | 1.94 | 13 / 13 | 55 / 77 |
+| v14-C (fewest rules): pure step-DOWN ×0.5 of M5 / sells, no step-up | 430 | +179.4 % | 4.79 % | 2.078 | 74.9 % | −16 643 (−11.1 %) | −154 | −1.98 % | **1.00 %** | 37.5 | 1.98 | 13 / 13 | 84 / 45 |
+| zone grid (option): deep leg 0.5 R into the zone, 60/40 budget, own ladder | 632 | +152.0 % | 4.07 % | 2.038 | 72.5 % | −14 648 (−22 %) | −84 | −1.94 % | 0.60 % | 37.4 | 1.87 | 13 / 13 | 202 deep |
+| classic martingale ×2 (cap 3, 3 %) — rejected | 428 | +305 % | 10.40 % | 2.011 | 75.5 % | −30 190 (+61 %) | −288 | −5.19 % | 3.05 % | 29.4 | 1.99 | 13 / 13 | 123 / 0 |
+
+* **The step-DOWN is what cuts the losses, the gated step-UP pays the return back.**  v14-A's 71 half-size trades (M5 / sells after a loss of their
+  TF) won 62 % and lost −2 062 $ in total; its 38 stepped-up HTF buys won **92 %** (+7 078 $, −905 $ lost); the 7 trades at step 2 (×2.25) won 7 / 7.
+* **Every ungated step-up lost more money than the reference** (−19…−35 k$), deficit recovery drove DD to 13.5 %, the anti-martingale lost
+  −35 k$ with 11/13 months, shrinking everywhere cut the return by 40–65 pt.  Among the 140 variants only 5 pass all five criteria (less $ lost,
+  loss band held, better return/DD, return held, OOS PF held) — all five are asymmetric.
+* **Stress** (return / DD / $ lost / OOS PF), v14-A vs reference: spread ×2 +122 % / 6.2 / −12 259 / 1.68 (ref +88 / 7.1 / −12 097 / 1.51);
+  commission ×2 +198 / 6.0 / −16 902 / 2.01 (ref +162 / 5.1 / −16 867 / 1.86); slippage ×3 +210 / 5.6 / −18 056 / 2.06 (ref +176 / 5.3 / −18 535 /
+  1.86); worst intrabar +231 / 5.9 / −18 089 / 2.21 (ref +192 / 5.2); risk 0.5 % +88 / 3.9 / 2.02; risk 2 % +798 / 9.9 / 1.96 — ahead of the
+  reference on return and OOS PF in 6 of 6 scenarios.  v14-B / v14-C lose less money than the reference in all 6.
+* **Shuffle / block bootstrap (n = 1000)**: v14-A loses less than flat sizing in 88 % of shuffled orders / 94 % of block bootstraps, out-returns
+  it in 63 % / 93 %; the HISTORICAL order ranks 0.97 on return/DD among shuffles (the DD advantage is partly order luck) but 0.62 among block
+  bootstraps (normal).  v14-C loses less in 100 % / 100 %.  → the loss reduction and the return gain are robust to the trade order; the drawdown
+  gain is not guaranteed.
+* **Walk-forward** (IS Sep25–Feb26 → OOS Mar–Sep26): the $-lost side of a sizing rule carries over almost perfectly (Spearman **+0.98**), the DD
+  **+0.88**, the PF only **+0.31**.  Of the 70 variants a user would have picked on the first half, 50 still lose less than the reference on the
+  second half.  v14-A: IS PF 2.46 → OOS PF 2.15, $ lost −11 % IS, +1.6 % OOS in dollars (−1.9 % relative to the OOS-start equity — it compounds faster).
+* **Honest**: the gates (HTF buys up, M5 / sells down) are read from the same year they are judged on; the loss reduction of v14-A is modest
+  (−2.6 % $ lost, avg loss −5 %) — it is the best RISK-ADJUSTED variant, v14-B / v14-C are the LOSS CUTTERS (−11…−13 % $ lost, DD 4.8 %) at a
+  5–13 pt return cost.  The martingale changes SIZE only; entries, stops and targets are v13-A; the v10 account rules stay in force.
+* **FINAL BACKTEST on the user's CSV** (`backtest_v14_final.py`, strings read from `run_trader.bat`, 359 813 M1 bars 2025-09-01 → 2026-09-04):
+  **430 trades, +227.53 % ($10 000 → $32 753), max DD 5.84 %, PF 2.249, win 74.7 %, 13/13 months positive, worst day −1.99 % of equity, OOS PF 2.15,
+  0 daily halts** — identical to the study json.  Report with month-by-month, by-TF, streak-step and worst-trade tables: **`study_results/FINAL_BACKTEST_V14.md`**.
+* Details, all 140 variants, diagnosis tables, charts: **`study_results/MARTINGALE_V14.md`** (+ `charts/v14_*.png`, `charts/final_v14_equity.png`).
 
 ---
 
@@ -549,6 +610,17 @@ run_v13_all.sh / run_v13_stage4.sh / run_v13_neigh.sh   v13 resumable launchers 
 walkforward_v13.py         v13 walk-forward + neighbourhood summary from the jsons -> v13_walkforward.csv, v13_neighbourhood.csv
 make_v13_report.py         v13 report -> study_results/WEAK_MONTHS_V13.md + charts/v13_*.png
 verify_bat_v13.py          replays the exact run_trader.bat strings in the simulator (must equal the v13-A study json)
+lubot/martingale.py        v14 Martingale state machine (mult / add / fib / deficit / anti, caps, gates per TF / side / quality / regime, mart_scope all|tf, asymmetric mart_ungated_scale, replay() for the live bot, grid_wanted)
+v14_common.py              v14 shared: v13-A config exactly as shipped, year loader, the loss-side judge (gross $ lost, avg loss, worst day %eq, max risk %eq, ulcer, IS/OOS PF)
+run_v14_diag.py            v14 diagnosis (streaks, P(win | k losses), post-loss edge per slice, classic schemes on the sequence, drawdown anatomy, MAE buckets) -> study_results/v14_diag/
+run_v14_levers.py          v14 grid of 140 sizing variants on top of v13-A (MU/FIB/ADD/DEF/SHR/ANTI/LAD/TF/GR/CMB families, --stress) -> study_results/v14_levers/, v14_levers.csv, v14_stress.csv
+shuffle_v14.py             v14 shuffle / block-bootstrap test of the finalists (sizing replayed on resampled trade orders, paired with flat) -> v14_shuffle.csv
+walkforward_v14.py         v14 walk-forward on the IS/OOS halves from the trade lists -> v14_halves.csv, v14_walkforward.csv
+make_v14_report.py         v14 report -> study_results/MARTINGALE_V14.md + charts/v14_*.png
+verify_bat_v14.py          replays the exact run_trader.bat v14-A strings in the simulator (must equal the v14-A study json)
+backtest_v14_final.py      FINAL BACKTEST of the shipped v14-A on the CSV (+ v13-A alongside) -> study_results/FINAL_BACKTEST_V14.md, final_v14/*, charts/final_v14_equity.png
+smoke_v14.py               v14 smoke run of 16 variants (parity + first look)
+tests/test_v14_martingale.py / tests/test_trader_v14.py / tests/test_bat_v14.py   v14 tests (state machine, caps, gates, sim parity, live bot restart replay vs fake MT5, bat strings)
 tests/test_v13_regime.py / tests/test_bat_v13.py / tests/test_trader_live.py::test_v13_*   v13 tests (metric, ladder switch, sim parity, live bot vs fake MT5, bat strings)
 run_v12_funnel.py / run_v12_levers.py / run_v12_stress.py / rank_v12.py / make_v12_report.py / verify_bat_v12.py   v12 more-trades study -> study_results/MORE_TRADES_V12.md
 lubot/trade_filter.py      v8 per-timeframe TRADE FILTER (cost_r / quality / zone-ATR / sessions / hours / sides / kinds / optional model)
@@ -560,7 +632,7 @@ run_v8_record.sh           v8 chunked, resumable recorder of the M5 stream WITH 
 run_filter_study.py / run_v8_compare.py / run_v8_stress.py / make_v8_report.py   v8 studies -> study_results/TRADER_V8.md, trader_v8_*
 run_rm_study.py / rm_insample.py / rm_stress.py / make_rm_report.py / run_v9_all.sh   v9 RISK-MANAGEMENT STUDY (580 exit systems OOS + in-sample + stress) -> study_results/RISK_MGMT_STUDY.md, rm_*
 tests/test_rm_systems.py   v9 hand-built M1 scenarios for every management mechanic (partial fraction, BE trigger, trail, ladder, ratchet, time stop, BE offset)
-trader.py                  LIVE TRADING BOT (attach to open MT5, no login; limit at zone start, SL zone end; v10 4-leg ladder, v11/v12 confluence + keep-replaced, v13 regime-adaptive ladder via --trader)
+trader.py                  LIVE TRADING BOT (attach to open MT5, no login; limit at zone start, SL zone end; v10 4-leg ladder, v11/v12 confluence + keep-replaced, v13 regime-adaptive ladder, v14 asymmetric martingale sizing via --trader)
 lubot/execution.py         v7 TradePlan / TraderConfig / SymbolSpec / sizing
 lubot/portfolio_sim.py     v7 M1-precision portfolio simulator (fills on ask/bid, intrabar path, legs, costs, swaps, margin)
 lubot/mt5_broker.py        v7 MT5 adapter (orders, positions, place/cancel/modify/close, retcode handling)
@@ -593,7 +665,7 @@ build_training_set.py / train_quality.py / compare_modes.py   model pipeline
 lubot/backtest.py          walk-forward backtest & statistics
 lubot/plotting.py          chart rendering
 lubot/mt5_connector.py     MetaTrader5 connection / rates / live price
-tests/                     113 tests (detectors, execution, portfolio sim, plan replay parity, live trader vs fake MT5, trade filter, management systems, regime)
+tests/                     131 tests (detectors, execution, portfolio sim, plan replay parity, live trader vs fake MT5, trade filter, management systems, regime, martingale)
 backtest_results/          stats.csv, charts/
 ```
 
