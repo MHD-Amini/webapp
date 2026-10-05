@@ -35,7 +35,7 @@ win rate >= ref - 3 pt, max DD <= ref + 0.5 pt, worst day >= ref - 0.5 pt, PF >=
 - [x] 1. Diagnosis `run_v15_diag.py`: reproduce v14-A (430 / +227.53 / -5.84), funnel of the v14-A reference (per TF: filtered by
         which gate, never filled, traded), would-be outcome of EVERY filtered POI by quality band / cost band / TF via
         `lubot.plan_replay` (R, win, fill rate) -> study_results/v15_diag/*.csv.  Check what the `candidates` column holds.
-- [ ] 2. Levers in TraderConfig / simulator (defaults byte-identical, parity test): tiered admission (`tier_filter` + `tier_risk_scale`),
+- [x] 2. Levers in TraderConfig / simulator (defaults byte-identical, parity test): tiered admission (`tier_filter` + `tier_risk_scale`),
         second-candidate trading if available, re-arm after SL (`rearm_sl_bars`), unit tests (tests/test_v15_levers.py), smoke.
 - [ ] 3. Grid `run_v15_levers.py` (resumable, workers 1) under `run_v15_all.sh` (autosave) -> study_results/v15_levers/ + v15_levers.csv;
         judge: trades, net $, OOS net $, hold_loss, hold_oos.
@@ -43,6 +43,22 @@ win rate >= ref - 3 pt, max DD <= ref + 0.5 pt, worst day >= ref - 0.5 pt, PF >=
 - [ ] 5. Final backtest `backtest_v15_final.py` -> study_results/FINAL_BACKTEST_V15.md, report MORE_TRADES_V15.md, README, final save.
 
 ## Log (v15)
+- 2026-10-05 16:05  step 2 DONE: lubot/execution.py TraderConfig v15 keys (confluent_risk_scale, plain_risk_scale, confluence_memory_min,
+  confluence_memory_kind, tier_filter, tier_risk_scale, mart_confluent_only; TradePlan.tier), lubot/portfolio_sim.py (_apply_v15 sizing,
+  confluence memory of plans that left the books, tier admission, mart gate; trades frame + summary carry tier / risk_scale).
+  tests/test_v15_levers.py (6 tests) -> 137 pass.  smoke_v15.py (11 variants, study_results/v15_smoke.jsonl): PARITY IDENTICAL
+  (430 / +227.53 / -5.84).  Smoke reading vs ref net +22 753 / OOS +14 524 / DD 5.84 / PF 2.249 / win 74.7 / sl 24.9 / wd -1.99:
+   * CONVICTION sizing alone (430 tr): x1.5 conf -> net +35 514 OOS +23 540 PF 2.42 but DD 7.30 wd -2.76 (fails hold_loss on DD/worst day);
+     x1.5/0.75 -> +30 438 DD 7.24 PF 2.58; x2.0/0.75 -> +44 475 DD 8.26 PF 2.76.  Profit lever confirmed; DD must be bought back.
+   * CONFLUENCE MEMORY alone: 60 min -> 436 tr, +23 073, OOS +14 795, DD 5.95, PF 2.257 = score 4/4 (T P L O) - the first 4/4;
+     240 min -> 448 tr +23 105 DD 5.32 (OOS net slightly below ref); 240/open -> 435 tr.
+   * TIER admission: M10 0.50 at half risk -> 1144 tr (!), PF 1.48, DD 10.2 = the tier bar admits far too much (the funnel count was
+     unique POIs, the tier re-admits every re-show); TIER_all -> 762 tr PF 1.74.  -> tiers need a much tighter bar (M10 0.55 only) or OUT.
+   * mart_confluent_only: -3 k$ (the htf-buy step-ups that pay are mostly plain) -> OUT.
+   * CMB cs1.5/0.75 + cm240: 448 tr, +35 002, OOS +22 489, PF 2.52, DD 6.51, wd -2.81 -> fails DD by 0.17 and wd by 0.32.
+  NEXT (step 3 grid): conviction x1.25-1.5 with plain 0.75-1.0 x memory 30-240 min (all/open) x a DD buy-back (max_open 3, range_risk_scale
+  0.75, mart_max_risk_pct 2) x tight tiers (M10 0.55, confluence-tier).  The sandbox migrated during step 2 (GitHub creds lost): save.sh
+  now writes a git bundle fallback; unpushed bundle uploaded: https://www.genspark.ai/api/files/s/qJGgEtvY
 - 2026-10-05 14:05  step 1 DONE (run_v15_diag.py -> study_results/v15_diag/, 19 s; v14-A reproduced IDENTICAL 430 / +227.53 / -5.84).
   FUNNEL (unique POIs): trade filter rejects 2462 (M5 1344, M10 444, M15 415, M30 164, H1 95); 964 orders never filled; 430 traded;
   overlaps 24.  max_open never binds (2 cancels at fill time).  `candidates` column = a COUNT only -> the 2nd-candidate idea is OUT.
