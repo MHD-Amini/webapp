@@ -37,12 +37,29 @@ win rate >= ref - 3 pt, max DD <= ref + 0.5 pt, worst day >= ref - 0.5 pt, PF >=
         `lubot.plan_replay` (R, win, fill rate) -> study_results/v15_diag/*.csv.  Check what the `candidates` column holds.
 - [x] 2. Levers in TraderConfig / simulator (defaults byte-identical, parity test): tiered admission (`tier_filter` + `tier_risk_scale`),
         second-candidate trading if available, re-arm after SL (`rearm_sl_bars`), unit tests (tests/test_v15_levers.py), smoke.
-- [ ] 3. Grid `run_v15_levers.py` (resumable, workers 1) under `run_v15_all.sh` (autosave) -> study_results/v15_levers/ + v15_levers.csv;
+- [x] 3. Grid `run_v15_levers.py` (resumable, workers 1) under `run_v15_all.sh` (autosave) -> study_results/v15_levers/ + v15_levers.csv;
         judge: trades, net $, OOS net $, hold_loss, hold_oos.
 - [ ] 4. Stress x6 + walk-forward of the finalists; port to trader.py + run_trader.bat (v15-A) + verify_bat_v15.py + fake-MT5 tests.
 - [ ] 5. Final backtest `backtest_v15_final.py` -> study_results/FINAL_BACKTEST_V15.md, report MORE_TRADES_V15.md, README, final save.
 
 ## Log (v15)
+- 2026-10-05 20:15  step 3 DONE: 209 variants (study_results/v15_levers.csv; 2 sandbox resets during the grid, the 4-min autosave +
+  resumable jsons lost nothing).  Scores: 4/4 = 24, 3/4 = 11, 2 = 127, 1 = 47.  Ref 430 tr / +22 753 $ / OOS +14 524 / DD 5.84 / PF 2.249.
+  * CONFLUENCE MEMORY alone (more trades, same sizing): every window 30-960 min scores 4/4 except 15/240 (OOS net a hair below ref):
+    CM_960 459 tr +24 619 OOS +15 377 DD 5.92; CM_120 443 tr +23 619; CM_240 448 tr +23 105 DD 5.32.  Loss profile untouched
+    (win 74.5-75.1, sl 24.5-25.1, wd -1.95..-2.01).  'open' memory adds fewer trades; 'pending' == 'all' at 60 min.
+  * CONVICTION SIZING alone: x1.25 with plain 0.75-0.8 scores 3 (fails more_trades only): +24.8-25.1 k$, DD 6.2, PF 2.45-2.51.
+    x1.5+ raises DD to 7.2-8.7 and worst day to -2.8..-4.6 % -> fails hold_loss.
+  * TIER: with the TF-scope fix the tiers add 25-75 trades; m5c12 (M5 cost 0.08-0.12 at q >= 0.57) x0.35 = 455 tr, 4/4 but no profit
+    gain; m10q55/htfq55 raise DD to 6.4-6.7 and drop OOS PF to 1.9-2.0 -> only m5c12 / m10q55 as a small add-on.
+  * DD BUY-BACKS alone: mc2 (-0.22 DD, -384 $), mo3 (-7 trades, -1.1 k$), rr75 (-2.8 k$) -> cheap: mc2.
+  * COMBINATIONS (the answer): CMB_cm240_cs1.25_0.9 = 448 tr, +29 745 $ (+31 %), OOS +19 264 (+33 %), DD 5.82, PF 2.375, win 74.8,
+    sl 24.8, wd -2.42, OOS PF 2.26, 13/13, max risk 2.81 % -> 4/4.  + tier m10q55 x0.5: 477 tr, +32 637 (+43 %), OOS +19 892, DD 6.08,
+    PF 2.33, OOS PF 2.12 -> 4/4 (more trades, slightly weaker OOS PF).  + mc2 (martingale cap 2 %): 448 tr +29 589 DD 5.84 max risk 1.99 %.
+    CAVEAT: the DD pass of cs1.25 depends on the 240-min memory window (cm30/60/120 with the same sizing: DD 6.8-7.4 = fail by 1-1.5 pt,
+    worst day -2.4); conviction x1.25 raises the worst day from -1.99 to -2.4 % in every combination (inside the -0.5 pt band, but real).
+  FINALISTS for step 4 stress x6 + walk-forward: CMB_cm240_cs1.25_0.9 (candidate v15-A), CMB_cm240_cs1.25_0.9_Tm10q55 (v15-B, most trades),
+  CMB_cm240_cs1.25_0.9_mc2 (v15-C, capped risk), CMB_cm240_cs1.25_0.8_rr75 (lowest DD 5.38), CM_960 (pure more-trades, no sizing), CS_1.25_0.8.
 - 2026-10-05 16:40  SANDBOX RESET during step 3 (back to the last pushed commit = step 1): recovered steps 2 from the uploaded git
   bundle (https://www.genspark.ai/api/files/s/CLYdwzHt), GitHub auth re-established, pushed.  Re-created run_v15_levers.py (209
   variants) + run_v15_all.sh (autosave 4 min) and relaunched the grid (resumable).  trader.py v15 port DONE in parallel: tier filter,
