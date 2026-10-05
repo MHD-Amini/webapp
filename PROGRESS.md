@@ -43,6 +43,7 @@ win rate >= ref - 3 pt, max DD <= ref + 0.5 pt, worst day >= ref - 0.5 pt, PF >=
 - [x] 5. Final backtest `backtest_v15_final.py` -> study_results/FINAL_BACKTEST_V15.md, report MORE_TRADES_V15.md, README, final save.
 
 ## Log (v15)
+- 2026-10-05 21:45  FINAL ARCHIVE (code + models + v14/v15 results, no node_modules/.git): https://www.genspark.ai/api/files/s/15fIYdcn  (extract to /home/user, then bash webapp/restore.sh).  GitHub origin main = the same state.
 - 2026-10-05 21:30  step 5 DONE (after a third sandbox reset - recovered from GitHub, only the unsaved make_v15_report.py had to be rewritten):
   backtest_v15_final.py -> study_results/FINAL_BACKTEST_V15.md + final_v15/* + charts/final_v15_equity.png: v15-A 448 tr / +29 745 $ / +297.45 % /
   DD -5.82 / PF 2.375 / win 74.8 / sl 24.8 / wd -2.42 / OOS +19 264 $ / OOS PF 2.26 / 13/13, IDENTICAL to the study json; the v14-A reference from
