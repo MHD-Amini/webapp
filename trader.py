@@ -383,8 +383,8 @@ class Trader:
                 why = flt.check(d, tf, spread=px["ask"] - px["bid"], when=r.get("time") or None)
                 if why:
                     # v15 tiered admission: failed the normal bar but passes the tier bar -> trade it smaller
-                    if self.tier_filter is not None and self.tier_filter.check(d, tf, spread=px["ask"] - px["bid"],
-                                                                               when=r.get("time") or None) is None:
+                    if self.tier_filter is not None and self.tier_filter.rule_for(tf) is not None and \
+                            self.tier_filter.check(d, tf, spread=px["ask"] - px["bid"], when=r.get("time") or None) is None:
                         plan.tier = True
                         self.log.info(f"tier {key}: {why} -> admitted at x{self.t.tier_risk_scale}")
                     else:

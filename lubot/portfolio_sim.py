@@ -319,7 +319,8 @@ class PortfolioSimulator:
         why = flt.check(d, row.tf, spread=float(self.spread[minute]), when=row.t)
         if why:
             # v15 tiered admission: failed the normal bar but passes the tier bar -> trade it smaller
-            if self.tier_filter is not None and self.tier_filter.check(d, row.tf, spread=float(self.spread[minute]), when=row.t) is None:
+            if self.tier_filter is not None and self.tier_filter.rule_for(row.tf) is not None \
+                    and self.tier_filter.check(d, row.tf, spread=float(self.spread[minute]), when=row.t) is None:
                 plan.tier = True
             else:
                 self.filtered.append((plan.key, f"{row.tf}: {why.split(' ')[0]}"))

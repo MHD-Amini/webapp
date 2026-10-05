@@ -80,6 +80,11 @@ def test_tier_filter_admits_a_rejected_plan_at_reduced_risk():
     ev[0]["quality"] = 0.48
     res, sim = run(FLAT, ev, cfg(trade_filter="M5:min_quality=0.55", tier_filter="M5:min_quality=0.50"))
     assert not sim.pending and sim.filtered == [("M5#9", "M5: quality")]
+    # a TF NOT listed in the tier filter gets no tier (M15 plan, tier filter lists M5 only)
+    ev15 = [sel("2026-03-02 10:00", pid=3, tf="M15")]
+    ev15[0]["quality"] = 0.52
+    res, sim = run(FLAT, ev15, cfg(trade_filter="M15:min_quality=0.55", tier_filter="M5:min_quality=0.50"))
+    assert not sim.pending and sim.filtered == [("M15#3", "M15: quality")]
     # passes the normal bar -> not a tier plan, full size
     ev[0]["quality"] = 0.60
     res, sim = run(FLAT, ev, cfg(trade_filter="M5:min_quality=0.55", tier_filter="M5:min_quality=0.50"))

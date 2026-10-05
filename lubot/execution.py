@@ -197,6 +197,7 @@ class TraderConfig:
     confluence_memory_kind: str = "all"       # "all" | "open" (only plans that were FILLED count) | "pending" (only unfilled orders)
     #: TIERED ADMISSION: a plan that FAILS the trade filter (or the confluence filter) but PASSES ``tier_filter`` (same syntax)
     #: is traded anyway at tier_risk_scale x the normal size (a "second tier" of smaller trades).  "" = off.
+    #: Only timeframes LISTED in tier_filter get a tier (an unlisted TF is rejected as before).
     tier_filter: str = ""
     tier_risk_scale: float = 0.5
     #: martingale gate (v14): step UP only confluent plans (tier plans are never stepped up)
