@@ -39,10 +39,24 @@ win rate >= ref - 3 pt, max DD <= ref + 0.5 pt, worst day >= ref - 0.5 pt, PF >=
         second-candidate trading if available, re-arm after SL (`rearm_sl_bars`), unit tests (tests/test_v15_levers.py), smoke.
 - [x] 3. Grid `run_v15_levers.py` (resumable, workers 1) under `run_v15_all.sh` (autosave) -> study_results/v15_levers/ + v15_levers.csv;
         judge: trades, net $, OOS net $, hold_loss, hold_oos.
-- [ ] 4. Stress x6 + walk-forward of the finalists; port to trader.py + run_trader.bat (v15-A) + verify_bat_v15.py + fake-MT5 tests.
+- [x] 4a. Stress x6 + walk-forward DONE; [ ] 4b. port/bat/verify (trader.py port done) — 4. Stress x6 + walk-forward of the finalists; port to trader.py + run_trader.bat (v15-A) + verify_bat_v15.py + fake-MT5 tests.
 - [ ] 5. Final backtest `backtest_v15_final.py` -> study_results/FINAL_BACKTEST_V15.md, report MORE_TRADES_V15.md, README, final save.
 
 ## Log (v15)
+- 2026-10-05 20:50  step 4a DONE.  WALK-FORWARD (walkforward_v15.py, from the trade lists, split at 2026-03-01, worst day in R):
+  Spearman IS->OOS of the deltas vs ref: trades +0.90, net $ +0.84, PF +0.27 -> the extra trades and the extra dollars are population
+  properties and carry over; 126/208 variants pass the v15 band on BOTH halves; the IS-chosen top 12 pass OOS in 10/12 cases.
+  STRESS x6 (v15_stress.csv / v15_stress_table.csv, v14-A reference from v14_stress.csv):
+  * CMB_cm240_cs1.25_0.9: net AND OOS net above v14-A in 6/6 (comm x2 +25.2 k vs +19.8 k; slip x3 +27.5 vs +21.0; worst intrabar +29.8 vs
+    +23.1; spread x2 +15.7 vs +12.2; risk 0.5 +9.6 vs +8.8; risk 2 +84.5 vs +79.8); DD within +0.5 pt in 5/6 (risk 2: 14.1 vs 9.9 - the
+    x1.25 on a 2 % base is 2.5 % per confluent plan, out of spec); OOS PF above ref in 6/6.  WEAK POINT: spread x2 worst day -4.55 % vs
+    -1.95 % (one day of clustered confluent losers at the bigger size); 11/13 months at spread x2 (ref 12/13).
+  * +Tm10q55 (477 tr): same pattern, +3-4 k$ more, DD +0.3, OOS PF 0.1 lower; spread x2 DD 8.3 (fails).
+  * CM_960 (pure memory, no sizing): more trades in 6/6, net above ref in 6/6 (+1-3 k$), worst day UNCHANGED in 6/6, DD within band in 5/6.
+  * mc2 == cs1.25_0.9 at 1 % risk (the cap only binds at risk 2: +70 k vs +84 k, same DD) -> not worth a key.  rr75: lowest DD, least $.
+  DECISION: v15-A = confluence_memory_min=240 + confluent_risk_scale=1.25 + plain_risk_scale=0.9 (448 tr, +29 745 $, OOS +19 264, DD 5.82,
+  PF 2.375, win 74.8, sl 24.8, wd -2.42, OOS PF 2.26, 13/13).  v15-B (most trades) = v15-A + tier_filter=M10:min_quality=0.55,
+  tier_risk_scale=0.5 (477 tr, +32 637).  v15-C (conservative, loss profile byte-for-byte) = confluence_memory_min=960 only (459 tr, +24 619).
 - 2026-10-05 20:15  step 3 DONE: 209 variants (study_results/v15_levers.csv; 2 sandbox resets during the grid, the 4-min autosave +
   resumable jsons lost nothing).  Scores: 4/4 = 24, 3/4 = 11, 2 = 127, 1 = 47.  Ref 430 tr / +22 753 $ / OOS +14 524 / DD 5.84 / PF 2.249.
   * CONFLUENCE MEMORY alone (more trades, same sizing): every window 30-960 min scores 4/4 except 15/240 (OOS net a hair below ref):
