@@ -1,0 +1,48 @@
+{
+ "n_variants": 208,
+ "is_pass": 149,
+ "oos_pass": 142,
+ "both": 126,
+ "spearman": {
+  "d_n": {
+   "rho": 0.901,
+   "p": 1.697000335093844e-76
+  },
+  "d_net": {
+   "rho": 0.836,
+   "p": 1.4095681384257805e-55
+  },
+  "d_PF": {
+   "rho": 0.273,
+   "p": 6.502701869189395e-05
+  }
+ },
+ "is_top": [
+  "CMB_cm240_cs1.5_0.8_Tm10q55",
+  "CMB_cm240_cs1.75_0.75",
+  "CMB_cm60_cs2.0_0.6_mo3",
+  "CMB_cm240_cs1.75_0.75_mo3",
+  "CMB_cm120_cs1.75_0.75",
+  "CMB_cm60_cs1.5_0.8_Tm10q55",
+  "CMB_cm240_cs1.75_0.75_mc2",
+  "CMB_cm120_cs1.75_0.75_mo3",
+  "CMB_cm120_cs1.75_0.75_mc2",
+  "CMB_cm120_cs2.0_0.6",
+  "CMB_cm60_cs1.75_0.75",
+  "CMB_cm60_cs1.75_0.75_mo3"
+ ],
+ "is_top_oos_pass": [
+  true,
+  true,
+  false,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  false
+ ]
+}
