@@ -14,4 +14,10 @@ elif [ -n "$GSK_TOKEN" ] && echo "$URL" | grep -q genspark.ai; then
     && echo "[save] pushed to $URL" || echo "[save] push failed (will retry on next save)"
 else
   echo "[save] push failed (will retry on next save)"
+  # fallback: a git bundle of the commits not yet on origin -> AI Drive (small; recover with: git fetch <bundle> main)
+  if [ -d /mnt/aidrive ]; then
+    B="/mnt/aidrive/webapp_v15_unpushed_$(date -u +%Y-%m-%d).bundle"
+    BASE=$(git rev-parse origin/main 2>/dev/null)
+    if [ -n "$BASE" ] && git bundle create "$B" "$BASE..HEAD" >/dev/null 2>&1; then echo "[save] bundle written: $B"; fi
+  fi
 fi
