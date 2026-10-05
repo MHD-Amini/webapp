@@ -1,5 +1,14 @@
 @echo off
-REM LU-POI TRADER v14 - live MT5 bot.  v14-A (study_results/MARTINGALE_V14.md) = v13-A + ASYMMETRIC MARTINGALE SIZING:
+REM LU-POI TRADER v15 - live MT5 bot.  v15-A (study_results/MORE_TRADES_V15.md) = v14-A + CONFLUENCE MEMORY + CONVICTION SIZING:
+REM   confluence_memory_min=240: a zone also counts as CONFLUENT (judged by --confluence-filter, M10 quality 0.50) when a plan of ANOTHER
+REM   timeframe on the same level was active (order or position, same side) within the last 240 minutes, not only right now -> more trades.
+REM   confluent_risk_scale=1.25 / plain_risk_scale=0.9: confluent plans (win 82 %%, stop 18 %%) are sized x1.25, plain plans x0.9.
+REM   Full year Sep25-Sep26: 448 trades (+18), +297 %% (net +29 745 $ vs +22 753), max DD 5.82 %%, PF 2.38, win 74.8 %%, stop-outs 24.8 %%,
+REM   worst day -2.42 %%, OOS net +19 264 $ (vs +14 524), OOS PF 2.26, 13/13 months positive.  The memory is persisted in trader_state.json.
+REM   v15-B (most trades): add tier_filter=M10:min_quality=0.55,tier_risk_scale=0.5 (477 tr, +32 637 $, DD 6.08).
+REM   v15-C (loss profile untouched): confluence_memory_min=960 alone, drop the two *_risk_scale keys (459 tr, +24 619 $).
+REM   v14-A: drop confluence_memory_min / confluent_risk_scale / plain_risk_scale.
+REM Previous layer (v14-A, study_results/MARTINGALE_V14.md) = v13-A + ASYMMETRIC MARTINGALE SIZING:
 REM   one loss streak PER TIMEFRAME (mart_scope=tf): a LOSING plan (r_net <= -0.2 R; break-even exits are neutral) re-sizes the NEXT plans of
 REM   the SAME timeframe until a win of that timeframe resets its streak: M10/M15/M30/H1 BUY plans (the slices whose post-loss edge is positive)
 REM   are stepped UP x1.5 per consecutive loss (max 3 steps, max 3 %% of equity); every other plan of a timeframe in a streak (all M5 plans,
@@ -22,7 +31,7 @@ REM Windows: open + log in your MT5 terminal FIRST, then double-click this file.
 REM v13-C (fewest new rules): drop range_sl_after_leg=0|0.3|x|x.   v12-A (no regime switch): drop every regime_*/range_* key.
 cd /d "%~dp0"
 IF "%1"=="" (
-  python trader.py --symbol XAUUSD.t --risk 1.0 --min-quality 0.50 --commission 7 --timeframes M5,M10,M15,M30,H1 --trader "tp_levels=0.6|1.2|2.4|4.8,tp_fracs=1|1|1|1,ladder_fallback=merge,dedupe_cross_tf=false,keep_replaced_bars=1,keep_replaced_tfs=M10|M15|M30|H1,regime_metric=adr_ratio,regime_threshold=1.0,regime_short=5,regime_long=20,range_tp_levels=0.5|1.0|1.5|2.5,range_tp_fracs=1|1|1|1,range_sl_after_leg=0|0.3|x|x,mart_mode=mult,mart_mult=1.5,mart_max_steps=3,mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10|M15|M30|H1,mart_sides=buy,mart_ungated_scale=0.5" --trade-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia|london|preny|ny|lclose/M10:min_quality=0.57/M15:min_quality=0.60/M30|H1:min_quality=0.57" --confluence-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia|london|preny|ny|lclose/M10:min_quality=0.50/M15:min_quality=0.60/M30|H1:min_quality=0.57" --state trader_state.json --log trader.log
+  python trader.py --symbol XAUUSD.t --risk 1.0 --min-quality 0.50 --commission 7 --timeframes M5,M10,M15,M30,H1 --trader "tp_levels=0.6|1.2|2.4|4.8,tp_fracs=1|1|1|1,ladder_fallback=merge,dedupe_cross_tf=false,keep_replaced_bars=1,keep_replaced_tfs=M10|M15|M30|H1,regime_metric=adr_ratio,regime_threshold=1.0,regime_short=5,regime_long=20,range_tp_levels=0.5|1.0|1.5|2.5,range_tp_fracs=1|1|1|1,range_sl_after_leg=0|0.3|x|x,mart_mode=mult,mart_mult=1.5,mart_max_steps=3,mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10|M15|M30|H1,mart_sides=buy,mart_ungated_scale=0.5,confluence_memory_min=240,confluent_risk_scale=1.25,plain_risk_scale=0.9" --trade-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia|london|preny|ny|lclose/M10:min_quality=0.57/M15:min_quality=0.60/M30|H1:min_quality=0.57" --confluence-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia|london|preny|ny|lclose/M10:min_quality=0.50/M15:min_quality=0.60/M30|H1:min_quality=0.57" --state trader_state.json --log trader.log
 ) ELSE (
   python trader.py %*
 )

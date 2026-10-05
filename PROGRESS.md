@@ -39,10 +39,14 @@ win rate >= ref - 3 pt, max DD <= ref + 0.5 pt, worst day >= ref - 0.5 pt, PF >=
         second-candidate trading if available, re-arm after SL (`rearm_sl_bars`), unit tests (tests/test_v15_levers.py), smoke.
 - [x] 3. Grid `run_v15_levers.py` (resumable, workers 1) under `run_v15_all.sh` (autosave) -> study_results/v15_levers/ + v15_levers.csv;
         judge: trades, net $, OOS net $, hold_loss, hold_oos.
-- [x] 4a. Stress x6 + walk-forward DONE; [ ] 4b. port/bat/verify (trader.py port done) — 4. Stress x6 + walk-forward of the finalists; port to trader.py + run_trader.bat (v15-A) + verify_bat_v15.py + fake-MT5 tests.
+- [x] 4. Stress x6 + walk-forward of the finalists; port to trader.py + run_trader.bat (v15-A) + verify_bat_v15.py + fake-MT5 tests.
 - [ ] 5. Final backtest `backtest_v15_final.py` -> study_results/FINAL_BACKTEST_V15.md, report MORE_TRADES_V15.md, README, final save.
 
 ## Log (v15)
+- 2026-10-05 21:00  step 4b DONE: run_trader.bat ships v15-A (header rewritten; v15-B / v15-C / v14-A fallbacks documented in the REMs);
+  verify_bat_v15.py reads the strings FROM the bat and replays them: 448 tr / +29 744.95 $ / +297.45 % / DD -5.82 / PF 2.375 / 210 confluent
+  = IDENTICAL to study_results/v15_levers/CMB_cm240_cs1.25_0.9.json.  tests/test_bat_v15.py -> 140 tests pass.  verify_bat_v14.py is now
+  expected to differ (the bat carries v15-A); the v14-A reference is reproduced by backtest_v15_final.py (strings minus the v15 keys).
 - 2026-10-05 20:50  step 4a DONE.  WALK-FORWARD (walkforward_v15.py, from the trade lists, split at 2026-03-01, worst day in R):
   Spearman IS->OOS of the deltas vs ref: trades +0.90, net $ +0.84, PF +0.27 -> the extra trades and the extra dollars are population
   properties and carry over; 126/208 variants pass the v15 band on BOTH halves; the IS-chosen top 12 pass OOS in 10/12 cases.
