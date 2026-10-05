@@ -77,6 +77,8 @@ class State:
                                         "daily_halt_day": None, "halted": False, "halt_time": None, "daily_halts": []}
         # v14: closed EDGE plans in close order [tf, net $, r_net, mart_step] - the martingale state is rebuilt from this list
         self.closed: List[list] = []
+        # v15: confluence memory [tf, side, zone_top, zone_bottom, epoch seconds the plan left the books, filled]
+        self.memory: List[list] = []
         self.load()
 
     def load(self) -> None:
@@ -87,13 +89,14 @@ class State:
                 self.traded = set(d.get("traded", []))
                 self.risk.update(d.get("risk", {}))
                 self.closed = [list(x) for x in d.get("closed", [])]
+                self.memory = [list(x) for x in d.get("memory", [])]
             except Exception as e:  # noqa: BLE001
                 print(f"state file unreadable ({e}) - starting fresh")
 
     def save(self) -> None:
         tmp = self.path.with_suffix(".tmp")
         tmp.write_text(json.dumps({"plans": self.plans, "traded": sorted(self.traded), "risk": self.risk,
-                                   "closed": self.closed[-500:],
+                                   "closed": self.closed[-500:], "memory": self.memory[-400:],
                                    "saved": time.strftime("%Y-%m-%d %H:%M:%S")}, indent=1, default=str))
         os.replace(tmp, self.path)
 
@@ -130,6 +133,18 @@ class Trader:
             if self.t.confluence_filter else None
         if self.conf_filter is not None:
             self.log.info(f"confluence filter: {self.conf_filter.describe()}")
+        # v15: second-tier filter + conviction sizing + confluence memory (same code path as the simulator)
+        self.tier_filter: Optional[TradeFilter] = TradeFilter.parse(
+            self.t.tier_filter, commission_oz=self.spec.commission_per_lot / self.spec.contract_size,
+            server_minus_ny_hours=cfg.server_minus_ny_hours if cfg.server_minus_ny_hours is not None else 7.0) \
+            if self.t.tier_filter else None
+        if self.tier_filter is not None:
+            self.log.info(f"tier filter (x{self.t.tier_risk_scale}): {self.tier_filter.describe()}")
+        if self.t.confluent_risk_scale != 1.0 or self.t.plain_risk_scale != 1.0:
+            self.log.info(f"conviction sizing: confluent x{self.t.confluent_risk_scale}, plain x{self.t.plain_risk_scale}")
+        if self.t.confluence_memory_min > 0:
+            self.log.info(f"confluence memory: {self.t.confluence_memory_min} min ({self.t.confluence_memory_kind}); "
+                          f"{len(self.state.memory)} entries restored")
         if self.t.keep_replaced_bars > 0:
             self.log.info(f"keep replaced orders: {self.t.keep_replaced_bars} bars of their timeframe "
                           f"({'|'.join(self.t.keep_replaced_tfs) or 'all TFs'})")
@@ -207,6 +222,7 @@ class Trader:
                     pl["position_tickets"].append(tk)
             if not pl["order_tickets"] and not pl["position_tickets"]:
                 self.log.info(f"plan {key} finished (no orders/positions left)")
+                self._remember(pl)
                 self.state.plans.pop(key)
         # orphans with our magic but unknown to the state (state file lost): adopt by comment
         known = {t for pl in self.state.plans.values() for t in pl.get("order_tickets", []) + pl.get("position_tickets", [])}
@@ -292,7 +308,8 @@ class Trader:
         return None
 
     def _confluent_other_tf(self, plan: TradePlan) -> bool:
-        """v12: the plan's zone overlaps (>= dedupe_overlap) an active plan (order or position, same side) of ANOTHER TF."""
+        """v12: the plan's zone overlaps (>= dedupe_overlap) an active plan (order or position, same side) of ANOTHER TF.
+        v15 ``confluence_memory_min``: a plan of another TF that left the books within the last N minutes counts too."""
         for pl in self.state.plans.values():
             if pl.get("grid_leg") or pl.get("side") != plan.side or pl.get("zone_top") is None or not pl.get("tf") or pl.get("tf") == plan.tf:
                 continue
@@ -300,7 +317,29 @@ class Trader:
                               be_price=pl["be_price"], risk=pl["risk"], zone_top=pl["zone_top"], zone_bottom=pl["zone_bottom"])
             if plan.overlaps(other) >= self.t.dedupe_overlap:
                 return True
+        if self.t.confluence_memory_min > 0:
+            now = time.time()
+            h = max(plan.zone_top - plan.zone_bottom, 1e-9)
+            for tf, side, top, bottom, last, filled in self.state.memory:
+                if side != plan.side or tf == plan.tf or now - float(last) > self.t.confluence_memory_min * 60:
+                    continue
+                if self.t.confluence_memory_kind == "open" and not filled:
+                    continue
+                if self.t.confluence_memory_kind == "pending" and filled:
+                    continue
+                inter = min(plan.zone_top, float(top)) - max(plan.zone_bottom, float(bottom))
+                if inter > 0 and inter / h >= self.t.dedupe_overlap:
+                    return True
         return False
+
+    def _remember(self, pl: dict) -> None:
+        """v15 confluence memory: a plan record leaves the state (order cancelled / position closed)."""
+        if self.t.confluence_memory_min <= 0 or pl.get("grid_leg") or pl.get("zone_top") is None or not pl.get("tf"):
+            return
+        filled = bool(pl.get("position_tickets") or pl.get("all_position_tickets"))
+        self.state.memory.append([pl["tf"], pl["side"], pl["zone_top"], pl["zone_bottom"], time.time(), filled])
+        keep = time.time() - self.t.confluence_memory_min * 60
+        self.state.memory = [m for m in self.state.memory if float(m[4]) >= keep][-400:]
 
     def on_selection(self, result: Dict[str, dict]) -> None:
         shown_keys = set()
@@ -343,8 +382,18 @@ class Trader:
                     plan.confluent = True
                 why = flt.check(d, tf, spread=px["ask"] - px["bid"], when=r.get("time") or None)
                 if why:
-                    self.log.info(f"filter {key}: {why}")
-                    continue
+                    # v15 tiered admission: failed the normal bar but passes the tier bar -> trade it smaller
+                    if self.tier_filter is not None and self.tier_filter.check(d, tf, spread=px["ask"] - px["bid"],
+                                                                               when=r.get("time") or None) is None:
+                        plan.tier = True
+                        self.log.info(f"tier {key}: {why} -> admitted at x{self.t.tier_risk_scale}")
+                    else:
+                        self.log.info(f"filter {key}: {why}")
+                        continue
+                # v15 conviction / tier sizing (same arithmetic as PortfolioSimulator._apply_v15)
+                rs = plan.risk_scale if plan.risk_scale > 0 else 1.0
+                rs *= self.t.tier_risk_scale if plan.tier else (self.t.confluent_risk_scale if plan.confluent else self.t.plain_risk_scale)
+                plan.risk_scale = rs
                 self.open_plan(plan)
         # mirror policy: cancel pending orders of POIs no longer shown (positions are never touched)
         if self.t.order_policy == "mirror":
@@ -378,6 +427,7 @@ class Trader:
                     for tk in pl["order_tickets"]:
                         self._cancel(tk)
                     pl["order_tickets"] = []
+                    self._remember(pl)
                     self.state.plans.pop(key)
                     self._cancel_deep(key, reason)
                     self.state.save()
@@ -387,6 +437,8 @@ class Trader:
         # v14: sequence sizing (streak from the closed-plan list) + the edge leg's share of the budget when a deep leg follows
         if self.mart.on and not plan.grid_leg:
             m, step = self.mart.scale(plan, equity)
+            if step > 0 and (plan.tier or (self.t.mart_confluent_only and not plan.confluent)):
+                m, step = 1.0, 0            # v15: tier plans / plain plans (with the gate) are never stepped up
             plan.mart_scale, plan.mart_step = m, step
             apply_mart_ladder(plan, self.t, self.spec)
             if step:
@@ -606,6 +658,7 @@ class Trader:
                 else:
                     self._record_closed(key, pl)
                     self._cancel_deep(key, "edge closed")
+                self._remember(pl)
                 self.state.plans.pop(key)
                 changed = True
         if changed:

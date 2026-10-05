@@ -43,6 +43,11 @@ win rate >= ref - 3 pt, max DD <= ref + 0.5 pt, worst day >= ref - 0.5 pt, PF >=
 - [ ] 5. Final backtest `backtest_v15_final.py` -> study_results/FINAL_BACKTEST_V15.md, report MORE_TRADES_V15.md, README, final save.
 
 ## Log (v15)
+- 2026-10-05 16:40  SANDBOX RESET during step 3 (back to the last pushed commit = step 1): recovered steps 2 from the uploaded git
+  bundle (https://www.genspark.ai/api/files/s/CLYdwzHt), GitHub auth re-established, pushed.  Re-created run_v15_levers.py (209
+  variants) + run_v15_all.sh (autosave 4 min) and relaunched the grid (resumable).  trader.py v15 port DONE in parallel: tier filter,
+  conviction sizing, confluence memory persisted in trader_state.json ('memory' list, restored on restart), mart gate;
+  tests/test_trader_v15.py (2 fake-MT5 tests) -> 139 pass.
 - 2026-10-05 16:05  step 2 DONE: lubot/execution.py TraderConfig v15 keys (confluent_risk_scale, plain_risk_scale, confluence_memory_min,
   confluence_memory_kind, tier_filter, tier_risk_scale, mart_confluent_only; TradePlan.tier), lubot/portfolio_sim.py (_apply_v15 sizing,
   confluence memory of plans that left the books, tier admission, mart gate; trades frame + summary carry tier / risk_scale).
