@@ -185,6 +185,22 @@ class TraderConfig:
     grid_regime: str = ""                     # "" | range | trend: only plans placed in this regime get a deep leg
     grid_cancel_on_partial: bool = True       # cancel the deep order once the edge leg has closed its first target
     grid_deep_ladder: str = "same"            # "same" = the deep leg's targets are the edge leg's prices | "own" = its own R ladder
+    # ---- v15 "more trades & more profit at the same loss percentage" levers (defaults = byte-identical to v14)
+    #: CONVICTION SIZING: a plan judged CONFLUENT (its zone overlaps an active plan of another timeframe, see
+    #: ``confluence_filter``) is sized x confluent_risk_scale, every other plan x plain_risk_scale (1 = unchanged).
+    confluent_risk_scale: float = 1.0
+    plain_risk_scale: float = 1.0
+    #: CONFLUENCE MEMORY: a plan also counts as confluent when its zone overlaps a plan of ANOTHER timeframe that was active
+    #: (pending or open, same side) within the last N MINUTES (0 = only plans active right now, v12).  Widens the population
+    #: judged by the looser ``confluence_filter`` and sized by ``confluent_risk_scale``.
+    confluence_memory_min: int = 0
+    confluence_memory_kind: str = "all"       # "all" | "open" (only plans that were FILLED count) | "pending" (only unfilled orders)
+    #: TIERED ADMISSION: a plan that FAILS the trade filter (or the confluence filter) but PASSES ``tier_filter`` (same syntax)
+    #: is traded anyway at tier_risk_scale x the normal size (a "second tier" of smaller trades).  "" = off.
+    tier_filter: str = ""
+    tier_risk_scale: float = 0.5
+    #: martingale gate (v14): step UP only confluent plans (tier plans are never stepped up)
+    mart_confluent_only: bool = False
     one_trade_per_poi: bool = True
     min_quality: Optional[float] = None   # extra filter on top of the scanner's min_quality (None = scanner default)
     grades: Tuple[str, ...] = ()          # e.g. ("A", "B") -> only these grades; () = all
@@ -269,6 +285,7 @@ class TradePlan:
     mart_scale: float = 1.0       # v14: the sizing multiplier applied on top of risk_scale
     grid_leg: bool = False        # v14: True = this plan is the DEEP leg of a zone-averaging grid
     grid_parent: str = ""         # v14: key of the edge plan the deep leg belongs to
+    tier: bool = False            # v15: True = admitted through ``tier_filter`` (second tier, reduced risk)
 
     # ---------------------------------------------------------- helpers
     @property

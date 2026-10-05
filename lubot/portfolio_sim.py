@@ -149,6 +149,12 @@ class PortfolioSimulator:
         self.conf_filter: Optional[TradeFilter] = TradeFilter.parse(
             tcfg.confluence_filter, commission_oz=self.spec.commission_per_lot / self.spec.contract_size) \
             if tcfg.confluence_filter else None
+        # v15: second-tier filter (plans failing the normal / confluence filter but passing this one trade at tier_risk_scale)
+        self.tier_filter: Optional[TradeFilter] = TradeFilter.parse(
+            tcfg.tier_filter, commission_oz=self.spec.commission_per_lot / self.spec.contract_size) if tcfg.tier_filter else None
+        # v15: confluence memory - (tf, side, top, bottom, last-active minute, was_filled) of plans that left the books
+        self.conf_memory: List[Tuple[str, str, float, float, int, bool]] = []
+        self.tier_trades_placed = 0
         self.cur_minute = 0
         self.reentries_placed = 0
         # v13: regime metric per M1 bar from CLOSED daily bars (NaN -> "trend" = normal management)
@@ -230,16 +236,39 @@ class PortfolioSimulator:
                 return "open"
         return ""
 
-    def _confluent_other_tf(self, plan: TradePlan) -> bool:
+    def _confluent_other_tf(self, plan: TradePlan, minute: Optional[int] = None) -> bool:
         """v12: does the plan's zone overlap (>= dedupe_overlap) an ACTIVE plan (pending or open, same side) of
-        ANOTHER timeframe?  That is the confluence evidence the ``confluence_filter`` relies on."""
+        ANOTHER timeframe?  That is the confluence evidence the ``confluence_filter`` relies on.
+        v15 ``confluence_memory_min``: a plan of another timeframe that was active within the last N minutes counts too."""
         t = self.tcfg
         for other in list(self.pending.values()) + list(self.positions.values()):
             if other.plan.grid_leg:
                 continue
             if other.plan.side == plan.side and other.plan.tf != plan.tf and plan.overlaps(other.plan) >= t.dedupe_overlap:
                 return True
+        if t.confluence_memory_min > 0 and minute is not None:
+            lo, hi = plan.zone_bottom, plan.zone_top
+            h = max(hi - lo, 1e-9)
+            for tf, side, top, bottom, last, filled in self.conf_memory:
+                if side != plan.side or tf == plan.tf or minute - last > t.confluence_memory_min:
+                    continue
+                if t.confluence_memory_kind == "open" and not filled:
+                    continue
+                if t.confluence_memory_kind == "pending" and filled:
+                    continue
+                inter = min(hi, top) - max(lo, bottom)
+                if inter > 0 and inter / h >= t.dedupe_overlap:
+                    return True
         return False
+
+    def _remember(self, plan: TradePlan, minute: int, filled: bool) -> None:
+        """v15 confluence memory: a plan left the books (order cancelled / position closed) at ``minute``."""
+        if self.tcfg.confluence_memory_min <= 0 or plan.grid_leg:
+            return
+        self.conf_memory.append((plan.tf, plan.side, plan.zone_top, plan.zone_bottom, minute, filled))
+        if len(self.conf_memory) > 400:
+            keep = minute - self.tcfg.confluence_memory_min
+            self.conf_memory = [m for m in self.conf_memory if m[4] >= keep]
 
     # ------------------------------------------------------------------ order events
     def _on_event(self, row, minute: int) -> None:
@@ -284,14 +313,19 @@ class PortfolioSimulator:
         # v8 trade filter, evaluated with the spread of the minute the order would be placed
         # (v12: a confluence plan - same level active on another timeframe - is judged by ``confluence_filter`` instead)
         flt = self.filter
-        if self.conf_filter is not None and self._confluent_other_tf(plan):
+        if self.conf_filter is not None and self._confluent_other_tf(plan, minute):
             flt = self.conf_filter
             plan.confluent = True
         why = flt.check(d, row.tf, spread=float(self.spread[minute]), when=row.t)
         if why:
-            self.filtered.append((plan.key, f"{row.tf}: {why.split(' ')[0]}"))
-            self.skipped.append((plan.key, "trade filter"))
-            return
+            # v15 tiered admission: failed the normal bar but passes the tier bar -> trade it smaller
+            if self.tier_filter is not None and self.tier_filter.check(d, row.tf, spread=float(self.spread[minute]), when=row.t) is None:
+                plan.tier = True
+            else:
+                self.filtered.append((plan.key, f"{row.tf}: {why.split(' ')[0]}"))
+                self.skipped.append((plan.key, "trade filter"))
+                return
+        self._apply_v15(plan)
         # v11 overlap_mode=share: an overlapping (confluence) plan is traded at a reduced risk
         if self.tcfg.overlap_mode == "share" and self._overlap_kind(plan):
             plan.risk_scale = plan.risk_scale * self.tcfg.overlap_risk_frac
@@ -319,12 +353,27 @@ class PortfolioSimulator:
         self._place_deep(plan, base, minute, exp_min)
 
     # ------------------------------------------------------------------ v14 martingale / grid
+    def _apply_v15(self, plan: TradePlan) -> None:
+        """v15 conviction / tier sizing (multiplies ``risk_scale``; defaults 1.0 = byte-identical to v14)."""
+        tc = self.tcfg
+        rs = plan.risk_scale if plan.risk_scale > 0 else 1.0
+        if plan.tier:
+            rs *= tc.tier_risk_scale
+            self.tier_trades_placed += 1
+        elif plan.confluent:
+            rs *= tc.confluent_risk_scale
+        else:
+            rs *= tc.plain_risk_scale
+        plan.risk_scale = rs
+
     def _apply_v14(self, plan: TradePlan, base: float) -> None:
         """Sequence sizing: scale the plan's risk from the closed-trade streak; the recovery plan may get its own ladder.
         Grid: the EDGE leg carries ``grid_base_frac`` of the budget."""
         tc = self.tcfg
         if self.mart.on:
             m, step = self.mart.scale(plan, base)
+            if step > 0 and (plan.tier or (tc.mart_confluent_only and not plan.confluent)):
+                m, step = 1.0, 0            # v15: tier plans / plain plans (with the gate) are never stepped up
             plan.mart_scale, plan.mart_step = m, step
             apply_mart_ladder(plan, tc, self.spec)
         if grid_wanted(plan, tc):
@@ -361,6 +410,7 @@ class PortfolioSimulator:
         if p is not None:
             p.reason_cancel = reason
             self.cancelled.append(p)
+            self._remember(p.plan, minute, filled=False)
             if not p.plan.grid_leg:
                 self._grid_sync(key, reason, minute)
 
@@ -397,9 +447,11 @@ class PortfolioSimulator:
         from dataclasses import replace
         plan = replace(old, reentry_n=old.reentry_n + 1, risk_scale=1.0, mart_scale=1.0, mart_step=0)
         plan.confluent = old.confluent
+        plan.tier = getattr(old, "tier", False)
         if plan.key in self.pending or plan.key in self.positions:
             return
         base = self.equity if tc.size_on == "equity" else tc.balance
+        self._apply_v15(plan)
         self._apply_v14(plan, base)
         sz = size_plan(plan, base, tc, self.spec)
         if not sz.ok:
@@ -746,6 +798,7 @@ class PortfolioSimulator:
             pos.outcome = "sl"
         self.positions.pop(pos.plan.key, None)
         self.closed.append(pos)
+        self._remember(pos.plan, self.cur_minute, filled=True)
         # v14: the streak state sees every closed EDGE plan (deep grid legs share the edge's outcome and are not counted twice)
         if self.mart.on and not pos.plan.grid_leg:
             net = sum(l.pnl for l in pos.legs) - pos.commission + pos.swap
@@ -887,6 +940,7 @@ class SimResult:
                 "regime": getattr(p.plan, "regime", ""),
                 "mart_step": p.plan.mart_step, "mart_scale": round(p.plan.mart_scale, 4),
                 "grid_leg": bool(p.plan.grid_leg), "grid_parent": p.plan.grid_parent,
+                "tier": bool(getattr(p.plan, "tier", False)), "risk_scale": round(p.plan.risk_scale, 4),
                 "legs": ";".join(f"{l.lots}@{l.close_price:.2f}:{l.close_reason}" for l in p.legs),
             })
         df = pd.DataFrame(rows)
@@ -913,7 +967,9 @@ class SimResult:
                                  "mart_max_scale": round(float(t.mart_scale.max()), 3) if len(t) else 1.0,
                                  "grid_placed": s.grid_placed, "grid_filled": s.grid_filled,
                                  "grid_leg_trades": int(t.grid_leg.sum()) if len(t) else 0,
-                                 "edge_trades": int((~t.grid_leg).sum()) if len(t) else 0}
+                                 "edge_trades": int((~t.grid_leg).sum()) if len(t) else 0,
+                                 "tier_placed": s.tier_trades_placed,
+                                 "tier_trades": int(t.tier.sum()) if len(t) and "tier" in t else 0}
         if not len(t):
             return out
         r = t.r_net
