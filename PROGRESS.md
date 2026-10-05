@@ -32,7 +32,7 @@ win rate >= ref - 3 pt, max DD <= ref + 0.5 pt, worst day >= ref - 0.5 pt, PF >=
 
 ## Plan (v15)
 - [x] 0. Session start: restore env (131 tests pass), PROGRESS v15 header + plan, first save.
-- [ ] 1. Diagnosis `run_v15_diag.py`: reproduce v14-A (430 / +227.53 / -5.84), funnel of the v14-A reference (per TF: filtered by
+- [x] 1. Diagnosis `run_v15_diag.py`: reproduce v14-A (430 / +227.53 / -5.84), funnel of the v14-A reference (per TF: filtered by
         which gate, never filled, traded), would-be outcome of EVERY filtered POI by quality band / cost band / TF via
         `lubot.plan_replay` (R, win, fill rate) -> study_results/v15_diag/*.csv.  Check what the `candidates` column holds.
 - [ ] 2. Levers in TraderConfig / simulator (defaults byte-identical, parity test): tiered admission (`tier_filter` + `tier_risk_scale`),
@@ -43,6 +43,24 @@ win rate >= ref - 3 pt, max DD <= ref + 0.5 pt, worst day >= ref - 0.5 pt, PF >=
 - [ ] 5. Final backtest `backtest_v15_final.py` -> study_results/FINAL_BACKTEST_V15.md, report MORE_TRADES_V15.md, README, final save.
 
 ## Log (v15)
+- 2026-10-05 14:05  step 1 DONE (run_v15_diag.py -> study_results/v15_diag/, 19 s; v14-A reproduced IDENTICAL 430 / +227.53 / -5.84).
+  FUNNEL (unique POIs): trade filter rejects 2462 (M5 1344, M10 444, M15 415, M30 164, H1 95); 964 orders never filled; 430 traded;
+  overlaps 24.  max_open never binds (2 cancels at fill time).  `candidates` column = a COUNT only -> the 2nd-candidate idea is OUT.
+  WOULD-BE OUTCOME of the rejected POIs (plan replayer, order live while the slot shows the POI, 0.6/1.2R two-leg approx; the same
+  replayer agrees with the simulator on 95.6 % of the traded population's signs):
+    * quality-rejected: M10 59 fill / win 72.9 % / avg +0.10 R / OOS +0.6 R (24 tr) = thin positive; M15 50 / 46 % / -0.36 R;
+      M5 26 / 50 % / -0.25 R; M30 11 / -0.08 R; H1 7 / -0.24 R  -> only M10 0.50-0.57 is a (weak) tier candidate.
+    * M5 cost-rejected (0.08+): 73 fill / 58.9 % / -0.11 R (band 0.08-0.10 -0.30 R, 0.10-0.12 +0.02, 0.12-0.15 +0.28 (15 tr), >=0.15 -0.41).
+    * M5 session-rejected (nypm): 22 fill / 72.7 % / +0.15 R / OOS -0.3 R.
+    -> ADMISSION relaxation is nearly exhausted (v11/v12 said the same); a tier at reduced risk can add ~60-100 trades at ~0 to +0.1 R.
+  RE-ARM AFTER A STOP: 106/107 stopped plans have the price THROUGH the entry at the stop -> 1 re-fill in the year -> DEAD.
+  FRONT OFFSET for the never-filled orders (0.1-0.3 of the zone in front): fills 4-15 % of them at avg R -0.04..+0.09 -> DEAD (as v11).
+  THE SIGNAL: CONFLUENT plans (zone active on another TF at placement, 153 of 430) win 81.7 % / stop 17.6 % / avg +0.47 R vs plain
+  70.8 % / 28.9 % / +0.18 R, and it holds IS (79.5 / 19.2 / +0.49) AND OOS (84.0 / 16.0 / +0.45); confluent in the range regime 86.5 %
+  win.  Confluent net +13 349 $ from 153 trades vs plain +9 404 $ from 277.  => the PROFIT lever is CONVICTION SIZING (confluent plans
+  x1.25-2.0, plain x0.75-1.0) and the MORE-TRADES lever is a WIDER CONFLUENCE DEFINITION (a plan of another TF that was active on the
+  same level within the last N minutes/bars counts too -> more plans judged by the looser confluence filter) + a reduced-risk TIER.
+  Step 2 levers: tier_filter/tier_risk_scale, confluent_risk_scale/plain_risk_scale, confluence_memory_min, mart_confluent gate.
 - 2026-10-05 13:40  step 0 done: repo cloned from GitHub (commit 4144052), restore.sh OK (CSV linked, 131 tests pass), v15 header written.
 
 ---

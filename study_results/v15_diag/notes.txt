@@ -3,10 +3,20 @@ skip reasons (events): {"trade filter": 14442, "already active": 285, "overlaps 
 candidates column: dtype int64, values [0, 1, 2, 3, 4, 5, 6] -> a COUNT only (no 2nd candidate recorded)
 traded population through the replayer: 180/430 filled, sign agreement sim vs replay 95.6 %, sim win 74.7 % vs replay win 74.4 %, sim avg R 0.281 vs replay 0.225
 re-arm after SL (wait 12 bars): 1/107 re-fill, through at start 106, win 100.0 %, sum R +0.3, avg R +0.285
+never-filled CONFLUENT orders, front offset 0.1: 12 would fill, win 66.7 %, avg R -0.044, sum R -0.5 (OOS sum R +2.1)
+never-filled CONFLUENT orders, front offset 0.2: 22 would fill, win 68.2 %, avg R -0.040, sum R -0.9 (OOS sum R -1.7)
+never-filled plain orders, front offset 0.1: 28 would fill, win 60.7 %, avg R -0.031, sum R -0.9 (OOS sum R -1.1)
+never-filled plain orders, front offset 0.2: 69 would fill, win 63.8 %, avg R -0.015, sum R -1.0 (OOS sum R -1.7)
+traded IS CONFLUENT: n 78 win 79.5 % sl 19.2 % avg R +0.492 sum R +38.4 net +4793 $
+traded IS plain    : n 128 win 68.8 % sl 30.5 % avg R +0.196 sum R +25.1 net +3436 $
+traded OOS CONFLUENT: n 75 win 84.0 % sl 16.0 % avg R +0.445 sum R +33.4 net +8556 $
+traded OOS plain    : n 149 win 72.5 % sl 27.5 % avg R +0.160 sum R +23.8 net +5968 $
+traded ALL CONFLUENT: n 153 win 81.7 % sl 17.6 % avg R +0.469 sum R +71.8 net +13349 $
+traded ALL plain    : n 277 win 70.8 % sl 28.9 % avg R +0.177 sum R +48.9 net +9404 $
 rejected POIs: 3069; by reason: {'quality': 1932, 'cost_r': 981, 'session': 156}
   M5 quality-rejected & filled: n 26 win 50.0 % avg R -0.252 sum R -6.6 (OOS n 20 sum R -3.7)
   M10 quality-rejected & filled: n 59 win 72.9 % avg R +0.102 sum R +6.0 (OOS n 24 sum R +0.6)
   M15 quality-rejected & filled: n 50 win 46.0 % avg R -0.363 sum R -18.1 (OOS n 18 sum R -9.9)
   M30 quality-rejected & filled: n 11 win 54.5 % avg R -0.083 sum R -0.9 (OOS n 7 sum R +1.2)
   H1 quality-rejected & filled: n 7 win 42.9 % avg R -0.235 sum R -1.6 (OOS n 6 sum R -2.9)
-elapsed 18s
+elapsed 19s

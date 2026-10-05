@@ -223,7 +223,55 @@ def main():
                      f"win {100 * (tot[tot.filled].r_net > 0).mean():.1f} %, sum R {tot[tot.filled].r_net.sum():+.1f}, "
                      f"avg R {tot[tot.filled].r_net.mean():+.3f}")
 
+
+    # ---------------------------------------------------------------- 7. never-filled orders: would an entry IN FRONT of the zone have filled?
+    # (v11 rejected a global front offset: DD 7-12 %.  Here: split by confluent / not, and measure the would-be outcome of the extra
+    #  fills at offsets 0.1 / 0.2 / 0.3 of the zone height in front of the edge - the candidate lever is a CONFLUENT-only offset.)
+    rows = []
+    seen = set()
+    for c in sim.cancelled:
+        pl = c.plan
+        if pl.key in traded_keys or pl.key in seen or pl.grid_leg or pl.reentry_n:
+            continue
+        seen.add(pl.key)
+        m0 = c.placed_minute
+        t_end = win.t_end.get(pl.key, c.placed + pd.Timedelta(days=3))
+        m_wait = max(int(np.searchsorted(idx, np.datetime64(t_end), side="left")), m0 + 1)
+        h = pl.zone_top - pl.zone_bottom
+        sgn = 1.0 if pl.is_buy else -1.0
+        for off in (0.0, 0.1, 0.2, 0.3):
+            ent = round(pl.entry + sgn * off * h, 2)
+            rr = rep.replay(pl.is_buy, ent, pl.sl, m0, m_wait, m_wait + int(a.hold_days * 24 * 60))
+            risk = abs(ent - pl.sl)
+            rows.append({"key": pl.key, "tf": pl.tf, "side": pl.side, "confluent": bool(getattr(pl, "confluent", False)),
+                         "quality": pl.quality, "offset": off, "oos": c.placed >= pd.Timestamp(OOS_SPLIT), "filled": rr.filled,
+                         "through": rr.through_at_start, "outcome": rr.outcome,
+                         "r_net": (rr.r_gross - 0.07 / risk) if rr.filled else np.nan})
+    nf = pd.DataFrame(rows)
+    nf.to_csv(OUT / "never_filled_front.csv", index=False)
+    if len(nf):
+        g = nf.groupby(["confluent", "offset"]).apply(lambda g: pd.Series({
+            "orders": len(g), "filled": int(g.filled.sum()), "fill_%": round(100 * g.filled.mean(), 1),
+            "win_%": round(100 * (g[g.filled].r_net > 0).mean(), 1) if g.filled.any() else np.nan,
+            "sl_%": round(100 * (g[g.filled].outcome == "sl").mean(), 1) if g.filled.any() else np.nan,
+            "avg_R": round(g[g.filled].r_net.mean(), 3) if g.filled.any() else np.nan, "sum_R": round(g[g.filled].r_net.sum(), 2),
+            "oos_filled": int(g[g.oos].filled.sum()), "oos_sum_R": round(g[g.oos & g.filled].r_net.sum(), 2)}),
+            include_groups=False).reset_index()
+        g.to_csv(OUT / "never_filled_front_summary.csv", index=False)
+        print("never-filled orders with a front offset:\n", g.to_string(index=False))
+        for conf in (True, False):
+            for off in (0.1, 0.2):
+                x = nf[(nf.confluent == conf) & (nf.offset == off) & nf.filled]
+                notes.append(f"never-filled {'CONFLUENT' if conf else 'plain'} orders, front offset {off}: {len(x)} would fill, win "
+                             f"{100 * (x.r_net > 0).mean():.1f} %, avg R {x.r_net.mean():+.3f}, sum R {x.r_net.sum():+.1f} (OOS sum R {x[x.oos].r_net.sum():+.1f})")
+
     # ---------------------------------------------------------------- notes
+    # traded population: CONFLUENT vs plain (the conviction signal), IS and OOS
+    for lab, x in (("IS", tr[tr.close_time < OOS_SPLIT]), ("OOS", tr[tr.close_time >= OOS_SPLIT]), ("ALL", tr)):
+        for conf in (True, False):
+            y = x[x.confluent == conf]
+            notes.append(f"traded {lab} {'CONFLUENT' if conf else 'plain    '}: n {len(y)} win {100 * (y.net > 0).mean():.1f} % sl "
+                         f"{100 * (y.outcome == 'sl').mean():.1f} % avg R {y.r_net.mean():+.3f} sum R {y.r_net.sum():+.1f} net {y.net.sum():+.0f} $")
     notes.append(f"rejected POIs: {len(rej)}; by reason: {rej.reason.value_counts().to_dict()}")
     for tf in TFS:
         q = rej[(rej.tf == tf) & (rej.reason == "quality") & rej.filled]
