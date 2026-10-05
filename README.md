@@ -1,4 +1,4 @@
-# LU-POI TRADER — Liquidity University POI trading bot for XAUUSD.t (MT5)   *(v14)*
+# LU-POI TRADER — Liquidity University POI trading bot for XAUUSD.t (MT5)   *(v15)*
 
 **v7 turns the POI scanner into a trading bot.**  For every POI the scanner shows (M5 / M10 / M15 / M30 / H1) the
 bot places a **limit order at the start of the zone** with the **stop at the end of the zone**, closes **50 % at
@@ -7,7 +7,9 @@ terminal that is already open and logged in on your Windows PC — **no login op
 
 | what | command |
 |---|---|
-| **Live trading** (Windows, MT5 open) | `run_trader.bat`  or  `python trader.py --symbol XAUUSD.t --risk 1.0 --commission 7 --trader "tp_levels=0.6\|1.2\|2.4\|4.8,tp_fracs=1\|1\|1\|1,ladder_fallback=merge,dedupe_cross_tf=false,keep_replaced_bars=1,keep_replaced_tfs=M10\|M15\|M30\|H1,regime_metric=adr_ratio,regime_threshold=1.0,regime_short=5,regime_long=20,range_tp_levels=0.5\|1.0\|1.5\|2.5,range_tp_fracs=1\|1\|1\|1,range_sl_after_leg=0\|0.3\|x\|x,mart_mode=mult,mart_mult=1.5,mart_max_steps=3,mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10\|M15\|M30\|H1,mart_sides=buy,mart_ungated_scale=0.5" --trade-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.57/M15:min_quality=0.60/M30\|H1:min_quality=0.57" --confluence-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.50/M15:min_quality=0.60/M30\|H1:min_quality=0.57"` (**v14-A**; drop every `mart_*` key for v13-A) |
+| **Live trading** (Windows, MT5 open) | `run_trader.bat`  or  `python trader.py --symbol XAUUSD.t --risk 1.0 --commission 7 --trader "tp_levels=0.6\|1.2\|2.4\|4.8,tp_fracs=1\|1\|1\|1,ladder_fallback=merge,dedupe_cross_tf=false,keep_replaced_bars=1,keep_replaced_tfs=M10\|M15\|M30\|H1,regime_metric=adr_ratio,regime_threshold=1.0,regime_short=5,regime_long=20,range_tp_levels=0.5\|1.0\|1.5\|2.5,range_tp_fracs=1\|1\|1\|1,range_sl_after_leg=0\|0.3\|x\|x,mart_mode=mult,mart_mult=1.5,mart_max_steps=3,mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10\|M15\|M30\|H1,mart_sides=buy,mart_ungated_scale=0.5,confluence_memory_min=240,confluent_risk_scale=1.25,plain_risk_scale=0.9" --trade-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.57/M15:min_quality=0.60/M30\|H1:min_quality=0.57" --confluence-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.50/M15:min_quality=0.60/M30\|H1:min_quality=0.57"` (**v15-A**; drop `confluence_memory_min` / `confluent_risk_scale` / `plain_risk_scale` for v14-A, every `mart_*` key too for v13-A) |
+| **FINAL BACKTEST of v15-A on the CSV** (strings read from `run_trader.bat`, v14-A alongside) | `python backtest_v15_final.py --csv data/xauusd_m1.csv` → **`study_results/FINAL_BACKTEST_V15.md`** + `final_v15/*` + `charts/final_v15_equity.png` |
+| **v15 more-trades / more-profit study** (diagnosis, 209 variants, stress ×6, walk-forward) | `python run_v15_diag.py; bash run_v15_all.sh; python run_v15_levers.py --stress ...; python walkforward_v15.py; python backtest_v15_final.py; python make_v15_report.py; python verify_bat_v15.py` (resumable, autosave) → **`study_results/MORE_TRADES_V15.md`** |
 | **FINAL BACKTEST of v14-A on the CSV** (strings read from `run_trader.bat`, v13-A alongside) | `python backtest_v14_final.py --csv data/xauusd_m1.csv` → **`study_results/FINAL_BACKTEST_V14.md`** + `final_v14/*` + `charts/final_v14_equity.png` |
 | **v14 martingale study** (diagnosis, 140 variants, stress ×6, shuffle/bootstrap, walk-forward) | `python run_v14_diag.py; python run_v14_levers.py; python run_v14_levers.py --stress ...; python shuffle_v14.py; python walkforward_v14.py; python make_v14_report.py; python verify_bat_v14.py` (resumable) → **`study_results/MARTINGALE_V14.md`** |
 | **v13 weak-months study** (diagnosis, 177 variants, stress, walk-forward, neighbourhood) | `python run_v13_diag.py; bash run_v13_all.sh; bash run_v13_stage4.sh; bash run_v13_neigh.sh; python walkforward_v13.py; python make_v13_report.py; python verify_bat_v13.py` (resumable) → **`study_results/WEAK_MONTHS_V13.md`** |
@@ -24,6 +26,44 @@ terminal that is already open and logged in on your Windows PC — **no login op
 → **Results: section 0g (v14 asymmetric martingale + FINAL BACKTEST), 0f (v13 weak months / regime-adaptive management), 0e (v12 more trades round 2), 0d (v11 more trades), 0c (v10 multi-TP + full year + loss rules), 0b (v9 management), 0a/0 below, `study_results/MULTI_TP_STUDY.md` (v10), `study_results/RISK_MGMT_STUDY.md` (v9), `TRADER_V8.md` (v8), `TRADER_BACKTEST.md` (v7).**
 
 ---
+
+## 0h. v15 — more trades AND more profit at the same loss percentage (confluence memory + conviction sizing) + FINAL BACKTEST
+
+**Spec.**  Make the v14 bot take more trades and make more profit while maintaining the loss percentage; save after every step (recoverable).
+
+**Diagnosis** (`run_v15_diag.py` → `study_results/v15_diag/`).  The trade filter rejects 2 462 unique POIs a year; replaying them shows that **admission
+relaxation is exhausted**: only M10 quality 0.50-0.57 carries a thin edge (+0.10 R), every other rejected band loses 0.1-0.4 R per fill.  Re-arming a zone
+after a stop (106/107 stops have price through the entry) and entering in front of the zone (-0.04..+0.09 R) are dead.  The one strong, OOS-stable signal
+in the traded population: **CONFLUENT plans** (zone overlapping an active plan of another timeframe) win 81.7 % / stop 17.6 % / +0.47 R vs 70.8 % / 28.9 %
+/ +0.18 R for the rest (IS 79.5 / OOS 84.0 % win).
+
+**Levers** (`TraderConfig`, defaults byte-identical to v14, simulator and live bot share the code): `confluence_memory_min=N` (a plan of another TF that
+left the books within N minutes still counts as confluence → more zones judged by the looser confluence bar; the live bot persists the memory in
+`trader_state.json`), `confluent_risk_scale` / `plain_risk_scale` (conviction sizing), `tier_filter` + `tier_risk_scale` (second bar at reduced size),
+`mart_confluent_only`.  Grid: 209 full-year runs (`run_v15_levers.py`, resumable, autosaved to GitHub every 4 min — survived three sandbox resets).
+
+**Result — `run_trader.bat` ships v15-A = v14-A + `confluence_memory_min=240,confluent_risk_scale=1.25,plain_risk_scale=0.9`.**  FINAL BACKTEST on the
+CSV (`backtest_v15_final.py`, 359 813 M1 bars 2025-09-01 → 2026-09-04, $10 000, 1 % base risk, real costs):
+
+| | v14-A reference | **v15-A (shipped)** |
+|---|---|---|
+| trades | 430 | **448** (+18) |
+| net profit $ | +22,753 | **+29,745** (+31 %) |
+| return % | +227.53 | **+297.45** |
+| max drawdown % | -5.84 | **-5.82** |
+| profit factor | 2.249 | **2.375** |
+| win % / stop-outs % | 74.7 / 24.9 | **74.8 / 24.8** |
+| worst day % of equity | -1.99 | -2.42 |
+| max risk on one plan % eq | 2.24 | 2.81 |
+| OOS (Mar-Sep 26) net $ / PF / win / stop | +14,524 / 2.15 / 76.3 / 23.7 | **+19,264 / 2.26 / 76.3 / 23.7** |
+| months positive | 13/13 | 13/13 |
+
+Stop-out rate, win rate and max DD unchanged to the decimal; the price is a worst day of -2.42 % (was -1.99) and a larger
+max single-plan risk (martingale step × conviction).  Stress ×6: ahead of v14-A on net $ and OOS PF in 6/6 scenarios, DD within +0.5 pt in 5/6 (not at 2 % base
+risk); weak point = spread ×2 worst day -4.55 %.  Walk-forward: Spearman IS→OOS of the extra trades +0.90, extra $ +0.84 (population properties).
+Alternatives documented in the bat: **v15-B** (+ `tier_filter=M10:min_quality=0.55,tier_risk_scale=0.5`: 477 trades, +32 637 $, DD 6.08) and **v15-C**
+(`confluence_memory_min=960` alone: 459 trades, +24 619 $, loss profile byte-for-byte).  `verify_bat_v15.py` replays the bat strings: IDENTICAL to the study json.
+Details: **`study_results/MORE_TRADES_V15.md`**, `FINAL_BACKTEST_V15.md`, `charts/v15_*.png`, `charts/final_v15_equity.png`.  140 tests pass.
 
 ## 0g. v14 — a martingale that REDUCES the losses (the asymmetric, edge-aware martingale) + FINAL BACKTEST
 
@@ -620,6 +660,16 @@ make_v14_report.py         v14 report -> study_results/MARTINGALE_V14.md + chart
 verify_bat_v14.py          replays the exact run_trader.bat v14-A strings in the simulator (must equal the v14-A study json)
 backtest_v14_final.py      FINAL BACKTEST of the shipped v14-A on the CSV (+ v13-A alongside) -> study_results/FINAL_BACKTEST_V14.md, final_v14/*, charts/final_v14_equity.png
 smoke_v14.py               v14 smoke run of 16 variants (parity + first look)
+v15_common.py              v15 shared: v14-A config exactly as shipped, reference scorecard, judge15 (more_trades / more_profit / hold_loss / hold_oos / score)
+run_v15_diag.py            v15 diagnosis (funnel, would-be outcome of every rejected POI by band, re-arm after SL, front offset, confluent-vs-plain signal) -> study_results/v15_diag/
+run_v15_levers.py          v15 grid of 209 variants on top of v14-A (CS / CM / TIER / DD / CMB families, --stress) -> study_results/v15_levers/, v15_levers.csv, v15_stress.csv
+run_v15_all.sh             v15 unattended grid runner with autosave (commit + push) every 4 min
+walkforward_v15.py         v15 walk-forward on the IS/OOS halves from the trade lists -> v15_walkforward.csv/json
+make_v15_report.py         v15 report -> study_results/MORE_TRADES_V15.md + charts/v15_*.png
+verify_bat_v15.py          replays the exact run_trader.bat v15-A strings in the simulator (must equal the v15-A study json)
+backtest_v15_final.py      FINAL BACKTEST of the shipped v15-A on the CSV (+ v14-A alongside) -> study_results/FINAL_BACKTEST_V15.md, final_v15/*, charts/final_v15_equity.png
+smoke_v15.py               v15 smoke run of 11 variants (parity + first look)
+tests/test_v15_levers.py / tests/test_trader_v15.py / tests/test_bat_v15.py   v15 tests (defaults, conviction sizing, memory, tier scope, mart gate, live bot restart, bat strings)
 tests/test_v14_martingale.py / tests/test_trader_v14.py / tests/test_bat_v14.py   v14 tests (state machine, caps, gates, sim parity, live bot restart replay vs fake MT5, bat strings)
 tests/test_v13_regime.py / tests/test_bat_v13.py / tests/test_trader_live.py::test_v13_*   v13 tests (metric, ladder switch, sim parity, live bot vs fake MT5, bat strings)
 run_v12_funnel.py / run_v12_levers.py / run_v12_stress.py / rank_v12.py / make_v12_report.py / verify_bat_v12.py   v12 more-trades study -> study_results/MORE_TRADES_V12.md
@@ -677,4 +727,4 @@ backtest_results/          stats.csv, charts/
 - Order placement through MT5 (`order_send`) – easy to add on top of `select()`
 - Telegram / webhook alerts when a selection changes (`--json` already exposes the state)
 
-Last updated: 2026-09-17 (v7: live MT5 trader with partial-close management, realistic M1 portfolio backtest, 35-variant sensitivity study)
+Last updated: 2026-10-05 (v15: confluence memory + conviction sizing — 448 trades / +29 745 $ / DD 5.82 % / PF 2.375 at the v14-A loss percentage; FINAL_BACKTEST_V15.md)
