@@ -1,0 +1,12 @@
+v14-A reproduction: (430, np.float64(227.53), np.float64(-5.84)) vs expected (430, 227.53, -5.84) -> IDENTICAL
+skip reasons (events): {"trade filter": 14442, "already active": 285, "overlaps open": 64, "overlaps pending": 51, "price already at/through entry": 2}
+candidates column: dtype int64, values [0, 1, 2, 3, 4, 5, 6] -> a COUNT only (no 2nd candidate recorded)
+traded population through the replayer: 180/430 filled, sign agreement sim vs replay 95.6 %, sim win 74.7 % vs replay win 74.4 %, sim avg R 0.281 vs replay 0.225
+re-arm after SL (wait 12 bars): 1/107 re-fill, through at start 106, win 100.0 %, sum R +0.3, avg R +0.285
+rejected POIs: 3069; by reason: {'quality': 1932, 'cost_r': 981, 'session': 156}
+  M5 quality-rejected & filled: n 26 win 50.0 % avg R -0.252 sum R -6.6 (OOS n 20 sum R -3.7)
+  M10 quality-rejected & filled: n 59 win 72.9 % avg R +0.102 sum R +6.0 (OOS n 24 sum R +0.6)
+  M15 quality-rejected & filled: n 50 win 46.0 % avg R -0.363 sum R -18.1 (OOS n 18 sum R -9.9)
+  M30 quality-rejected & filled: n 11 win 54.5 % avg R -0.083 sum R -0.9 (OOS n 7 sum R +1.2)
+  H1 quality-rejected & filled: n 7 win 42.9 % avg R -0.235 sum R -1.6 (OOS n 6 sum R -2.9)
+elapsed 18s
