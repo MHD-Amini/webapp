@@ -1,3 +1,51 @@
+# PROGRESS — v15 MORE TRADES & MORE PROFIT for the v14-A trader AT THE SAME LOSS PERCENTAGE — IN PROGRESS (started 2026-10-05)
+
+**Recovery (read this first):** `git clone https://github.com/MHD-Amini/webapp.git /home/user/webapp`, `bash restore.sh`
+(relinks the CSV to `data/xauusd_m1.csv`, pip, tests), read this file, continue from the FIRST UNCHECKED step below.  Every step ends
+with `bash save.sh "msg"` (commit + push to GitHub origin = https://github.com/MHD-Amini/webapp).  Long jobs are resumable (one json per
+run, they skip outputs that exist) and run under `run_v15_all.sh`, which autosaves (commit + push) every 4 minutes.
+Data: `/home/user/uploaded_files/XAUUSD.t_M1_202501020100_2026090423581112.csv` (593 863 M1 bars 2025-01-02 -> 2026-09-04; symlink
+`data/xauusd_m1.csv`).  Sandbox: 2 cores, ~1 GB RAM -> simulator with `--workers 1`, never two full-year runs at once.
+
+## User spec (v15)
+1. Make the v14 trading bot (run_trader.bat = v14-A) take MORE TRADES and MORE PROFIT while MAINTAINING THE LOSS PERCENTAGE.
+2. Save the process after EVERY step without exception, recoverable if the session dies (GitHub + PROGRESS.md + resumable jobs).
+
+## Reference (v14-A, FINAL_BACKTEST_V14.md, full year 2025-09-01 -> 2026-09-04, $10 000, 1 % base risk)
+430 trades, +227.53 %, max DD -5.84 %, PF 2.249, win 74.7 %, stop-outs 24.9 %, worst day -1.99 % eq, OOS PF 2.15 (224 tr), 13/13 months,
+gross loss -18 220 $, avg loss -167 $, max risk 2.24 % eq.  "Loss percentage maintained" (hold_loss) = stop-out rate <= ref + 2 pt,
+win rate >= ref - 3 pt, max DD <= ref + 0.5 pt, worst day >= ref - 0.5 pt, PF >= ref - 0.10, and the same on the OOS half (hold_oos).
+"More trades" = trades > 430; "more profit" = net $ > +22 753 AND OOS net $ > +14 524.
+
+## Ideas (v15) — what was NOT tried in v11/v12 (those tried: quality bars, cost bars, sessions, keep_replaced, confluence, re-entry,
+## entry offset, max_open, grace periods -> MORE_TRADES_STUDY.md / MORE_TRADES_V12.md)
+  A. TIERED ADMISSION: POIs that fail the quality bar by a little (e.g. M10 0.50-0.57, M15 0.55-0.60, M5 0.50-0.55) are traded at a
+     REDUCED risk (`tier_risk_scale`, e.g. 0.5) instead of being skipped -> more trades, each loss smaller; the loss PERCENTAGE of
+     the whole stays close because the tier adds many small trades.  Same for the M5 cost bar (0.08-0.12 at half risk).
+  B. SECOND CANDIDATE: the scanner keeps up to N candidates per slot (`candidates` column) but trades only the top one; trade the 2nd
+     ranked zone of the slot too (if it does not overlap the first) at reduced risk.  (Needs the candidate list - check the stream.)
+  C. RE-ARM AFTER STOP: after a stop-out the zone is often re-tested; v12 tested re-entry only after BE exits (rejected).  Not retested.
+  D. PROFIT side: the v14 martingale step-up gate (htf buys) could be widened to the new tier trades; range_risk_scale; swap of the
+     M5 ladder.  Judge every lever on the OOS half first.
+  E. NEW TRADE SOURCE: the quality model only (no scanner slot limit) is NOT available in the recorded streams -> out of scope unless
+     the candidates column carries the full list.
+
+## Plan (v15)
+- [x] 0. Session start: restore env (131 tests pass), PROGRESS v15 header + plan, first save.
+- [ ] 1. Diagnosis `run_v15_diag.py`: reproduce v14-A (430 / +227.53 / -5.84), funnel of the v14-A reference (per TF: filtered by
+        which gate, never filled, traded), would-be outcome of EVERY filtered POI by quality band / cost band / TF via
+        `lubot.plan_replay` (R, win, fill rate) -> study_results/v15_diag/*.csv.  Check what the `candidates` column holds.
+- [ ] 2. Levers in TraderConfig / simulator (defaults byte-identical, parity test): tiered admission (`tier_filter` + `tier_risk_scale`),
+        second-candidate trading if available, re-arm after SL (`rearm_sl_bars`), unit tests (tests/test_v15_levers.py), smoke.
+- [ ] 3. Grid `run_v15_levers.py` (resumable, workers 1) under `run_v15_all.sh` (autosave) -> study_results/v15_levers/ + v15_levers.csv;
+        judge: trades, net $, OOS net $, hold_loss, hold_oos.
+- [ ] 4. Stress x6 + walk-forward of the finalists; port to trader.py + run_trader.bat (v15-A) + verify_bat_v15.py + fake-MT5 tests.
+- [ ] 5. Final backtest `backtest_v15_final.py` -> study_results/FINAL_BACKTEST_V15.md, report MORE_TRADES_V15.md, README, final save.
+
+## Log (v15)
+- 2026-10-05 13:40  step 0 done: repo cloned from GitHub (commit 4144052), restore.sh OK (CSV linked, 131 tests pass), v15 header written.
+
+---
 # PROGRESS — v14 MARTINGALE / LOSS-RECOVERY SIZING for the v13-A trader — ALL STEPS COMPLETE (2026-10-03 15:45)
 
 **Recovery (read this first):** `git clone https://github.com/MHD-Amini/webapp.git /home/user/webapp`, `bash restore.sh`
