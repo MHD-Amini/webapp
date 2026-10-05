@@ -1,4 +1,4 @@
-# PROGRESS — v15 MORE TRADES & MORE PROFIT for the v14-A trader AT THE SAME LOSS PERCENTAGE — IN PROGRESS (started 2026-10-05)
+# PROGRESS — v15 MORE TRADES & MORE PROFIT for the v14-A trader AT THE SAME LOSS PERCENTAGE — ALL STEPS COMPLETE (2026-10-05 21:30)
 
 **Recovery (read this first):** `git clone https://github.com/MHD-Amini/webapp.git /home/user/webapp`, `bash restore.sh`
 (relinks the CSV to `data/xauusd_m1.csv`, pip, tests), read this file, continue from the FIRST UNCHECKED step below.  Every step ends
@@ -40,9 +40,18 @@ win rate >= ref - 3 pt, max DD <= ref + 0.5 pt, worst day >= ref - 0.5 pt, PF >=
 - [x] 3. Grid `run_v15_levers.py` (resumable, workers 1) under `run_v15_all.sh` (autosave) -> study_results/v15_levers/ + v15_levers.csv;
         judge: trades, net $, OOS net $, hold_loss, hold_oos.
 - [x] 4. Stress x6 + walk-forward of the finalists; port to trader.py + run_trader.bat (v15-A) + verify_bat_v15.py + fake-MT5 tests.
-- [ ] 5. Final backtest `backtest_v15_final.py` -> study_results/FINAL_BACKTEST_V15.md, report MORE_TRADES_V15.md, README, final save.
+- [x] 5. Final backtest `backtest_v15_final.py` -> study_results/FINAL_BACKTEST_V15.md, report MORE_TRADES_V15.md, README, final save.
 
 ## Log (v15)
+- 2026-10-05 21:30  step 5 DONE (after a third sandbox reset - recovered from GitHub, only the unsaved make_v15_report.py had to be rewritten):
+  backtest_v15_final.py -> study_results/FINAL_BACKTEST_V15.md + final_v15/* + charts/final_v15_equity.png: v15-A 448 tr / +29 745 $ / +297.45 % /
+  DD -5.82 / PF 2.375 / win 74.8 / sl 24.8 / wd -2.42 / OOS +19 264 $ / OOS PF 2.26 / 13/13, IDENTICAL to the study json; the v14-A reference from
+  the same strings minus the v15 keys reproduces FINAL_BACKTEST_V14 (430 / +227.53 / -5.84).  make_v15_report.py -> MORE_TRADES_V15.md (199 lines)
+  + charts/v15_{equity,scatter,monthly,dd_window}.png.  README: title v15, command table (live v15-A string, final backtest, v15 study), section 0h,
+  layout, last-updated.  restore.sh v15 hints.  140 tests pass.  ALL v15 STEPS COMPLETE.
+  Honest reading: avg R per trade is unchanged (0.28) - v15 earns +31 % because it sizes the already-winning confluent plans x1.25 and lets ~18 more
+  of them through; the cost is a worst day of -2.42 % (was -1.99) and 2.81 % max single-plan risk (was 2.24).  v15-C (memory only) is the floor
+  that keeps the loss profile byte-for-byte; the next real gain needs new entry-model information, not more admission rules.
 - 2026-10-05 21:00  step 4b DONE: run_trader.bat ships v15-A (header rewritten; v15-B / v15-C / v14-A fallbacks documented in the REMs);
   verify_bat_v15.py reads the strings FROM the bat and replays them: 448 tr / +29 744.95 $ / +297.45 % / DD -5.82 / PF 2.375 / 210 confluent
   = IDENTICAL to study_results/v15_levers/CMB_cm240_cs1.25_0.9.json.  tests/test_bat_v15.py -> 140 tests pass.  verify_bat_v14.py is now
