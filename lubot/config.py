@@ -17,6 +17,7 @@ TIMEFRAME_MINUTES = {
     "M5": 5,
     "M10": 10,
     "M15": 15,
+    "M20": 20,     # v16: new scanned timeframe between M15 and M30 (derived from M1 like every other one)
     "M30": 30,
     "H1": 60,
     "H4": 240,
@@ -117,7 +118,7 @@ class StrategyConfig:
     htf_confluence: bool = True
     #: which higher timeframe backs each scanned timeframe
     htf_parent: Dict[str, str] = field(default_factory=lambda: {
-        "M1": "M15", "M5": "M30", "M10": "H1", "M15": "H1", "M30": "H4", "H1": "H4", "H4": "D1"})
+        "M1": "M15", "M5": "M30", "M10": "H1", "M15": "H1", "M20": "H1", "M30": "H4", "H1": "H4", "H4": "D1"})
 
     # ---------------------------------------------------------- POI selection
     #: Rule 2: liquidity must rest between price and the POI (feeding into it)

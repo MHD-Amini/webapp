@@ -31,8 +31,8 @@ qualified candidates on that side and 6 % have >= 3 - those zones were NEVER ava
 Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 / +29 745 / -5.82) before anything is judged.
 
 ## Plan (v16)
-- [ ] 0. Session start: restore env (140 tests pass), PROGRESS v16 header + plan, v16_common.py (v15-A config + judge16), first save.
-- [ ] 1. `record_selections_v16.py` (top-K per slot with `rank`, new TF M20 in TIMEFRAME_MINUTES/htf_parent) + pilot on one month (M10):
+- [x] 0. Session start: restore env (140 tests pass), PROGRESS v16 header + plan, v16_common.py (v15-A config + judge16), first save.
+- [x] 1. `record_selections_v16.py` (top-K per slot with `rank`, new TF M20 in TIMEFRAME_MINUTES/htf_parent) + pilot on one month (M10):
         rank-2 frequency, quality distribution, timing; rank-1 rows == v10 stream on that month.
 - [ ] 2. `run_v16_record.sh`: full-year streams Sep25-Sep26 in monthly chunks (6-week warm-up, carry-over), all TFs + M20, each chunk
         committed; merge -> study_results/sel_v16_<TF>.pkl.  Runs in the background under the autosave loop.
@@ -44,6 +44,12 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [ ] 6. Final backtest `backtest_v16_final.py` -> study_results/FINAL_BACKTEST_V16.md, report MORE_TRADES_V16.md, README, final save + archive.
 
 ## Log (v16)
+- 2026-10-06 19:40  step 1 DONE: lubot/config.py TIMEFRAME_MINUTES += M20 (htf_parent M20 -> H1); record_selections_v16.py (top-K per side
+  with `rank`, qualified() computed once per bar, carry-over per (side, rank) for chunking).  PILOT M10 Sep 2025 (top-3, 162 s):
+  rank-1 rows IDENTICAL to parts_v10/sel_v10_M10_2025-09-01.pkl (599/599 rows, every column).  Rank 2: 255 set events / 56 unique POIs
+  (18 never promoted to rank 1), quality median 0.530 (rank 1: 0.538), q90 0.596 (0.621), distance 4.8 ATR (4.2); rank 3: 70 / 20 POIs.
+  -> ~60 % more unique M10 zones per month are available to the trader than the slot shows.  M5 recorded WITHOUT feats (the M5 filter
+  uses cost/quality/session only; the optional model gate is off) to keep the pkl small.  Next: run_v16_record.sh (background, autosave).
 - 2026-10-06 19:05  step 0: repo at GitHub commit 938676f (v15 complete), restore.sh OK (CSV linked, lightgbm installed, 140 tests pass).
   Env: py3.13, 2 cores, ~1 GB RAM.  v16 header + plan written.
 
