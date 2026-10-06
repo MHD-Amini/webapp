@@ -44,6 +44,12 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [ ] 6. Final backtest `backtest_v16_final.py` -> study_results/FINAL_BACKTEST_V16.md, report MORE_TRADES_V16.md, README, final save + archive.
 
 ## Log (v16)
+- 2026-10-06 20:40  step 5 (port) DONE AHEAD of the grid: lubot/engine.py MultiTimeframeScanner.scan(top_k) returns above_ranked /
+  below_ranked (rank field, index 0 == slot winner); trader.py: on_selection iterates the ranked lists (_on_candidate), rank-2 gates
+  (tf scope, confluent-only, own bar) + x rank2_risk_scale, a POI shown on ANY rank slot keeps its order, rank stored in trader_state
+  (asdict).  LIVE FIX found by the tests: trader.py marked a POI "traded" at ORDER PLACEMENT, the simulator at FILL -> a cancelled
+  unfilled order whose POI was shown again was never re-placed live (every backtest re-places it).  Now `traded` is set on fill (sync +
+  adopt).  tests/test_trader_v16.py (3 fake-MT5 / scanner tests) -> 150 pass.  run_trader.bat is still v15-A until the grid decides.
 - 2026-10-06 20:15  2nd SANDBOX RESET (during M15 recording; 21 chunks already on GitHub, nothing lost).  Recovered via restore.sh;
   pipeline relaunched as `nohup bash run_v16_all.sh > logs/v16_all.log 2>&1 &` (it relaunches the recorder, then runs the grid, autosave
   every 4 min).  RECOVERY RULE from here: after any reset run `bash restore.sh` then that one command.

@@ -229,6 +229,9 @@ class Trader:
             for tk, p in poss.items():
                 if p.comment == pl["comment"] and tk not in pl["position_tickets"]:
                     pl["position_tickets"].append(tk)
+                    self.state.traded.add(key)
+            if pl.get("position_tickets") or pl.get("all_position_tickets"):
+                self.state.traded.add(key)
             if not pl["order_tickets"] and not pl["position_tickets"]:
                 self.log.info(f"plan {key} finished (no orders/positions left)")
                 self._remember(pl)
@@ -532,7 +535,8 @@ class Trader:
                    lots_total=sz.lots_total, lots_leg1=sz.lots_leg1, lots_leg2=sz.lots_leg2, risk_money=sz.risk_money,
                    placed=time.strftime("%Y-%m-%d %H:%M:%S"))
         self.state.plans[plan.key] = rec
-        self.state.traded.add(plan.key)
+        # v16 FIX: the POI counts as traded when an order FILLS (PortfolioSimulator semantics), not at placement - a cancelled
+        # unfilled order of a POI that is shown again is re-placed, exactly as in every backtest
         self.state.save()
         self.log.info(f"NEW {plan.side.upper()} LIMIT {plan.tf} {plan.kind} #{plan.poi_id}{' DEEP' if plan.grid_leg else ''} "
                       f"{sz.lots_total} lots @ {plan.entry} {('[' + plan.regime + '] ') if plan.regime else ''}"
@@ -626,6 +630,7 @@ class Trader:
                 if t in poss and t not in pl["position_tickets"]:
                     pl["position_tickets"].append(t)
                     pl.setdefault("all_position_tickets", []).append(t)      # v14: kept for the realised P&L lookup
+                    self.state.traded.add(key)
                     self.log.info(f"{key}: order #{t} FILLED @ {poss[t].price_open}")
                     changed = True
                 elif t not in poss:
@@ -634,6 +639,7 @@ class Trader:
                         if p.ticket not in pl["position_tickets"]:
                             pl["position_tickets"].append(p.ticket)
                             pl.setdefault("all_position_tickets", []).append(p.ticket)
+                            self.state.traded.add(key)
                             self.log.info(f"{key}: order #{t} FILLED -> position #{p.ticket} @ {p.price_open}")
                             changed = True
             pl["order_tickets"] = still
