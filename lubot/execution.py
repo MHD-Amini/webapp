@@ -202,6 +202,15 @@ class TraderConfig:
     tier_risk_scale: float = 0.5
     #: martingale gate (v14): step UP only confluent plans (tier plans are never stepped up)
     mart_confluent_only: bool = False
+    # ---- v16 "new trade sources" levers (defaults = byte-identical to v15)
+    #: RANKED CANDIDATES: the v16 selection stream carries the scanner's top-K qualified zones per side (`rank` column);
+    #: plans of rank <= max_rank are placed (1 = only the slot winner = every stream before v16).  A rank-2 zone that
+    #: overlaps the rank-1 zone of the same timeframe is skipped by the normal overlap dedupe.
+    max_rank: int = 1
+    rank2_filter: str = ""                    # own filter bar for rank >= 2 plans (same syntax); "" = the normal / confluence bar
+    rank2_risk_scale: float = 1.0             # sizing multiplier for rank >= 2 plans
+    rank2_tfs: Tuple[str, ...] = ()           # timeframes whose rank >= 2 zones are admitted; () = all
+    rank2_confluent_only: bool = False        # rank >= 2 plans only when they are confluent (another TF active on the level)
     one_trade_per_poi: bool = True
     min_quality: Optional[float] = None   # extra filter on top of the scanner's min_quality (None = scanner default)
     grades: Tuple[str, ...] = ()          # e.g. ("A", "B") -> only these grades; () = all
@@ -287,6 +296,7 @@ class TradePlan:
     grid_leg: bool = False        # v14: True = this plan is the DEEP leg of a zone-averaging grid
     grid_parent: str = ""         # v14: key of the edge plan the deep leg belongs to
     tier: bool = False            # v15: True = admitted through ``tier_filter`` (second tier, reduced risk)
+    rank: int = 1                 # v16: scanner rank of the zone on its side (1 = slot winner)
 
     # ---------------------------------------------------------- helpers
     @property

@@ -121,7 +121,11 @@ class PortfolioSimulator:
         sel = sel[(sel.t >= m.index[0]) & (sel.t <= m.index[-1] + pd.Timedelta(minutes=1))]
         if tcfg.timeframes:
             sel = sel[sel.tf.isin(tcfg.timeframes)]
-        self.sel = sel.sort_values("t").reset_index(drop=True)
+        # v16: ranked streams carry a `rank` column (1 = slot winner); streams before v16 are rank 1 throughout
+        if "rank" not in sel.columns:
+            sel = sel.assign(rank=1)
+        sel = sel[sel["rank"] <= max(1, tcfg.max_rank)]
+        self.sel = sel.sort_values(["t", "rank"], kind="stable").reset_index(drop=True)
         # map each event to the FIRST M1 bar whose open time >= event time (act at that bar's open)
         self.sel_minute = np.searchsorted(self.idx, self.sel.t.values.astype("datetime64[ns]"), side="left")
         # state
@@ -155,6 +159,11 @@ class PortfolioSimulator:
         # v15: confluence memory - (tf, side, top, bottom, last-active minute, was_filled) of plans that left the books
         self.conf_memory: List[Tuple[str, str, float, float, int, bool]] = []
         self.tier_trades_placed = 0
+        # v16: own filter bar for rank >= 2 plans
+        self.rank2_filter: Optional[TradeFilter] = TradeFilter.parse(
+            tcfg.rank2_filter, commission_oz=self.spec.commission_per_lot / self.spec.contract_size) if tcfg.rank2_filter else None
+        self.rank2_placed = 0
+        self._batch_set: set = set()           # v16: (tf, side, id) set by the events of the current minute
         self.cur_minute = 0
         self.reentries_placed = 0
         # v13: regime metric per M1 bar from CLOSED daily bars (NaN -> "trend" = normal management)
@@ -270,23 +279,37 @@ class PortfolioSimulator:
             keep = minute - self.tcfg.confluence_memory_min
             self.conf_memory = [m for m in self.conf_memory if m[4] >= keep]
 
+    def _shown_elsewhere(self, tf: str, side: str, poi_id: int, key_side) -> bool:
+        """v16: is ``poi_id`` currently shown on another rank slot of the same (tf, side)?  (never with max_rank 1)"""
+        if self.tcfg.max_rank <= 1:
+            return False
+        for k, v in self.shown.items():
+            if k != key_side and k[0] == tf and k[1] == side and v == poi_id:
+                return True
+        # the same bar may re-set the POI on another rank slot a few events later (promotion / demotion)
+        return (tf, side, poi_id) in self._batch_set
+
     # ------------------------------------------------------------------ order events
     def _on_event(self, row, minute: int) -> None:
-        key_side = (row.tf, row.side)
+        rank = int(getattr(row, "rank", 1))
+        key_side = (row.tf, row.side) if rank <= 1 else (row.tf, row.side, rank)   # v16: one slot per (tf, side, rank)
         prev = self.shown.get(key_side)
         if row.event == "clear" or row.id < 0:
             self.shown.pop(key_side, None)
-            if prev is not None and self.tcfg.order_policy == "mirror":
+            # v16: a POI promoted from rank 2 to rank 1 (or demoted) is still shown on another slot of the side -> keep its order
+            if prev is not None and self.tcfg.order_policy == "mirror" and not self._shown_elsewhere(row.tf, row.side, prev, key_side):
                 self._mirror_cancel(f"{row.tf}#{prev}", "no longer shown", minute)
-                # v12 keep_replaced_bars: a clear of the slot also drops the orders kept after a 'replaced'
+                # v12 keep_replaced_bars: a clear of the slot also drops the orders kept after a 'replaced' (of the same rank)
                 if self.tcfg.keep_replaced_bars > 0:
                     side = "buy" if row.side == "below" else "sell"
                     for k, p in list(self.pending.items()):
-                        if p.grace_reason == "replaced" and p.plan.tf == row.tf and p.plan.side == side and p.plan.reentry_n == 0:
+                        if p.grace_reason == "replaced" and p.plan.tf == row.tf and p.plan.side == side and p.plan.reentry_n == 0 \
+                                and getattr(p.plan, "rank", 1) == rank:
                             self._cancel(k, "no longer shown", minute)
             return
         self.shown[key_side] = int(row.id)
-        if prev is not None and prev != row.id and self.tcfg.order_policy == "mirror":
+        if prev is not None and prev != row.id and self.tcfg.order_policy == "mirror" \
+                and not self._shown_elsewhere(row.tf, row.side, prev, key_side):
             self._mirror_cancel(f"{row.tf}#{prev}", "replaced", minute)
         # v11 grace: the POI is shown again while its order waits in the grace period -> keep the order
         pend = self.pending.get(f"{row.tf}#{int(row.id)}")
@@ -300,6 +323,10 @@ class PortfolioSimulator:
             d["feats"] = row.feats
         plan = TradePlan.from_poi(d, self.tcfg, self.spec, selected_time=str(row.t), regime=self._regime(minute))
         if plan is None:
+            return
+        plan.rank = rank
+        if rank > 1 and self.tcfg.rank2_tfs and row.tf not in self.tcfg.rank2_tfs:
+            self.skipped.append((plan.key, "rank filtered (tf)"))
             return
         if plan.regime:
             self.regime_counts[plan.regime] = self.regime_counts.get(plan.regime, 0) + 1
@@ -316,6 +343,11 @@ class PortfolioSimulator:
         if self.conf_filter is not None and self._confluent_other_tf(plan, minute):
             flt = self.conf_filter
             plan.confluent = True
+        elif rank > 1 and self.tcfg.rank2_confluent_only:
+            self.skipped.append((plan.key, "rank filtered (not confluent)"))
+            return
+        if rank > 1 and self.rank2_filter is not None:
+            flt = self.rank2_filter                     # v16: rank >= 2 zones judged by their own bar
         why = flt.check(d, row.tf, spread=float(self.spread[minute]), when=row.t)
         if why:
             # v15 tiered admission: failed the normal bar but passes the tier bar -> trade it smaller
@@ -365,6 +397,10 @@ class PortfolioSimulator:
             rs *= tc.confluent_risk_scale
         else:
             rs *= tc.plain_risk_scale
+        if plan.rank > 1:
+            rs *= tc.rank2_risk_scale                  # v16
+            if plan.reentry_n == 0:
+                self.rank2_placed += 1
         plan.risk_scale = rs
 
     def _apply_v14(self, plan: TradePlan, base: float) -> None:
@@ -835,9 +871,17 @@ class PortfolioSimulator:
             self.cur_minute = m
             t64 = self.idx[m]
             # 1) act on selection events stamped at/before this bar's open
-            while ev_i < n_ev and self.sel_minute[ev_i] <= m:
-                self._on_event(self.sel.iloc[ev_i], m)
-                ev_i += 1
+            if ev_i < n_ev and self.sel_minute[ev_i] <= m:
+                if self.tcfg.max_rank > 1:
+                    j = ev_i
+                    while j < n_ev and self.sel_minute[j] <= m:
+                        j += 1
+                    b = self.sel.iloc[ev_i:j]
+                    b = b[(b.event == "set") & (b.id >= 0)]
+                    self._batch_set = set(zip(b.tf, b.side, b.id.astype(int)))
+                while ev_i < n_ev and self.sel_minute[ev_i] <= m:
+                    self._on_event(self.sel.iloc[ev_i], m)
+                    ev_i += 1
             # 2) expire pending (persist policy) / v11 grace period elapsed
             for k, p in list(self.pending.items()):
                 if m >= p.expires_minute:
@@ -942,6 +986,7 @@ class SimResult:
                 "mart_step": p.plan.mart_step, "mart_scale": round(p.plan.mart_scale, 4),
                 "grid_leg": bool(p.plan.grid_leg), "grid_parent": p.plan.grid_parent,
                 "tier": bool(getattr(p.plan, "tier", False)), "risk_scale": round(p.plan.risk_scale, 4),
+                "rank": int(getattr(p.plan, "rank", 1)),
                 "legs": ";".join(f"{l.lots}@{l.close_price:.2f}:{l.close_reason}" for l in p.legs),
             })
         df = pd.DataFrame(rows)
@@ -970,7 +1015,9 @@ class SimResult:
                                  "grid_leg_trades": int(t.grid_leg.sum()) if len(t) else 0,
                                  "edge_trades": int((~t.grid_leg).sum()) if len(t) else 0,
                                  "tier_placed": s.tier_trades_placed,
-                                 "tier_trades": int(t.tier.sum()) if len(t) and "tier" in t else 0}
+                                 "tier_trades": int(t.tier.sum()) if len(t) and "tier" in t else 0,
+                                 "rank2_placed": s.rank2_placed,
+                                 "rank2_trades": int((t["rank"] > 1).sum()) if len(t) and "rank" in t else 0}
         if not len(t):
             return out
         r = t.r_net
