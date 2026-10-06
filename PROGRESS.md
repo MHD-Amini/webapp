@@ -44,6 +44,13 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [ ] 6. Final backtest `backtest_v16_final.py` -> study_results/FINAL_BACKTEST_V16.md, report MORE_TRADES_V16.md, README, final save + archive.
 
 ## Log (v16)
+- 2026-10-06 19:50  step 3 (levers) DONE while the recorder runs: lubot/execution.py TraderConfig v16 keys (max_rank, rank2_filter,
+  rank2_risk_scale, rank2_tfs, rank2_confluent_only; TradePlan.rank), lubot/portfolio_sim.py: one slot per (tf, side, rank), a POI
+  promoted/demoted between rank slots in the same bar keeps its order (no cancel/re-place), rank-2 own filter bar / scale / tf scope /
+  confluent-only gate, trades frame + summary carry `rank` / rank2_trades.  tests/test_v16_levers.py (7) -> 147 pass.  smoke_v16.py
+  PARITY: v15-A on the v10 streams through the v16 simulator = 448 / +297.45 / -5.82 IDENTICAL (the sort of the selection frame had to
+  stay `sort_values("t")` - a stable sort changes the order of same-minute events and moves the result by -0.3 k$).  Remaining in step 3:
+  parity on the sel_v16 rank-1 stream once recorded (M20 rows excluded via `timeframes`).
 - 2026-10-06 19:25  SANDBOX RESET during step 2 (recorder killed after the 4th M10 chunk; every chunk was already committed + pushed
   -> nothing lost).  Recovered: git pull, bash restore.sh (CSV relinked, lightgbm, 140 tests), run_v16_record.sh relaunched (resumable).
   RECOVERY RULE for step 2: after any reset just relaunch `nohup bash run_v16_record.sh > logs/record_v16.log 2>&1 &`.

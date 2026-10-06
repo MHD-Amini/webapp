@@ -125,7 +125,8 @@ class PortfolioSimulator:
         if "rank" not in sel.columns:
             sel = sel.assign(rank=1)
         sel = sel[sel["rank"] <= max(1, tcfg.max_rank)]
-        self.sel = sel.sort_values(["t", "rank"], kind="stable").reset_index(drop=True)
+        # NOTE: the same sort call as before v16 (default quicksort) -> identical event order on rank-1 streams
+        self.sel = sel.sort_values("t").reset_index(drop=True)
         # map each event to the FIRST M1 bar whose open time >= event time (act at that bar's open)
         self.sel_minute = np.searchsorted(self.idx, self.sel.t.values.astype("datetime64[ns]"), side="left")
         # state
@@ -291,7 +292,7 @@ class PortfolioSimulator:
 
     # ------------------------------------------------------------------ order events
     def _on_event(self, row, minute: int) -> None:
-        rank = int(getattr(row, "rank", 1))
+        rank = int(row["rank"]) if "rank" in row.index else 1   # row.rank is the pandas method
         key_side = (row.tf, row.side) if rank <= 1 else (row.tf, row.side, rank)   # v16: one slot per (tf, side, rank)
         prev = self.shown.get(key_side)
         if row.event == "clear" or row.id < 0:

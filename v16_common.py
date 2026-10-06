@@ -29,7 +29,7 @@ EXPECT_V15A = (448, 297.45, -5.82)      # trades, return %, max DD %
 REF16 = {"trades": 448, "net_$": 29745.0, "OOS_net_$": 19264.0, "return_%": 297.45, "max_dd_%": -5.82, "profit_factor": 2.375,
          "win_%": 74.8, "sl_%": 24.8, "worst_day_%eq": -2.42, "OOS_PF": 2.259, "OOS_win_%": 76.3, "OOS_sl_%": 23.7}
 
-TFS16 = ("H1", "M30", "M20", "M15", "M10", "M5")
+TFS16 = ("M5", "M10", "M15", "M20", "M30", "H1")     # concat order = run_v12_funnel.load_year (stable sort -> event order)
 
 
 def v15a_config() -> TraderConfig:
@@ -57,15 +57,19 @@ def fmt16(name: str, j: dict) -> str:
 
 def load_year16(csv: str = "data/xauusd_m1.csv", start: str = "2025-09-01", stream: str = "v16", tfs=TFS16, max_rank: int = 1):
     """M1 year + the recorded selection streams.  ``stream='v10'`` = the v15 streams (rank 1 only); ``'v16'`` = the re-recorded
-    top-K streams (study_results/sel_v16_<TF>.pkl) cut at ``max_rank``.  Missing TF files are skipped (M20 has no v10 stream)."""
+    top-K streams (study_results/sel_v16_<TF>.pkl) cut at ``max_rank``.  Missing TF files are skipped (M20 has no v10 stream).
+    Loading goes through backtest_trader.load_selections per TF + the same concat / stable sort as run_v12_funnel.load_year, so the
+    event order (and therefore the simulator result) of the v10 streams is byte-identical to every study before v16."""
+    from backtest_trader import load_selections
     m1 = load_mt5_csv(csv)[start:]
     parts = []
     for tf in tfs:
-        for f in sorted(glob.glob(f"study_results/sel_{stream}_{tf}.pkl")):
-            d = pd.read_pickle(f)
-            if "rank" in d:
-                d = d[d["rank"] <= max_rank]
-            parts.append(d)
+        if not glob.glob(f"study_results/sel_{stream}_{tf}.pkl"):
+            continue
+        d = load_selections(f"study_results/sel_{stream}_{tf}.pkl")
+        if "rank" in d:
+            d = d[d["rank"] <= max_rank]
+        parts.append(d)
     if not parts:
         raise SystemExit(f"no sel_{stream}_*.pkl streams in study_results/")
     sel = pd.concat(parts, ignore_index=True).sort_values("t", kind="stable").reset_index(drop=True)
