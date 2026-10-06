@@ -44,6 +44,8 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [ ] 6. Final backtest `backtest_v16_final.py` -> study_results/FINAL_BACKTEST_V16.md, report MORE_TRADES_V16.md, README, final save + archive.
 
 ## Log (v16)
+- 2026-10-06 20:53  3rd SANDBOX RESET (during M5 recording; 38/51 chunks on GitHub: M10, M20, M15, M30, H1 complete + M5 Sep/Oct).
+  Recovered (restore.sh, 150 tests) and relaunched run_v16_all.sh (recorder continues at M5 Nov 2025, then the grid).
 - 2026-10-06 20:40  step 5 (port) DONE AHEAD of the grid: lubot/engine.py MultiTimeframeScanner.scan(top_k) returns above_ranked /
   below_ranked (rank field, index 0 == slot winner); trader.py: on_selection iterates the ranked lists (_on_candidate), rank-2 gates
   (tf scope, confluent-only, own bar) + x rank2_risk_scale, a POI shown on ANY rank slot keeps its order, rank stored in trader_state
