@@ -44,6 +44,11 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [ ] 6. Final backtest `backtest_v16_final.py` -> study_results/FINAL_BACKTEST_V16.md, report MORE_TRADES_V16.md, README, final save + archive.
 
 ## Log (v16)
+- 2026-10-06 21:00  PRELIMINARY full-year read on the 4 higher TFs (M10/M15/M30/H1, M5 not yet recorded), v15-A strings:
+  v16 rank-1 stream == v10 stream IDENTICAL (248 tr / +15 774 $ / DD 4.66 / PF 2.83).  rank-2 same bar: 269 tr (+15 r2 fills) +16 548 $
+  OOS +9 132 DD 5.59; rank-2 q0.60: 264 tr +16 537 DD 4.93 PF 2.73 win 77.3.  M20 q0.57: 310 tr but +14 622 DD 7.33 PF 2.13 (M20 at
+  0.57 loses); M20 q0.60: 292 tr +17 708 OOS +9 873 DD 6.09 PF 2.43 (45 M20 trades, +1.9 k$ at a DD cost).  -> both sources add trades;
+  rank-2 is cheap on the loss profile, M20 needs a high bar (>= 0.60) and will be judged with M5 in the grid.
 - 2026-10-06 20:53  3rd SANDBOX RESET (during M5 recording; 38/51 chunks on GitHub: M10, M20, M15, M30, H1 complete + M5 Sep/Oct).
   Recovered (restore.sh, 150 tests) and relaunched run_v16_all.sh (recorder continues at M5 Nov 2025, then the grid).
 - 2026-10-06 20:40  step 5 (port) DONE AHEAD of the grid: lubot/engine.py MultiTimeframeScanner.scan(top_k) returns above_ranked /
