@@ -1,3 +1,53 @@
+# PROGRESS — v16 NEW TRADE SOURCES for the v15-A trader: MORE TRADES & MORE PROFIT AT THE SAME LOSS PERCENTAGE — IN PROGRESS
+
+**Recovery (read this first):** `git clone https://github.com/MHD-Amini/webapp.git /home/user/webapp`, `bash restore.sh`
+(relinks the CSV to `data/xauusd_m1.csv`, pip, tests), read this file, continue from the FIRST UNCHECKED step below.  Every step ends
+with `bash save.sh "msg"` (commit + push to GitHub origin = https://github.com/MHD-Amini/webapp).  Long jobs are resumable (one file per
+chunk / per run, they skip outputs that exist) and run under `run_v16_all.sh`, which autosaves (commit + push) every 4 minutes.
+Data: `/home/user/uploaded_files/XAUUSD.t_M1_202501020100_2026090423581112.csv` (593 863 M1 bars 2025-01-02 -> 2026-09-04; symlink
+`data/xauusd_m1.csv`).  Sandbox: 2 cores, ~1 GB RAM -> simulator with `--workers 1`, recorder on the other core, never two full-year sims.
+
+## User spec (v16)
+1. Make the v15 trading bot (run_trader.bat = v15-A) take MORE TRADES and MORE PROFIT while MAINTAINING THE LOSS PERCENTAGE.
+2. Save the process after EVERY step without exception, recoverable if the session dies (GitHub + PROGRESS.md + resumable jobs).
+
+## Reference (v15-A, FINAL_BACKTEST_V15.md, full year 2025-09-01 -> 2026-09-04, $10 000, 1 % base risk)
+448 trades, +29 745 $ (+297.45 %), max DD -5.82 %, PF 2.375, win 74.8 %, stop-outs 24.8 %, worst day -2.42 % eq, OOS net +19 264 $,
+OOS PF 2.26, OOS win 76.3, OOS sl 23.7, 13/13 months.  Judge (v16_common.judge16, same bands as v15): more_trades = n > 448;
+more_profit = net > 29 745 AND OOS net > 19 264; hold_loss = stop-out rate <= ref + 2 pt, win >= ref - 3 pt, max DD <= ref + 0.5 pt,
+worst day >= ref - 0.5 pt, PF >= ref - 0.10; hold_oos = the same on the OOS half.
+
+## Why v16 = NEW TRADE SOURCES (what v11/v12/v15 proved is exhausted)
+Admission relaxation is dead: quality bars, cost bars, sessions, keep_replaced, grace, re-entry after BE, re-arm after SL, front offset,
+tiers (M10 0.55 only marginal) were all tested (MORE_TRADES_STUDY.md, MORE_TRADES_V12.md, MORE_TRADES_V15.md).  The recorded streams
+(sel_v10_*.pkl) carry ONE POI per side per timeframe (the scanner slot); `candidates` is a COUNT: 24 % of set events have >= 2
+qualified candidates on that side and 6 % have >= 3 - those zones were NEVER available to the trader.  Untested sources:
+  A. RANK-2 CANDIDATES: re-record the scanner stream with the top-K qualified candidates per slot (`rank` column); the trader may place
+     the 2nd-ranked zone too (if it does not overlap the 1st: same-TF overlap dedupe already skips it) - optional own filter bar and
+     risk scale (`max_rank`, `rank2_filter`, `rank2_risk_scale`, `rank2_tfs`).  Judged like every lever: full year + OOS half.
+  B. NEW TIMEFRAME M20 (between M15 51 tr and M30 39 tr; same model, tf_minutes is a model feature -> interpolation, not extrapolation):
+     record its stream; M20 zones overlapping M15/M30 zones count as confluence (cross-TF) and get the v15 sizing.  Needs filter bar.
+  C. (if A/B leave budget) H4 stream (cheap, few trades) and a rank-2 x confluence-only variant (2nd candidate only when it is confluent).
+Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 / +29 745 / -5.82) before anything is judged.
+
+## Plan (v16)
+- [ ] 0. Session start: restore env (140 tests pass), PROGRESS v16 header + plan, v16_common.py (v15-A config + judge16), first save.
+- [ ] 1. `record_selections_v16.py` (top-K per slot with `rank`, new TF M20 in TIMEFRAME_MINUTES/htf_parent) + pilot on one month (M10):
+        rank-2 frequency, quality distribution, timing; rank-1 rows == v10 stream on that month.
+- [ ] 2. `run_v16_record.sh`: full-year streams Sep25-Sep26 in monthly chunks (6-week warm-up, carry-over), all TFs + M20, each chunk
+        committed; merge -> study_results/sel_v16_<TF>.pkl.  Runs in the background under the autosave loop.
+- [ ] 3. Simulator levers (defaults byte-identical, parity test): `max_rank`, `rank2_filter`, `rank2_risk_scale`, `rank2_tfs`; M20 support
+        (filter rule, keep_replaced_tfs, mart_tfs); unit tests tests/test_v16_levers.py; parity of v15-A on the sel_v16 rank-1 stream.
+- [ ] 4. Grid `run_v16_levers.py` (resumable, workers 1) -> study_results/v16_levers/ + v16_levers.csv; judge16.
+- [ ] 5. Stress x6 + walk-forward of the finalists; port to trader.py (live scanner: qualified() list, M20) + run_trader.bat (v16-A) +
+        verify_bat_v16.py + fake-MT5 tests.
+- [ ] 6. Final backtest `backtest_v16_final.py` -> study_results/FINAL_BACKTEST_V16.md, report MORE_TRADES_V16.md, README, final save + archive.
+
+## Log (v16)
+- 2026-10-06 19:05  step 0: repo at GitHub commit 938676f (v15 complete), restore.sh OK (CSV linked, lightgbm installed, 140 tests pass).
+  Env: py3.13, 2 cores, ~1 GB RAM.  v16 header + plan written.
+
+---
 # PROGRESS — v15 MORE TRADES & MORE PROFIT for the v14-A trader AT THE SAME LOSS PERCENTAGE — ALL STEPS COMPLETE (2026-10-05 21:30)
 
 **Recovery (read this first):** `git clone https://github.com/MHD-Amini/webapp.git /home/user/webapp`, `bash restore.sh`
