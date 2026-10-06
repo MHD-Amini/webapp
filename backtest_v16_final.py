@@ -217,13 +217,13 @@ def main():
     w("## Five worst trades\n")
     w(md(worst, index=False))
     w("\n## Files\n")
-    w("`study_results/final_v15/v15A_summary.json` (all metrics), `v15A_trades.csv` (every trade with `confluent` / `tier` / `risk_scale` / legs), "
-      "`v15A_equity.csv` (balance + equity), `v15A_monthly.csv`, `v15A_by_tf.csv`, the same for `ref_*` (v14-A), chart `charts/final_v15_equity.png`.  "
-      "Full study: `study_results/MORE_TRADES_V15.md`.\n")
-    Path("study_results/FINAL_BACKTEST_V15.md").write_text("\n".join(L), encoding="utf-8")
-    print("wrote study_results/FINAL_BACKTEST_V15.md")
+    w("`study_results/final_v16/v16A_summary.json` (all metrics), `v16A_trades.csv` (every trade with `rank` / `confluent` / `risk_scale` / legs), "
+      "`v16A_equity.csv` (balance + equity), `v16A_monthly.csv`, `v16A_by_tf.csv`, the same for `ref_*` (v15-A), chart `charts/final_v16_equity.png`.  "
+      "Full study: `study_results/MORE_TRADES_V16.md`.\n")
+    Path("study_results/FINAL_BACKTEST_V16.md").write_text("\n".join(L), encoding="utf-8")
+    print("wrote study_results/FINAL_BACKTEST_V16.md")
     os.makedirs("logs", exist_ok=True)
-    open("logs/backtest_v15_final.log", "w").write(json.dumps({"v15A": ja, "ref": jr, "identical": identical, "ref_ok": ref_ok}, indent=1, default=str))
+    open("logs/backtest_v16_final.log", "w").write(json.dumps({"v16A": ja, "ref": jr, "identical": identical, "ref_ok": ref_ok}, indent=1, default=str))
 
 
 if __name__ == "__main__":
