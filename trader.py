@@ -142,6 +142,15 @@ class Trader:
             self.log.info(f"tier filter (x{self.t.tier_risk_scale}): {self.tier_filter.describe()}")
         if self.t.confluent_risk_scale != 1.0 or self.t.plain_risk_scale != 1.0:
             self.log.info(f"conviction sizing: confluent x{self.t.confluent_risk_scale}, plain x{self.t.plain_risk_scale}")
+        # v16: ranked candidates (rank-2 zones of the scanner) - same code path as the simulator
+        self.rank2_filter: Optional[TradeFilter] = TradeFilter.parse(
+            self.t.rank2_filter, commission_oz=self.spec.commission_per_lot / self.spec.contract_size,
+            server_minus_ny_hours=cfg.server_minus_ny_hours if cfg.server_minus_ny_hours is not None else 7.0) \
+            if self.t.rank2_filter else None
+        if self.t.max_rank > 1:
+            self.log.info(f"ranked candidates: up to rank {self.t.max_rank} per side, x{self.t.rank2_risk_scale}, "
+                          f"tfs {'|'.join(self.t.rank2_tfs) or 'all'}{', confluent only' if self.t.rank2_confluent_only else ''}; "
+                          f"rank-2 bar: {self.rank2_filter.describe() if self.rank2_filter else 'normal bar'}")
         if self.t.confluence_memory_min > 0:
             self.log.info(f"confluence memory: {self.t.confluence_memory_min} min ({self.t.confluence_memory_kind}); "
                           f"{len(self.state.memory)} entries restored")
@@ -205,7 +214,7 @@ class Trader:
         closed = m1[m1.index + pd.Timedelta(minutes=1) <= now_server.floor("min")]
         ohlc = closed[["open", "high", "low", "close", "volume"]]
         scanner = MultiTimeframeScanner(ohlc, self.cfg)
-        res = scanner.scan(price=(tick["bid"] + tick["ask"]) / 2.0)
+        res = scanner.scan(price=(tick["bid"] + tick["ask"]) / 2.0, top_k=max(1, self.t.max_rank))
         return res
 
     # ------------------------------------------------------------------ sync with terminal
@@ -347,54 +356,75 @@ class Trader:
         regime = self.current_regime()                        # v13
         for tf, r in result.items():
             for side in ("above", "below"):
-                d = r.get(side)
-                if not d:
-                    continue
-                d = dict(d)
-                d["tf"] = tf
-                key = f"{tf}#{d['id']}"
-                shown_keys.add(key)
-                slot_shown[(tf, BUY if side == "below" else SELL)] = key
-                plan = TradePlan.from_poi(d, self.t, self.spec, selected_time=r.get("time", ""), regime=regime)
-                if plan is None:
-                    continue
-                if plan.regime == "range" and self.t.range_risk_scale <= 0:
-                    self.log.debug(f"skip {key}: range regime (no trading)")
-                    continue
-                why = self._accept(plan)
-                if why == "active":
-                    # v12: a kept (replaced) order that is shown again is kept for good
-                    pl = self.state.plans.get(key)
-                    if pl is not None and pl.get("keep_until"):
-                        pl.pop("keep_until", None)
-                        self.state.save()
-                        self.log.info(f"{key} shown again -> kept order is live again")
-                    continue
-                if why:
-                    self.log.debug(f"skip {key}: {why}")
-                    continue
-                # v8 trade filter with the live spread (ask - bid) at decision time
-                # (v12: a confluence plan - same level active on another TF - is judged by the confluence filter instead)
-                px = self.b.price()
-                flt = self.filter
-                if self.conf_filter is not None and self._confluent_other_tf(plan):
-                    flt = self.conf_filter
-                    plan.confluent = True
-                why = flt.check(d, tf, spread=px["ask"] - px["bid"], when=r.get("time") or None)
-                if why:
-                    # v15 tiered admission: failed the normal bar but passes the tier bar -> trade it smaller
-                    if self.tier_filter is not None and self.tier_filter.rule_for(tf) is not None and \
-                            self.tier_filter.check(d, tf, spread=px["ask"] - px["bid"], when=r.get("time") or None) is None:
-                        plan.tier = True
-                        self.log.info(f"tier {key}: {why} -> admitted at x{self.t.tier_risk_scale}")
-                    else:
-                        self.log.info(f"filter {key}: {why}")
-                        continue
-                # v15 conviction / tier sizing (same arithmetic as PortfolioSimulator._apply_v15)
-                rs = plan.risk_scale if plan.risk_scale > 0 else 1.0
-                rs *= self.t.tier_risk_scale if plan.tier else (self.t.confluent_risk_scale if plan.confluent else self.t.plain_risk_scale)
-                plan.risk_scale = rs
-                self.open_plan(plan)
+                # v16: the ranked list (index 0 == the slot winner); rank-1 only when max_rank is 1 / the scan has no list
+                ranked = r.get(side + "_ranked") if self.t.max_rank > 1 else None
+                if ranked is None:
+                    ranked = [dict(r[side], rank=1)] if r.get(side) else []
+                for d in ranked:
+                    self._on_candidate(tf, side, dict(d), r, regime, shown_keys, slot_shown)
+        self._mirror_cancel_unshown(shown_keys, slot_shown)
+
+    def _on_candidate(self, tf: str, side: str, d: dict, r: dict, regime: str, shown_keys: set, slot_shown: dict) -> None:
+        """One shown candidate (rank 1 = the slot winner, rank >= 2 = v16 ranked candidates) -> plan, gates, order."""
+        rank = int(d.get("rank", 1))
+        d["tf"] = tf
+        key = f"{tf}#{d['id']}"
+        shown_keys.add(key)
+        if rank <= 1:
+            slot_shown[(tf, BUY if side == "below" else SELL)] = key
+        plan = TradePlan.from_poi(d, self.t, self.spec, selected_time=r.get("time", ""), regime=regime)
+        if plan is None:
+            return
+        plan.rank = rank
+        if rank > 1 and self.t.rank2_tfs and tf not in self.t.rank2_tfs:
+            return
+        if plan.regime == "range" and self.t.range_risk_scale <= 0:
+            self.log.debug(f"skip {key}: range regime (no trading)")
+            return
+        why = self._accept(plan)
+        if why == "active":
+            # v12: a kept (replaced) order that is shown again is kept for good
+            pl = self.state.plans.get(key)
+            if pl is not None and pl.get("keep_until"):
+                pl.pop("keep_until", None)
+                self.state.save()
+                self.log.info(f"{key} shown again -> kept order is live again")
+            return
+        if why:
+            self.log.debug(f"skip {key}: {why}")
+            return
+        # v8 trade filter with the live spread (ask - bid) at decision time
+        # (v12: a confluence plan - same level active on another TF - is judged by the confluence filter instead)
+        px = self.b.price()
+        flt = self.filter
+        if self.conf_filter is not None and self._confluent_other_tf(plan):
+            flt = self.conf_filter
+            plan.confluent = True
+        elif rank > 1 and self.t.rank2_confluent_only:
+            self.log.debug(f"skip {key}: rank {rank} not confluent")
+            return
+        if rank > 1 and self.rank2_filter is not None:
+            flt = self.rank2_filter                      # v16: rank >= 2 zones judged by their own bar
+        why = flt.check(d, tf, spread=px["ask"] - px["bid"], when=r.get("time") or None)
+        if why:
+            # v15 tiered admission: failed the normal bar but passes the tier bar -> trade it smaller
+            if self.tier_filter is not None and self.tier_filter.rule_for(tf) is not None and \
+                    self.tier_filter.check(d, tf, spread=px["ask"] - px["bid"], when=r.get("time") or None) is None:
+                plan.tier = True
+                self.log.info(f"tier {key}: {why} -> admitted at x{self.t.tier_risk_scale}")
+            else:
+                self.log.info(f"filter {key}: {why}")
+                return
+        # v15 conviction / tier sizing (same arithmetic as PortfolioSimulator._apply_v15)
+        rs = plan.risk_scale if plan.risk_scale > 0 else 1.0
+        rs *= self.t.tier_risk_scale if plan.tier else (self.t.confluent_risk_scale if plan.confluent else self.t.plain_risk_scale)
+        if rank > 1:
+            rs *= self.t.rank2_risk_scale                # v16
+            self.log.info(f"rank {rank} {key}: admitted at x{self.t.rank2_risk_scale}")
+        plan.risk_scale = rs
+        self.open_plan(plan)
+
+    def _mirror_cancel_unshown(self, shown_keys: set, slot_shown: dict) -> None:
         # mirror policy: cancel pending orders of POIs no longer shown (positions are never touched)
         if self.t.order_policy == "mirror":
             now = time.time()

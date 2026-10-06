@@ -642,11 +642,13 @@ class MultiTimeframeScanner:
         for e in self.engines.values():
             e.run_all()
 
-    def scan(self, price: Optional[float] = None, exclude_forming_bar: bool = True) -> Dict[str, Dict]:
+    def scan(self, price: Optional[float] = None, exclude_forming_bar: bool = True, top_k: int = 1) -> Dict[str, Dict]:
         """Run every engine to the end and return the two POIs per timeframe.
 
         ``exclude_forming_bar``: when the last M1 bar does not complete the HTF
         bar, that HTF bar is still forming and must not be treated as closed.
+        ``top_k`` > 1 (v16): the result also carries ``above_ranked`` / ``below_ranked`` = the top-k qualified
+        candidates per side in scanner order (index 0 == ``above`` / ``below``), each with a ``rank`` field.
         """
         last_m1 = self.m1.index[-1]
         price = float(self.m1["close"].iloc[-1]) if price is None else price
@@ -660,5 +662,16 @@ class MultiTimeframeScanner:
                     n -= 1
             while e.i + 1 < n:
                 e.step()
-            out[tf] = e.select(e.i, price).to_dict()
+            if top_k <= 1:
+                out[tf] = e.select(e.i, price).to_dict()
+            else:
+                q = e.qualified(e.i, price)
+                sel = Selection(tf=tf, time=str(e.candles.index[e.i]), price=float(price),
+                                above=q["above"][0] if q["above"] else None, below=q["below"][0] if q["below"] else None,
+                                range_bias=e.structure.range.bias, price_zone=e.structure.range.zone_of(float(price)),
+                                candidates_above=len(q["above"]), candidates_below=len(q["below"]))
+                d = sel.to_dict()
+                for side in ("above", "below"):
+                    d[side + "_ranked"] = [{**c, "rank": k + 1} for k, c in enumerate(q[side][:top_k])]
+                out[tf] = d
         return out
