@@ -44,6 +44,9 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [ ] 6. Final backtest `backtest_v16_final.py` -> study_results/FINAL_BACKTEST_V16.md, report MORE_TRADES_V16.md, README, final save + archive.
 
 ## Log (v16)
+- 2026-10-06 19:25  SANDBOX RESET during step 2 (recorder killed after the 4th M10 chunk; every chunk was already committed + pushed
+  -> nothing lost).  Recovered: git pull, bash restore.sh (CSV relinked, lightgbm, 140 tests), run_v16_record.sh relaunched (resumable).
+  RECOVERY RULE for step 2: after any reset just relaunch `nohup bash run_v16_record.sh > logs/record_v16.log 2>&1 &`.
 - 2026-10-06 19:40  step 1 DONE: lubot/config.py TIMEFRAME_MINUTES += M20 (htf_parent M20 -> H1); record_selections_v16.py (top-K per side
   with `rank`, qualified() computed once per bar, carry-over per (side, rank) for chunking).  PILOT M10 Sep 2025 (top-3, 162 s):
   rank-1 rows IDENTICAL to parts_v10/sel_v10_M10_2025-09-01.pkl (599/599 rows, every column).  Rank 2: 255 set events / 56 unique POIs
