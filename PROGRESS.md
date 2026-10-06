@@ -44,6 +44,14 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [ ] 6. Final backtest `backtest_v16_final.py` -> study_results/FINAL_BACKTEST_V16.md, report MORE_TRADES_V16.md, README, final save + archive.
 
 ## Log (v16)
+- 2026-10-06 20:15  2nd SANDBOX RESET (during M15 recording; 21 chunks already on GitHub, nothing lost).  Recovered via restore.sh;
+  pipeline relaunched as `nohup bash run_v16_all.sh > logs/v16_all.log 2>&1 &` (it relaunches the recorder, then runs the grid, autosave
+  every 4 min).  RECOVERY RULE from here: after any reset run `bash restore.sh` then that one command.
+- 2026-10-06 20:05  step 4 prepared: run_v16_levers.py (95 variants: ref, R2 bar x scale x tf-scope, R2C confluent-only, R3, M20 bars,
+  CMB M20 x rank-2; resumable, judge16) + run_v16_all.sh.  SMOKE on the recorded M10 chunks Sep25-Feb26 (M10 only, v15-A strings):
+  rank-1 = v10 stream IDENTICAL (70 tr / +33.94 % / DD 1.43); max_rank 2 -> 78 tr (+4 rank-2 fills, 8 new keys, 2 lost through
+  overlap / promotion interactions) +32.1 % DD 2.59; rank-2 bar q0.60 -> 77 tr +38.27 % DD 1.64; max_rank 3 adds nothing over 2.
+  -> rank-2 zones ARE a real new source (~10 % more M10 trades); the admission bar decides whether they pay.
 - 2026-10-06 19:50  step 3 (levers) DONE while the recorder runs: lubot/execution.py TraderConfig v16 keys (max_rank, rank2_filter,
   rank2_risk_scale, rank2_tfs, rank2_confluent_only; TradePlan.rank), lubot/portfolio_sim.py: one slot per (tf, side, rank), a POI
   promoted/demoted between rank slots in the same bar keeps its order (no cancel/re-place), rank-2 own filter bar / scale / tf scope /
