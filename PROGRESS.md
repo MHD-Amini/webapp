@@ -38,12 +38,23 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
         committed; merge -> study_results/sel_v16_<TF>.pkl.  Runs in the background under the autosave loop.
 - [x] 3. Simulator levers (defaults byte-identical, parity test): `max_rank`, `rank2_filter`, `rank2_risk_scale`, `rank2_tfs`; M20 support
         (filter rule, keep_replaced_tfs, mart_tfs); unit tests tests/test_v16_levers.py; parity of v15-A on the sel_v16 rank-1 stream.
-- [ ] 4. Grid `run_v16_levers.py` (resumable, workers 1) -> study_results/v16_levers/ + v16_levers.csv; judge16.
+- [x] 4. Grid `run_v16_levers.py` (resumable, workers 1) -> study_results/v16_levers/ + v16_levers.csv; judge16.
 - [ ] 5. Stress x6 + walk-forward of the finalists; port to trader.py (live scanner: qualified() list, M20) + run_trader.bat (v16-A) +
         verify_bat_v16.py + fake-MT5 tests.
 - [ ] 6. Final backtest `backtest_v16_final.py` -> study_results/FINAL_BACKTEST_V16.md, report MORE_TRADES_V16.md, README, final save + archive.
 
 ## Log (v16)
+- 2026-10-07 10:05  step 4 DONE: 171 variants (study_results/v16_levers.csv).  FOUR variants score 4/4, all of the same family = the NEW
+  M20 TIMEFRAME traded ONLY WHEN CONFLUENT (an M15/M30/... plan active or remembered on the same level), at a reduced M20 size:
+    M20SC_0.55_x0.4  498 tr / +30 913 $ / OOS +20 413 / DD 6.32 / PF 2.338 / win 74.9 / sl 24.5 / wd -2.83 / OOS PF 2.25 (52 M20 tr)
+    M20SC_0.60_x0.4  478 tr / +30 693 $ / OOS +20 278 / DD 6.00 / PF 2.359 / win 74.7 / sl 24.9 / wd -2.83 / OOS PF 2.26 (33 M20 tr)
+    M20SC_0.63_x0.4  467 tr / +30 175 $ / OOS +19 661 / DD 5.82 / PF 2.365 / win 75.2 / sl 24.4 / wd -2.64 / OOS PF 2.25 (21 M20 tr)
+    M20SC_0.63_x0.3  465 tr / +29 974 $ / OOS +19 645 / DD 5.81 / PF 2.369 / win 75.1 / sl 24.5 / wd -2.45 / OOS PF 2.26 (19 M20 tr)
+  The gains inside the band are modest (+1-4 %, +17-50 trades); the x0.6 / x0.75 / KD versions earn far more (+23 % with KD) but
+  overshoot the worst-day band by 0.02-0.15 pt or the OOS PF band.  Rank-2 zones (the original idea A) are OUT: the scanner's 2nd choice
+  loses at every bar.  Keep-demoted (KD) is a real +10 % but costs OOS PF (2.12-2.19 vs 2.26 - 0.10 = 2.16 band) -> offered as v16-B.
+  FINALISTS for step 5 stress x6 + walk-forward: M20SC_0.55_x0.4, M20SC_0.60_x0.4, M20SC_0.63_x0.4 (4/4), M20SC_0.60_x0.6_KD (most $),
+  M20SC_0.60_x0.6 (near miss), KD (pure keep-demoted).  Stress runs as `bash run_v16_stress.sh` (autosave loop, resumable).
 - 2026-10-07 09:40  Stage 4 DONE (159 runs, 9th reset in between): 29 variants at 3/4, still none 4/4.  The M20 size scale works as
   intended: M20SC_0.60_x0.6 (confluent-only M20 at x0.6 of normal size) = 478 tr / +32 476 $ / OOS +21 631 / DD 5.67 / PF 2.39 /
   OOS PF 2.28 / worst day -3.05 (band -2.92: the 2026-04-08 cluster = 2 confluent sells + the M20 leg stopped in one minute);
