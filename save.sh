@@ -6,6 +6,14 @@ MSG="${1:-checkpoint $(date -u +%Y-%m-%dT%H:%M:%SZ)}"
 git add -A >/dev/null 2>&1
 git commit -qm "$MSG" >/dev/null 2>&1 && echo "[save] committed: $MSG" || echo "[save] nothing to commit"
 URL=$(git remote get-url origin 2>/dev/null | sed -E 's#^(https?://)[^@]*@#\1#')
+# a concurrent autosave (run_v16_all.sh) may have pushed first -> integrate (rebase; grid jsons are idempotent: keep remote copy)
+if ! timeout 120 git push -q origin HEAD:main >/dev/null 2>&1; then
+  timeout 120 git fetch -q origin main >/dev/null 2>&1
+  if ! git rebase -q origin/main >/dev/null 2>&1; then
+    for f in $(git diff --name-only --diff-filter=U); do git checkout --theirs -- "$f" >/dev/null 2>&1; git add "$f"; done
+    GIT_EDITOR=true git rebase --continue >/dev/null 2>&1 || git rebase --abort >/dev/null 2>&1
+  fi
+fi
 if timeout 400 git push -q origin HEAD:main >/dev/null 2>&1; then
   echo "[save] pushed to $URL"
 elif [ -n "$GSK_TOKEN" ] && echo "$URL" | grep -q genspark.ai; then
