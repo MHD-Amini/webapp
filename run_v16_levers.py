@@ -119,6 +119,11 @@ def variants() -> dict[str, str]:
                 v[f"M20S{tag}_{qc}_x{sc}"] = j(m20_filters("0.99", qc, mart=mart), f"tf_risk_scale=M20:{sc}")
                 v[f"M20S{tag}_{qc}_x{sc}_KD"] = j(m20_filters("0.99", qc, mart=mart), f"tf_risk_scale=M20:{sc}", "max_rank=2",
                                                    f"rank2_filter={R2BARS['none']}")
+    # --- stage 5: smaller M20 size (the 2026-04-08 cluster day misses the worst-day band by 0.1 pt at x0.6)
+    for qc in ("0.55", "0.60", "0.63"):
+        for sc in ("0.4", "0.3"):
+            v[f"M20SC_{qc}_x{sc}"] = j(m20_filters("0.99", qc), f"tf_risk_scale=M20:{sc}")
+            v[f"M20SC_{qc}_x{sc}_KD"] = j(m20_filters("0.99", qc), f"tf_risk_scale=M20:{sc}", "max_rank=2", f"rank2_filter={R2BARS['none']}")
     # --- CMB: M20 x rank-2
     for bn in ("q57", "q60"):
         for bar in ("same", "q57", "q60"):
