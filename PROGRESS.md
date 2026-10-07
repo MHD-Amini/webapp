@@ -1,4 +1,4 @@
-# PROGRESS — v16 NEW TRADE SOURCES for the v15-A trader: MORE TRADES & MORE PROFIT AT THE SAME LOSS PERCENTAGE — IN PROGRESS
+# PROGRESS — v16 NEW TRADE SOURCES for the v15-A trader: MORE TRADES & MORE PROFIT AT THE SAME LOSS PERCENTAGE — IN PROGRESS (session 2, 2026-10-07)
 
 **Recovery (read this first):** `git clone https://github.com/MHD-Amini/webapp.git /home/user/webapp`, `bash restore.sh`
 (relinks the CSV to `data/xauusd_m1.csv`, pip, tests), read this file, continue from the FIRST UNCHECKED step below.  Every step ends
@@ -39,11 +39,43 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [x] 3. Simulator levers (defaults byte-identical, parity test): `max_rank`, `rank2_filter`, `rank2_risk_scale`, `rank2_tfs`; M20 support
         (filter rule, keep_replaced_tfs, mart_tfs); unit tests tests/test_v16_levers.py; parity of v15-A on the sel_v16 rank-1 stream.
 - [x] 4. Grid `run_v16_levers.py` (resumable, workers 1) -> study_results/v16_levers/ + v16_levers.csv; judge16.
-- [ ] 5. Stress x6 + walk-forward of the finalists; port to trader.py (live scanner: qualified() list, M20) + run_trader.bat (v16-A) +
-        verify_bat_v16.py + fake-MT5 tests.
-- [ ] 6. Final backtest `backtest_v16_final.py` -> study_results/FINAL_BACKTEST_V16.md, report MORE_TRADES_V16.md, README, final save + archive.
+- [x] 5a. Stress x6 + walk-forward of the finalists (v16_stress.csv, v16_walkforward.csv/.json).
+- [x] 5b. Judge 5a vs the v15-A stress rows (v15_stress.csv) -> DECISION v16-A / v16-B / v16-C (log below).
+- [ ] 5c. Port to run_trader.bat (v16-A strings: M20 timeframe, confluence bar M20 0.63, tf_risk_scale=M20:0.4), trader.py support check
+        (M20 live scan, MT5 timeframe map), tests/test_bat_v16.py (strings parse, keys present, M20 in every per-TF key).
+- [ ] 6a. `make_v16_report.py` -> study_results/MORE_TRADES_V16.md + charts (every number read from the result files).
+- [ ] 6b. README (title v16, command table, section 0i), restore.sh v16 hints, save.
+- [ ] 6c. Final backtest `backtest_v16_final.py` -> FINAL_BACKTEST_V16.md + verify_bat_v16.py (NEEDS the M1 CSV: the new sandbox has no
+        /home/user/uploaded_files - ask the user to re-upload XAUUSD.t_M1_202501020100_2026090423581112.csv), final save + archive.
 
 ## Log (v16)
+- 2026-10-07 17:20  SESSION 2 (the previous chat died after step 5a was pushed; nothing lost: GitHub main a960336 = stress + walk-forward
+  complete).  Recovered: git clone, restore.sh (152 tests pass).  The M1 CSV is NOT in this sandbox (no /home/user/uploaded_files) -> every
+  step that only reads result files (5b, 5c, 6a, 6b) is done first; 6c (final replay) waits for the re-upload.
+  step 5b DONE - judgement of the stress x6 (same 6 scenarios as v15: spread x2, commission x2, slip x3, worst intrabar, risk 0.5, risk 2;
+  reference = the v15-A rows of v15_stress.csv) and of the walk-forward (split 2026-03-01, from the trade lists):
+  * M20SC_0.63_x0.4 : more trades AND more $ than v15-A in 6/6 scenarios (+0.7 to +1.4 k$ at 1 %; risk 2 +1.4 k$), OOS net above AND OOS
+    PF within band in 6/6, loss bands (stop rate, win, DD, worst day, PF) held in 5/6 - the only miss is max DD at risk 0.5 (3.94 % vs
+    3.19 %, band 3.69; at 1 % risk the DD is 5.82 = ref).  Walk-forward: IS pass (more trades, more $, bands held); OOS half misses ONLY the
+    worst-day-in-R band (-3.04 R vs -2.10 R): 2026-04-08 01:54, the confluent-sell cluster (M10 + M30 stopped in the same minute, as in
+    v15-A) gets the M20 leg as a third stop (-48.76 $ at x0.4 - a tenth of the day's loss in $, but a full -1 R in R units).
+  * M20SC_0.60_x0.4 : 6/6 more trades/$, OOS 6/6, loss bands 4/6 (risk 0.5 DD 4.38; risk 2 worst day -6.43 vs -5.85).  WF: IS -66 $ (fails
+    more_profit on the first half), OOS worst-day as above.
+  * M20SC_0.55_x0.4 : 6/6 / 6/6 / 3/6 (slip x3 DD 6.62 vs 5.65, risk 0.5 DD, risk 2 worst day).  WF: IS PF -0.106 (fails).
+  * M20SC_0.60_x0.6 and M20SC_0.60_x0.6_KD : 6/6 more $ (KD +57 k$ summed over the 6 scenarios, by far the most money) but the loss bands
+    hold in only 1/6 - the worst day breaks in 5/6 (e.g. commission x2 -3.06 / -3.14 % vs -2.44).  KD alone: PF / OOS PF fail in 3/6.
+  * M20SC_0.63_x0.3 (not stressed; 4/4 on the full year): the ONLY finalist whose walk-forward OOS half passes every band (worst day -2.10 R
+    = ref: the 2026-04-08 M20 leg is not in its list) but its IS half is -151 $ vs ref (fails more_profit IS); +230 $ / +17 tr full year.
+  DECISION:  v16-A = M20SC_0.63_x0.4 = v15-A + M20 timeframe traded ONLY WHEN CONFLUENT at quality >= 0.63, sized x0.4:
+             467 tr (+19) / +30 175 $ (+1.4 %) / OOS +19 661 $ (+2.1 %) / DD 5.82 (=) / PF 2.365 (-0.01) / win 75.2 (+0.4) / sl 24.4 (-0.4) /
+             worst day -2.64 % (-0.22) / OOS PF 2.247 (-0.01) / 13/13 months; 21 M20 trades, 86 % win, +1 052 $.
+             v16-B (most $, the loss profile 0.02-0.15 pt outside the band) = M20SC_0.60_x0.6_KD: 509 tr / +36 670 $ / OOS +24 430 / DD 5.60 /
+             PF 2.305 / wd -2.94 / OOS PF 2.19 (max_rank=2 with rank2 bar 0.99 = keep-demoted orders, M20 bar 0.60 at x0.6).
+             v16-C (loss profile byte-for-byte on the OOS half) = M20SC_0.63_x0.3: 465 tr / +29 974 $ / wd -2.45.
+  HONEST READING: v16 is a small, robust gain, not a big one.  The ONLY new trade source that pays is the M20 timeframe when it confirms a
+  level another timeframe already trades (plain M20 zones lose 37 % win; the scanner's rank-2 zones lose at every bar); its contribution
+  is +1-4 % net at the sizes that keep the worst day inside the band.  Everything that earns more (x0.6, keep-demoted) does so by adding
+  one more leg to the same clustered confluent stop-outs, and that is exactly what the worst-day / PF bands measure.
 - 2026-10-07 10:05  step 4 DONE: 171 variants (study_results/v16_levers.csv).  FOUR variants score 4/4, all of the same family = the NEW
   M20 TIMEFRAME traded ONLY WHEN CONFLUENT (an M15/M30/... plan active or remembered on the same level), at a reduced M20 size:
     M20SC_0.55_x0.4  498 tr / +30 913 $ / OOS +20 413 / DD 6.32 / PF 2.338 / win 74.9 / sl 24.5 / wd -2.83 / OOS PF 2.25 (52 M20 tr)
