@@ -59,13 +59,15 @@ def j(*parts: str) -> str:
     return ",".join(p for p in parts if p)
 
 
-def m20_filters(q: str, qc: str | None = None) -> str:
+def m20_filters(q: str, qc: str | None = None, mart: bool = True) -> str:
     """TraderConfig overrides that add an M20 rule (min_quality q) to both filters and put M20 into the TF-scoped keys.
-    ``qc``: quality bar of the CONFLUENCE filter for M20 (default = q).  q=0.99 + qc=0.55 -> M20 traded ONLY when confluent."""
+    ``qc``: quality bar of the CONFLUENCE filter for M20 (default = q).  q=0.99 + qc=0.55 -> M20 traded ONLY when confluent.
+    ``mart=False``: M20 plans are never stepped up by the v14 martingale (mart_tfs without M20)."""
     flt = V15A_FLT + f"/M20:min_quality={q}"
     cf = V15A_CF + f"/M20:min_quality={qc if qc is not None else q}"
+    mt = "M10|M15|M20|M30|H1" if mart else "M10|M15|M30|H1"
     # the override parser splits on ',' -> the filter strings must not contain ',' (they do not)
-    return f"trade_filter={flt},confluence_filter={cf},keep_replaced_tfs=M10|M15|M20|M30|H1,mart_tfs=M10|M15|M20|M30|H1,timeframes={TF6}"
+    return f"trade_filter={flt},confluence_filter={cf},keep_replaced_tfs=M10|M15|M20|M30|H1,mart_tfs={mt},timeframes={TF6}"
 
 
 def variants() -> dict[str, str]:
@@ -102,6 +104,14 @@ def variants() -> dict[str, str]:
     for q, qc in (("0.63", "0.55"), ("0.63", "0.57"), ("0.66", "0.55")):
         v[f"M20C_{qc}_p{q}"] = m20_filters(q, qc)
         v[f"M20C_{qc}_p{q}_KD"] = j(m20_filters(q, qc), "max_rank=2", f"rank2_filter={R2BARS['none']}")
+    # --- M20N: M20 confluent-only WITHOUT martingale step-ups on M20 (the big M20 stops were stepped-up buys)
+    for qc in ("0.55", "0.57", "0.60", "0.63"):
+        v[f"M20N_{qc}"] = m20_filters("0.99", qc, mart=False)
+        v[f"M20N_{qc}_KD"] = j(m20_filters("0.99", qc, mart=False), "max_rank=2", f"rank2_filter={R2BARS['none']}")
+    # M20 confluent-only at a reduced size for the M20 plans: only via the DD buy-back mart cap (mart_max_risk_pct 2) as in v15
+    for qc in ("0.55", "0.60"):
+        v[f"M20N_{qc}_mc2"] = j(m20_filters("0.99", qc, mart=False), "mart_max_risk_pct=2")
+        v[f"M20C_{qc}_mc2"] = j(m20_filters("0.99", qc), "mart_max_risk_pct=2")
     # --- CMB: M20 x rank-2
     for bn in ("q57", "q60"):
         for bar in ("same", "q57", "q60"):
