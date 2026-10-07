@@ -89,3 +89,11 @@ def test_rank2_clear_cancels_only_its_own_order():
     res, sim = run(FLAT, ev, cfg(max_rank=2))
     assert set(sim.pending) == {"M15#1"} and [c.plan.key for c in sim.cancelled] == ["M15#2"]
     assert "rank" in res.trades.columns or len(res.trades) == 0
+
+
+def test_tf_risk_scale_applies_per_timeframe():
+    ev = [rsel("2026-03-02 10:00", pid=1, tf="M15"), rsel("2026-03-02 10:00", pid=9, tf="M20", top=1990.0, bottom=1985.0)]
+    res, sim = run(FLAT, ev, cfg(tf_risk_scale="M20:0.5"))
+    assert sim.pending["M15#1"].plan.risk_scale == 1.0 and sim.pending["M20#9"].plan.risk_scale == 0.5
+    res, sim = run(FLAT, ev, cfg())
+    assert sim.pending["M20#9"].plan.risk_scale == 1.0

@@ -164,6 +164,12 @@ class PortfolioSimulator:
         self.rank2_filter: Optional[TradeFilter] = TradeFilter.parse(
             tcfg.rank2_filter, commission_oz=self.spec.commission_per_lot / self.spec.contract_size) if tcfg.rank2_filter else None
         self.rank2_placed = 0
+        # v16: per-timeframe risk scale "M20:0.5|M5:0.8"
+        self.tf_scale: Dict[str, float] = {}
+        for part in (tcfg.tf_risk_scale or "").split("|"):
+            if ":" in part:
+                k, v = part.split(":", 1)
+                self.tf_scale[k.strip()] = float(v)
         self._batch_set: set = set()           # v16: (tf, side, id) set by the events of the current minute
         self.cur_minute = 0
         self.reentries_placed = 0
@@ -402,6 +408,7 @@ class PortfolioSimulator:
             rs *= tc.rank2_risk_scale                  # v16
             if plan.reentry_n == 0:
                 self.rank2_placed += 1
+        rs *= self.tf_scale.get(plan.tf, 1.0)          # v16 per-TF scale
         plan.risk_scale = rs
 
     def _apply_v14(self, plan: TradePlan, base: float) -> None:

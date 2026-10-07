@@ -81,3 +81,9 @@ def test_scanner_scan_top_k_returns_ranked_lists():
     # top_k 1 -> the classic dict (no ranked lists)
     sc2 = MultiTimeframeScanner(m1[["open", "high", "low", "close", "volume"]], cfg)
     assert "above_ranked" not in sc2.scan()["M15"]
+
+
+def test_live_tf_risk_scale(tmp_path):
+    tr, _, state = make_trader(tmp_path, FakeMT5(make_m1(), bid=2000.0), tf_risk_scale="M15:0.5", **LADDER)
+    tr.on_selection(selection())
+    assert state.plans["M15#5"]["risk_scale"] == 0.5 and math.isclose(state.plans["M15#5"]["lots_total"], 0.10)

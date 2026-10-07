@@ -147,6 +147,13 @@ class Trader:
             self.t.rank2_filter, commission_oz=self.spec.commission_per_lot / self.spec.contract_size,
             server_minus_ny_hours=cfg.server_minus_ny_hours if cfg.server_minus_ny_hours is not None else 7.0) \
             if self.t.rank2_filter else None
+        self.tf_scale: Dict[str, float] = {}
+        for part in (self.t.tf_risk_scale or "").split("|"):
+            if ":" in part:
+                k, v = part.split(":", 1)
+                self.tf_scale[k.strip()] = float(v)
+        if self.tf_scale:
+            self.log.info(f"per-timeframe risk scale: {self.tf_scale}")
         if self.t.max_rank > 1:
             self.log.info(f"ranked candidates: up to rank {self.t.max_rank} per side, x{self.t.rank2_risk_scale}, "
                           f"tfs {'|'.join(self.t.rank2_tfs) or 'all'}{', confluent only' if self.t.rank2_confluent_only else ''}; "
@@ -424,6 +431,7 @@ class Trader:
         if rank > 1:
             rs *= self.t.rank2_risk_scale                # v16
             self.log.info(f"rank {rank} {key}: admitted at x{self.t.rank2_risk_scale}")
+        rs *= self.tf_scale.get(tf, 1.0)                 # v16 per-TF scale
         plan.risk_scale = rs
         self.open_plan(plan)
 

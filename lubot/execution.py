@@ -211,6 +211,8 @@ class TraderConfig:
     rank2_risk_scale: float = 1.0             # sizing multiplier for rank >= 2 plans
     rank2_tfs: Tuple[str, ...] = ()           # timeframes whose rank >= 2 zones are admitted; () = all
     rank2_confluent_only: bool = False        # rank >= 2 plans only when they are confluent (another TF active on the level)
+    #: PER-TIMEFRAME risk scale, e.g. "M20:0.5|M5:0.8" (unlisted TFs x1).  Applied on top of the v15 conviction scales.
+    tf_risk_scale: str = ""
     one_trade_per_poi: bool = True
     min_quality: Optional[float] = None   # extra filter on top of the scanner's min_quality (None = scanner default)
     grades: Tuple[str, ...] = ()          # e.g. ("A", "B") -> only these grades; () = all
