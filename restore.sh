@@ -13,6 +13,9 @@ mkdir -p data logs models study_results
 pip install -q scikit-learn lightgbm 2>/dev/null || true
 python3 -m pytest tests -q 2>&1 | tail -1
 echo "--- next step (PROGRESS.md):"; grep -m1 "^- \[ \]" PROGRESS.md
+echo "--- v16 (all complete): python3 verify_bat_v16.py (bat == study), python3 backtest_v16_final.py --study study_results/v16_levers/M20SC_0.63_x0.4.json (FINAL BACKTEST -> study_results/FINAL_BACKTEST_V16.md), python3 walkforward_v16.py, python3 make_v16_report.py; streams: bash run_v16_record.sh; grid: bash run_v16_all.sh / bash run_v16_stress.sh (resumable, autosave)"
+ls study_results/v16_levers/*.json 2>/dev/null | grep -v __ | wc -l | sed 's/^/    v16 runs on disk (171 expected): /'
+ls study_results/sel_v16_*.pkl 2>/dev/null | wc -l | sed 's/^/    v16 streams (6 expected): /'
 echo "--- v15 (all complete): python3 verify_bat_v15.py (bat == study), python3 backtest_v15_final.py --study study_results/v15_levers/CMB_cm240_cs1.25_0.9.json (FINAL BACKTEST -> study_results/FINAL_BACKTEST_V15.md), python3 walkforward_v15.py, python3 make_v15_report.py; grid: bash run_v15_all.sh (resumable, autosave) / python3 run_v15_levers.py --stress names"
 ls study_results/v15_levers/*.json 2>/dev/null | grep -v __ | wc -l | sed 's/^/    v15 runs on disk (209 expected): /'
 echo "--- v14 (all complete): python3 verify_bat_v14.py (bat == study), python3 backtest_v14_final.py (FINAL BACKTEST -> study_results/FINAL_BACKTEST_V14.md), python3 walkforward_v14.py, python3 make_v14_report.py; grid: python3 run_v14_levers.py [--stress names] (resumable), python3 shuffle_v14.py"

@@ -1,4 +1,4 @@
-# PROGRESS — v16 NEW TRADE SOURCES for the v15-A trader: MORE TRADES & MORE PROFIT AT THE SAME LOSS PERCENTAGE — IN PROGRESS (session 2, 2026-10-07)
+# PROGRESS — v16 NEW TRADE SOURCES for the v15-A trader: MORE TRADES & MORE PROFIT AT THE SAME LOSS PERCENTAGE — ALL STEPS COMPLETE (2026-10-07 18:45, session 2)
 
 **Recovery (read this first):** `git clone https://github.com/MHD-Amini/webapp.git /home/user/webapp`, `bash restore.sh`
 (relinks the CSV to `data/xauusd_m1.csv`, pip, tests), read this file, continue from the FIRST UNCHECKED step below.  Every step ends
@@ -44,10 +44,13 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [x] 5c. Port to run_trader.bat (v16-A strings: M20 timeframe, confluence bar M20 0.63, tf_risk_scale=M20:0.4), trader.py support check
         (M20 live scan, MT5 timeframe map), tests/test_bat_v16.py (strings parse, keys present, M20 in every per-TF key).
 - [x] 6a. `make_v16_report.py` -> study_results/MORE_TRADES_V16.md + charts (every number read from the result files).
-- [ ] 6b. README (title v16, command table, section 0i), restore.sh v16 hints, save.
+- [x] 6b. README (title v16, command table, section 0i), restore.sh v16 hints, save.
 - [x] 6c. Final backtest `backtest_v16_final.py` -> FINAL_BACKTEST_V16.md + verify_bat_v16.py (CSV re-uploaded by the user in session 2).
 
 ## Log (v16)
+- 2026-10-07 18:45  step 6b DONE: README (title v16, live command row rebuilt from the bat, two v16 command-table rows, results pointer, new section 0i
+  with the result table / stress / walk-forward / alternatives / honest reading, layout block for the 11 v16 files, next steps, last-updated), restore.sh
+  v16 hints (file counts).  157 tests pass.  ALL v16 STEPS COMPLETE.  Final archive link below (code + models + v15/v16 results, no node_modules/.git).
 - 2026-10-07 18:30  step 6a DONE: make_v16_report.py -> study_results/MORE_TRADES_V16.md (58 blocks, 7 sections: method + stream facts (set events
   per rank per TF, unique POIs only ever rank 2/3), levers, grid (4/4 table + best two per family), source A rank-2 LOSES (table by bar), source B M20
   confluent-only (plain vs confluent tables, size-scale chart, who-trades population table from final_v16), robustness (walk-forward rows, the

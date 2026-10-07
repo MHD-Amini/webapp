@@ -1,4 +1,4 @@
-# LU-POI TRADER — Liquidity University POI trading bot for XAUUSD.t (MT5)   *(v15)*
+# LU-POI TRADER — Liquidity University POI trading bot for XAUUSD.t (MT5)   *(v16)*
 
 **v7 turns the POI scanner into a trading bot.**  For every POI the scanner shows (M5 / M10 / M15 / M30 / H1) the
 bot places a **limit order at the start of the zone** with the **stop at the end of the zone**, closes **50 % at
@@ -7,7 +7,9 @@ terminal that is already open and logged in on your Windows PC — **no login op
 
 | what | command |
 |---|---|
-| **Live trading** (Windows, MT5 open) | `run_trader.bat`  or  `python trader.py --symbol XAUUSD.t --risk 1.0 --commission 7 --trader "tp_levels=0.6\|1.2\|2.4\|4.8,tp_fracs=1\|1\|1\|1,ladder_fallback=merge,dedupe_cross_tf=false,keep_replaced_bars=1,keep_replaced_tfs=M10\|M15\|M30\|H1,regime_metric=adr_ratio,regime_threshold=1.0,regime_short=5,regime_long=20,range_tp_levels=0.5\|1.0\|1.5\|2.5,range_tp_fracs=1\|1\|1\|1,range_sl_after_leg=0\|0.3\|x\|x,mart_mode=mult,mart_mult=1.5,mart_max_steps=3,mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10\|M15\|M30\|H1,mart_sides=buy,mart_ungated_scale=0.5,confluence_memory_min=240,confluent_risk_scale=1.25,plain_risk_scale=0.9" --trade-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.57/M15:min_quality=0.60/M30\|H1:min_quality=0.57" --confluence-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.50/M15:min_quality=0.60/M30\|H1:min_quality=0.57"` (**v15-A**; drop `confluence_memory_min` / `confluent_risk_scale` / `plain_risk_scale` for v14-A, every `mart_*` key too for v13-A) |
+| **Live trading** (Windows, MT5 open) | `run_trader.bat`  or  `python trader.py --symbol XAUUSD.t --risk 1.0 --min-quality 0.50 --commission 7 --timeframes M5,M10,M15,M20,M30,H1 --trader "tp_levels=0.6\|1.2\|2.4\|4.8,tp_fracs=1\|1\|1\|1,ladder_fallback=merge,dedupe_cross_tf=false,keep_replaced_bars=1,keep_replaced_tfs=M10\|M15\|M20\|M30\|H1,regime_metric=adr_ratio,regime_threshold=1.0,regime_short=5,regime_long=20,range_tp_levels=0.5\|1.0\|1.5\|2.5,range_tp_fracs=1\|1\|1\|1,range_sl_after_leg=0\|0.3\|x\|x,mart_mode=mult,mart_mult=1.5,mart_max_steps=3,mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10\|M15\|M20\|M30\|H1,mart_sides=buy,mart_ungated_scale=0.5,confluence_memory_min=240,confluent_risk_scale=1.25,plain_risk_scale=0.9,tf_risk_scale=M20:0.4" --trade-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.57/M15:min_quality=0.60/M30\|H1:min_quality=0.57/M20:min_quality=0.99" --confluence-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.50/M15:min_quality=0.60/M30\|H1:min_quality=0.57/M20:min_quality=0.63"` (**v16-A**; drop M20 from `--timeframes`, both filters, `keep_replaced_tfs`, `mart_tfs` and drop `tf_risk_scale` for v15-A; then `confluence_memory_min` / `confluent_risk_scale` / `plain_risk_scale` for v14-A, every `mart_*` key too for v13-A) |
+| **FINAL BACKTEST of v16-A on the CSV** (strings read from `run_trader.bat`, v15-A alongside) | `python backtest_v16_final.py --csv data/xauusd_m1.csv --study study_results/v16_levers/M20SC_0.63_x0.4.json` → **`study_results/FINAL_BACKTEST_V16.md`** + `final_v16/*` + `charts/final_v16_equity.png` |
+| **v16 new-trade-sources study** (top-3 recorder incl. M20, 171 variants, stress ×6, walk-forward) | `bash run_v16_record.sh; bash run_v16_all.sh; bash run_v16_stress.sh; python walkforward_v16.py; python backtest_v16_final.py; python make_v16_report.py; python verify_bat_v16.py` (resumable, autosave) → **`study_results/MORE_TRADES_V16.md`** |
 | **FINAL BACKTEST of v15-A on the CSV** (strings read from `run_trader.bat`, v14-A alongside) | `python backtest_v15_final.py --csv data/xauusd_m1.csv` → **`study_results/FINAL_BACKTEST_V15.md`** + `final_v15/*` + `charts/final_v15_equity.png` |
 | **v15 more-trades / more-profit study** (diagnosis, 209 variants, stress ×6, walk-forward) | `python run_v15_diag.py; bash run_v15_all.sh; python run_v15_levers.py --stress ...; python walkforward_v15.py; python backtest_v15_final.py; python make_v15_report.py; python verify_bat_v15.py` (resumable, autosave) → **`study_results/MORE_TRADES_V15.md`** |
 | **FINAL BACKTEST of v14-A on the CSV** (strings read from `run_trader.bat`, v13-A alongside) | `python backtest_v14_final.py --csv data/xauusd_m1.csv` → **`study_results/FINAL_BACKTEST_V14.md`** + `final_v14/*` + `charts/final_v14_equity.png` |
@@ -23,7 +25,56 @@ terminal that is already open and logged in on your Windows PC — **no login op
 | Full sensitivity study + report | `python run_trader_study.py --csv data.csv` → `study_results/TRADER_BACKTEST.md` |
 | POI scanner only (v6) | `python bot.py scan --csv data.csv` / `python bot.py live` |
 
-→ **Results: section 0g (v14 asymmetric martingale + FINAL BACKTEST), 0f (v13 weak months / regime-adaptive management), 0e (v12 more trades round 2), 0d (v11 more trades), 0c (v10 multi-TP + full year + loss rules), 0b (v9 management), 0a/0 below, `study_results/MULTI_TP_STUDY.md` (v10), `study_results/RISK_MGMT_STUDY.md` (v9), `TRADER_V8.md` (v8), `TRADER_BACKTEST.md` (v7).**
+→ **Results: section 0i (v16 new trade sources: M20 confluent-only + FINAL BACKTEST), 0h (v15 confluence memory + conviction sizing), 0g (v14 asymmetric martingale + FINAL BACKTEST), 0f (v13 weak months / regime-adaptive management), 0e (v12 more trades round 2), 0d (v11 more trades), 0c (v10 multi-TP + full year + loss rules), 0b (v9 management), 0a/0 below, `study_results/MULTI_TP_STUDY.md` (v10), `study_results/RISK_MGMT_STUDY.md` (v9), `TRADER_V8.md` (v8), `TRADER_BACKTEST.md` (v7).**
+
+---
+
+## 0i. v16 — new trade sources: the M20 timeframe (confluent only) + ranked zones; FINAL BACKTEST
+
+**Spec.**  Make the v15 bot take more trades and make more profit while maintaining the loss percentage; save after every step (recoverable).
+
+**Why new sources.**  v11 / v12 / v15 had exhausted admission relaxation (quality bars, cost bars, sessions, tiers, re-entry, re-arm, front offset).  The
+recorded streams carried ONE zone per side per timeframe - the scanner's slot winner - although 24 % of the set events had >= 2 qualified candidates.  v16
+re-recorded the whole year with the **top-3 qualified candidates per slot** (`record_selections_v16.py` → `sel_v16_<TF>.pkl`, `rank` column, rank-1 rows
+identical to the v10 streams) and added a **6th timeframe, M20** (derived from M1 like the others; same quality model, `tf_minutes` is a feature → interpolation).
+
+**Levers** (`TraderConfig`, defaults byte-identical to v15, simulator and live bot share the code): `max_rank`, `rank2_filter`, `rank2_risk_scale`, `rank2_tfs`,
+`rank2_confluent_only` (ranked zones), `tf_risk_scale=M20:0.4` (per-timeframe size), M20 in `--timeframes` / both filters / `keep_replaced_tfs` / `mart_tfs`.
+Grid: 171 full-year runs (`run_v16_levers.py`, resumable, autosaved to GitHub every 4 min — survived nine sandbox resets and one dead chat session).
+
+**What the data says.**  (A) **Rank-2 zones LOSE** at every quality bar (fills win 48-62 %, stop 40-58 %, -0.2..-2.8 k$); rank 3 is worse.  The scanner's
+ranking is right.  The only positive part of `max_rank=2` is *keep-demoted* (an order is no longer cancelled when its POI slips to rank 2: +28 trades, +2.9 k$,
+but OOS PF 2.13 < band).  (B) **Plain M20 zones lose** (37 % win); **confluent M20 zones** (a plan of another timeframe active or remembered on the level) win
+79-90 % and add +2.9..+4.7 k$ at full size - but every M20 leg is one more position on the days when 2-3 confluent plans are stopped within one minute, so
+the **worst day** (-3.4..-3.5 % vs the -2.92 band) is what binds.  `tf_risk_scale` brings it back: at x0.4 the worst day is inside the band with the DD unchanged.
+
+**Result — `run_trader.bat` ships v16-A = v15-A + M20 (plain bar 0.99 = never alone, confluence bar 0.63, `tf_risk_scale=M20:0.4`).**  FINAL BACKTEST on
+the CSV (`backtest_v16_final.py`, 359 813 M1 bars 2025-09-01 → 2026-09-04, $10 000, 1 % base risk, real costs):
+
+| | v15-A reference | **v16-A (shipped)** |
+|---|---|---|
+| trades | 448 | **467** (+19; 21 M20 trades, 86 % win, +1 052 $) |
+| net profit $ | +29,745 | **+30,175** (+1.4 %) |
+| return % | +297.45 | **+301.75** |
+| max drawdown % | -5.82 | **-5.82** |
+| profit factor | 2.375 | 2.365 |
+| win % / stop-outs % | 74.8 / 24.8 | **75.2 / 24.4** |
+| worst day % of equity | -2.42 | -2.64 |
+| OOS (Mar-Sep 26) net $ / PF / win / stop | +19,264 / 2.26 / 76.3 / 23.7 | **+19,661 / 2.25 / 76.1 / 23.9** |
+| months positive | 13/13 | 13/13 |
+
+Stress ×6 (spread ×2, commission ×2, slip ×3, worst intrabar, risk 0.5 / 2 %): more trades AND more $ than v15-A in 6/6, OOS net above with the OOS PF in band
+in 6/6, loss bands held in 5/6 (miss: max DD at 0.5 % base risk).  Walk-forward: the extra trades carry over (Spearman +0.95), the extra $ moderately (+0.52);
+the OOS half misses only the worst day in R (-3.04 vs -2.10 R: the 2026-04-08 cluster gets the M20 leg as a third stop, -49 $ at x0.4).
+Alternatives documented in the bat: **v16-B** (most $: M20 bar 0.60, `tf_risk_scale=M20:0.6`, + keep-demoted `max_rank=2,rank2_filter=...:min_quality=0.99`:
+509 trades, +36 670 $, DD 5.60, worst day -2.94, OOS PF 2.19 - the loss bands 0.02-0.15 pt outside) and **v16-C** (`tf_risk_scale=M20:0.3`: 465 trades,
++29 974 $, OOS loss profile untouched).  `verify_bat_v16.py` replays the bat strings: IDENTICAL to the study json.  Live bot: `trader.py` scans M20, gates
+M20 by the confluence bar, scales by `tf_risk_scale`; fake-MT5 tests in `tests/test_bat_v16.py`.
+
+**Honest reading.**  v16 is a small, robust gain (+1-4 % at the sizes that keep the worst day inside the band), not a big one: the slot winner IS the best
+zone, and a 6th timeframe only adds *confirmation* of the five, which the v15 confluence sizing already prices.  Everything that earns more (bigger M20
+size, keep-demoted) adds one more leg to the same clustered stop-outs.  The next real gain needs a better **entry model**, not more sources or admission rules.
+Details: **`study_results/MORE_TRADES_V16.md`**, `FINAL_BACKTEST_V16.md`, `charts/v16_*.png`, `charts/final_v16_equity.png`.  157 tests pass.
 
 ---
 
@@ -660,6 +711,17 @@ make_v14_report.py         v14 report -> study_results/MARTINGALE_V14.md + chart
 verify_bat_v14.py          replays the exact run_trader.bat v14-A strings in the simulator (must equal the v14-A study json)
 backtest_v14_final.py      FINAL BACKTEST of the shipped v14-A on the CSV (+ v13-A alongside) -> study_results/FINAL_BACKTEST_V14.md, final_v14/*, charts/final_v14_equity.png
 smoke_v14.py               v14 smoke run of 16 variants (parity + first look)
+v16_common.py              v16 shared: v15-A config exactly as shipped, reference scorecard, judge16, load_year16 (v16 top-K streams cut at max_rank)
+record_selections_v16.py   v16 resumable recorder: top-K qualified candidates per side per slot (`rank`), M20 timeframe, monthly chunks with carry-over
+run_v16_record.sh          v16 full-year recording Sep25-Sep26 in monthly chunks (all TFs + M20) -> study_results/parts_v16/, merged sel_v16_<TF>.pkl
+run_v16_levers.py          v16 grid of 171 variants on top of v15-A (R2 / R2C / R3 / KD / M20 / M20C / M20N / M20SC / CMB families, --stress) -> study_results/v16_levers/, v16_levers.csv, v16_stress.csv
+run_v16_all.sh / run_v16_stress.sh   v16 unattended launchers (recorder + grid / stress + walk-forward) with autosave (commit + push) every 4 min
+walkforward_v16.py         v16 walk-forward on the IS/OOS halves from the trade lists -> v16_walkforward.csv/json
+make_v16_report.py         v16 report -> study_results/MORE_TRADES_V16.md + charts/v16_*.png
+verify_bat_v16.py          replays the exact run_trader.bat v16-A strings in the simulator (must equal the v16-A study json)
+backtest_v16_final.py      FINAL BACKTEST of the shipped v16-A on the CSV (+ v15-A alongside) -> study_results/FINAL_BACKTEST_V16.md, final_v16/*, charts/final_v16_equity.png
+smoke_v16.py               v16 parity smoke (v15-A through the v16 simulator on the v10 streams)
+tests/test_v16_levers.py / tests/test_trader_v16.py / tests/test_bat_v16.py   v16 tests (rank slots, rank-2 gates, tf_risk_scale, live ranked lists, M20 live gating, bat == study config)
 v15_common.py              v15 shared: v14-A config exactly as shipped, reference scorecard, judge15 (more_trades / more_profit / hold_loss / hold_oos / score)
 run_v15_diag.py            v15 diagnosis (funnel, would-be outcome of every rejected POI by band, re-arm after SL, front offset, confluent-vs-plain signal) -> study_results/v15_diag/
 run_v15_levers.py          v15 grid of 209 variants on top of v14-A (CS / CM / TIER / DD / CMB families, --stress) -> study_results/v15_levers/, v15_levers.csv, v15_stress.csv
@@ -720,11 +782,11 @@ backtest_results/          stats.csv, charts/
 ```
 
 ## 6. Not implemented / next steps
-- v7 trader: trailing stop after TP2 / time-based exit, news filter, Telegram alerts of fills, per-timeframe risk
-- Retrain the quality model on data that includes bearish gold months (sells under-perform OOS)
+- v7 trader: trailing stop after TP2 / time-based exit, news filter, Telegram alerts of fills (per-timeframe risk: done in v16, `tf_risk_scale`)
+- Retrain the quality model on data that includes bearish gold months (sells under-perform OOS) - after v16 this is THE remaining lever: more trades at the same loss percentage now needs a better entry model, not more trade sources or admission rules
 - Trend-line liquidity (needs a subjective line-fit; not used for POI selection)
 - Entry models from the PDF (Confirmation / PA / Direct entry), stacking, hedging – the bot delivers the POIs; execution is left to the trader or a follow-up module
 - Order placement through MT5 (`order_send`) – easy to add on top of `select()`
 - Telegram / webhook alerts when a selection changes (`--json` already exposes the state)
 
-Last updated: 2026-10-05 (v15: confluence memory + conviction sizing — 448 trades / +29 745 $ / DD 5.82 % / PF 2.375 at the v14-A loss percentage; FINAL_BACKTEST_V15.md)
+Last updated: 2026-10-07 (v16: M20 timeframe confluent-only at x0.4 — 467 trades / +30 175 $ / DD 5.82 % / PF 2.365 at the v15-A loss percentage; rank-2 zones rejected; FINAL_BACKTEST_V16.md)
