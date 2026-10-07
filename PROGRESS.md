@@ -44,6 +44,16 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [ ] 6. Final backtest `backtest_v16_final.py` -> study_results/FINAL_BACKTEST_V16.md, report MORE_TRADES_V16.md, README, final save + archive.
 
 ## Log (v16)
+- 2026-10-07 07:40  step 4 GRID (first 95) DONE after the 6th reset (study_results/v16_levers.csv): scores 3/4 = 1, 2 = 72, 1 = 22.
+  READING: (1) genuine RANK-2 fills LOSE money at every bar (same bar: 42 tr -1.3 k$, 58 % win; q57: 31 tr -2.8 k$; q60: 13 tr
+  -0.2 k$) - the scanner's ranking is right, the 2nd zone is worse than the 1st and its stop rate 40-58 % breaks hold_loss.
+  Rank 3 worse still.  (2) The KEEP-DEMOTED effect (a rank-1 POI pushed to rank 2 keeps its pending order) alone = KD: 476 tr,
+  +32 670 $ (+10 %), OOS +20 872, DD 5.70 (lower than ref), PF 2.27, win 74.4, wd -2.91 -> passes more_trades, more_profit, hold_loss;
+  misses hold_oos on OOS PF 2.12 vs 2.26-0.10.  (3) M20 as a 6th timeframe: PLAIN M20 zones lose (27 tr, 37 % win, -2.9 k$);
+  CONFLUENT M20 zones win (53 tr, 79 % win, +5.7 k$, OOS +9.4 R), best at q >= 0.63 (21 tr, 90 % win).  M20_q60 = 490 tr +33 502 $
+  OOS +22 147 but DD 6.87 / wd -3.54 (a 1 144 $ single M20 stop on 2026-08-14).  CMB m20q60 x r2q60 = 527 tr / +38 572 $ / OOS +25 504
+  but PF 2.14 / OOS PF 1.99 / wd -4.56 -> score 2.  Stage 2 of the grid launched (28 runs): M20 CONFLUENT-ONLY (plain bar 0.99,
+  confluence bar 0.50-0.63) x keep-demoted -> the population the data says pays.
 - 2026-10-07 06:45  5th reset (50/95 grid runs on GitHub), relaunched.  FINDING while the grid runs: `max_rank=2` changes the result even
   at a bar no rank-2 zone passes (R2_q65: 0 rank-2 fills, yet 476 tr / +32 670 $ vs ref 448 / +29 745): a POI DEMOTED from rank 1 to
   rank 2 keeps its order (it is still shown on a slot) instead of being cancelled as "replaced" -> 36 new trades (+767 $, 72 % win,
