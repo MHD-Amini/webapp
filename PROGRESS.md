@@ -48,6 +48,8 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [x] 6c. Final backtest `backtest_v16_final.py` -> FINAL_BACKTEST_V16.md + verify_bat_v16.py (CSV re-uploaded by the user in session 2).
 
 ## Log (v16)
+- 2026-10-07 18:55  FINAL ARCHIVE (code + models + all study results incl. v16, no node_modules/.git/parts_v16): https://www.genspark.ai/api/files/s/MTn8Q3jf
+  (extract to /home/user, re-upload the CSV to /home/user/uploaded_files/, then bash webapp/restore.sh).  GitHub origin main = the same state.
 - 2026-10-07 18:45  step 6b DONE: README (title v16, live command row rebuilt from the bat, two v16 command-table rows, results pointer, new section 0i
   with the result table / stress / walk-forward / alternatives / honest reading, layout block for the 11 v16 files, next steps, last-updated), restore.sh
   v16 hints (file counts).  157 tests pass.  ALL v16 STEPS COMPLETE.  Final archive link below (code + models + v15/v16 results, no node_modules/.git).
