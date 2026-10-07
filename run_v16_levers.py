@@ -112,6 +112,13 @@ def variants() -> dict[str, str]:
     for qc in ("0.55", "0.60"):
         v[f"M20N_{qc}_mc2"] = j(m20_filters("0.99", qc, mart=False), "mart_max_risk_pct=2")
         v[f"M20C_{qc}_mc2"] = j(m20_filters("0.99", qc), "mart_max_risk_pct=2")
+    # --- M20S: M20 confluent-only at a REDUCED size for the M20 plans (tf_risk_scale), with / without martingale on M20, +KD
+    for qc in ("0.55", "0.60"):
+        for sc in ("0.75", "0.6", "0.5"):
+            for mart, tag in ((True, "C"), (False, "N")):
+                v[f"M20S{tag}_{qc}_x{sc}"] = j(m20_filters("0.99", qc, mart=mart), f"tf_risk_scale=M20:{sc}")
+                v[f"M20S{tag}_{qc}_x{sc}_KD"] = j(m20_filters("0.99", qc, mart=mart), f"tf_risk_scale=M20:{sc}", "max_rank=2",
+                                                   f"rank2_filter={R2BARS['none']}")
     # --- CMB: M20 x rank-2
     for bn in ("q57", "q60"):
         for bar in ("same", "q57", "q60"):
