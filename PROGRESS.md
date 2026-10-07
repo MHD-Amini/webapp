@@ -43,11 +43,16 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [x] 5b. Judge 5a vs the v15-A stress rows (v15_stress.csv) -> DECISION v16-A / v16-B / v16-C (log below).
 - [x] 5c. Port to run_trader.bat (v16-A strings: M20 timeframe, confluence bar M20 0.63, tf_risk_scale=M20:0.4), trader.py support check
         (M20 live scan, MT5 timeframe map), tests/test_bat_v16.py (strings parse, keys present, M20 in every per-TF key).
-- [ ] 6a. `make_v16_report.py` -> study_results/MORE_TRADES_V16.md + charts (every number read from the result files).
+- [x] 6a. `make_v16_report.py` -> study_results/MORE_TRADES_V16.md + charts (every number read from the result files).
 - [ ] 6b. README (title v16, command table, section 0i), restore.sh v16 hints, save.
 - [x] 6c. Final backtest `backtest_v16_final.py` -> FINAL_BACKTEST_V16.md + verify_bat_v16.py (CSV re-uploaded by the user in session 2).
 
 ## Log (v16)
+- 2026-10-07 18:30  step 6a DONE: make_v16_report.py -> study_results/MORE_TRADES_V16.md (58 blocks, 7 sections: method + stream facts (set events
+  per rank per TF, unique POIs only ever rank 2/3), levers, grid (4/4 table + best two per family), source A rank-2 LOSES (table by bar), source B M20
+  confluent-only (plain vs confluent tables, size-scale chart, who-trades population table from final_v16), robustness (walk-forward rows, the
+  2026-04-08 worst-day trade list, stress summary counts + full stress table with band misses vs the v15-A rows of v15_stress.csv), final backtest,
+  recommendation / honest reading, files) + charts/v16_{equity,scatter,monthly,m20_scale}.png.  Every number is read from the result files.
 - 2026-10-07 18:10  step 6c DONE (the user re-uploaded the M1 CSV; restore.sh relinked it, 157 tests pass).  backtest_v16_final.py
   (strings READ FROM run_trader.bat, v16 streams top-3 incl. M20) -> study_results/FINAL_BACKTEST_V16.md + final_v16/* + charts/final_v16_equity.png:
   v16-A = 467 tr / +30 175 $ / +301.75 % / DD -5.82 / PF 2.365 / win 75.2 / sl 24.4 / OOS +19 661 $ / 21 M20 trades / 0 rank-2 = IDENTICAL to
