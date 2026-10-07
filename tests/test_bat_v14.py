@@ -11,7 +11,8 @@ def test_bat_trader_string_is_v14a():
     line = _bat_line()
     t = TraderConfig().override(re.search(r'--trader "([^"]*)"', line).group(1))
     assert t.mart_mode == "mult" and t.mart_mult == 1.5 and t.mart_max_steps == 3 and t.mart_max_risk_pct == 3.0
-    assert t.mart_scope == "tf" and t.mart_tfs == ("M10", "M15", "M30", "H1") and t.mart_sides == ("buy",) and t.mart_ungated_scale == 0.5
+    assert t.mart_scope == "tf" and t.mart_sides == ("buy",) and t.mart_ungated_scale == 0.5
+    assert {"M10", "M15", "M30", "H1"} <= set(t.mart_tfs)              # v16 adds M20 to the set
     assert t.grid_add_r == 0.0 and t.mart_tp_levels == () and t.mart_loss_r == 0.2          # no grid, no recovery ladder, default loss rule
     # behaviour (per-TF streaks): after one M15 loss an M15 buy is x1.5, an M15 sell is x0.5, other timeframes are untouched;
     # after an M5 loss every M5 plan is x0.5 (M5 never steps up)

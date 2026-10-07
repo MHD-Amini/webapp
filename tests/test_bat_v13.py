@@ -18,7 +18,8 @@ def test_bat_trader_string_is_v13a():
     assert ladder(t, range_regime=True) == ((0.5, 1.0, 1.5, 2.5), (0.25, 0.25, 0.25, 0.25))
     assert t.range_sl_after_leg == ("0", "0.3", "x", "x") and t.range_risk_scale == 1.0 and t.range_tfs == ()
     # v12-A part unchanged
-    assert t.dedupe_cross_tf is False and t.keep_replaced_bars == 1 and t.keep_replaced_tfs == ("M10", "M15", "M30", "H1")
+    assert t.dedupe_cross_tf is False and t.keep_replaced_bars == 1
+    assert {"M10", "M15", "M30", "H1"} <= set(t.keep_replaced_tfs)   # v16 adds M20 to the set
     assert t.ladder_fallback == "merge"
     flt = re.search(r'--trade-filter "([^"]*)"', line).group(1)
     cf = re.search(r'--confluence-filter "([^"]*)"', line).group(1)

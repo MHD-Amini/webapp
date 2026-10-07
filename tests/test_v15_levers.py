@@ -122,6 +122,14 @@ def test_bat_v14_strings_match_v15_common():
     line = next(l for l in open("run_trader.bat", encoding="utf-8").read().splitlines() if l.strip().startswith("python trader.py --symbol"))
     arg = lambda n: re.search(n + r' "([^"]*)"', line).group(1)
     bat_trader = arg("--trader")
-    # the bat may carry v15 keys on top of v14-A once step 4 ships; the v14-A part must be a prefix-set of it
-    assert set(v.V14A_TRADER.split(",")) <= set(bat_trader.split(","))
-    assert arg("--trade-filter") == v.V14A_FLT and arg("--confluence-filter") == v.V14A_CF
+    # the bat carries v15 keys on top of v14-A (and, since v16, M20 inside the TF-scoped keys): every v14-A key must be present
+    # with its value, except keep_replaced_tfs / mart_tfs whose v14 set must be a subset of the shipped set
+    bat = dict(kv.split("=", 1) for kv in bat_trader.split(","))
+    for kv in v.V14A_TRADER.split(","):
+        k, val = kv.split("=", 1)
+        if k in ("keep_replaced_tfs", "mart_tfs"):
+            assert set(val.split("|")) <= set(bat[k].split("|")), k
+        else:
+            assert bat[k] == val, k
+    # the v14-A filters are a prefix of the shipped filters (v16 appends an M20 rule)
+    assert arg("--trade-filter").startswith(v.V14A_FLT) and arg("--confluence-filter").startswith(v.V14A_CF)

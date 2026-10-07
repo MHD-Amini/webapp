@@ -1,5 +1,19 @@
 @echo off
-REM LU-POI TRADER v15 - live MT5 bot.  v15-A (study_results/MORE_TRADES_V15.md) = v14-A + CONFLUENCE MEMORY + CONVICTION SIZING:
+REM LU-POI TRADER v16 - live MT5 bot.  v16-A (study_results/MORE_TRADES_V16.md) = v15-A + NEW TRADE SOURCE: the M20 TIMEFRAME, CONFLUENT ONLY:
+REM   --timeframes adds M20 (derived from M1 like every other timeframe; same quality model, tf_minutes is a model feature).  Its PLAIN bar is
+REM   unreachable (--trade-filter M20:min_quality=0.99) and its CONFLUENCE bar is 0.63 (--confluence-filter M20:min_quality=0.63): an M20 zone
+REM   is traded ONLY when a plan of ANOTHER timeframe on the same level is active or remembered (v15 memory 240 min) AND its quality >= 0.63;
+REM   tf_risk_scale=M20:0.4 sizes every M20 plan at 40 %% of the normal risk (the worst-day band is what binds); M20 joins keep_replaced_tfs
+REM   and mart_tfs like the other higher timeframes.  Rank-2 scanner zones (the other v16 idea) are NOT shipped: they lose at every bar.
+REM   Full year Sep25-Sep26: 467 trades (+19), net +30 175 $ (vs +29 745), max DD 5.82 %% (=), PF 2.365, win 75.2 %%, stop-outs 24.4 %%,
+REM   worst day -2.64 %%, OOS net +19 661 $ (vs +19 264), OOS PF 2.25, 13/13 months; 21 M20 trades, 86 %% win, +1 052 $.
+REM   Stress x6 (spread x2, commission x2, slip x3, worst intrabar, risk 0.5, risk 2): more trades AND more $ than v15-A in 6/6, OOS 6/6.
+REM   v16-B (most $, worst day / OOS PF 0.02-0.15 pt outside the band): M20 confluence bar 0.60, tf_risk_scale=M20:0.6 and add
+REM     max_rank=2,rank2_filter=M5|M10|M15|M20|M30|H1:min_quality=0.99 (keep-demoted orders) -> 509 tr, +36 670 $, DD 5.60, wd -2.94.
+REM   v16-C (loss profile untouched on the OOS half): tf_risk_scale=M20:0.3 (465 tr, +29 974 $, wd -2.45).
+REM   v15-A: drop M20 from --timeframes / both filters / keep_replaced_tfs / mart_tfs and drop tf_risk_scale.
+REM v16 study: study_results/v16_levers/M20SC_0.63_x0.4.json
+REM Previous layer (v15-A, study_results/MORE_TRADES_V15.md) = v14-A + CONFLUENCE MEMORY + CONVICTION SIZING:
 REM   confluence_memory_min=240: a zone also counts as CONFLUENT (judged by --confluence-filter, M10 quality 0.50) when a plan of ANOTHER
 REM   timeframe on the same level was active (order or position, same side) within the last 240 minutes, not only right now -> more trades.
 REM   confluent_risk_scale=1.25 / plain_risk_scale=0.9: confluent plans (win 82 %%, stop 18 %%) are sized x1.25, plain plans x0.9.
@@ -31,7 +45,7 @@ REM Windows: open + log in your MT5 terminal FIRST, then double-click this file.
 REM v13-C (fewest new rules): drop range_sl_after_leg=0|0.3|x|x.   v12-A (no regime switch): drop every regime_*/range_* key.
 cd /d "%~dp0"
 IF "%1"=="" (
-  python trader.py --symbol XAUUSD.t --risk 1.0 --min-quality 0.50 --commission 7 --timeframes M5,M10,M15,M30,H1 --trader "tp_levels=0.6|1.2|2.4|4.8,tp_fracs=1|1|1|1,ladder_fallback=merge,dedupe_cross_tf=false,keep_replaced_bars=1,keep_replaced_tfs=M10|M15|M30|H1,regime_metric=adr_ratio,regime_threshold=1.0,regime_short=5,regime_long=20,range_tp_levels=0.5|1.0|1.5|2.5,range_tp_fracs=1|1|1|1,range_sl_after_leg=0|0.3|x|x,mart_mode=mult,mart_mult=1.5,mart_max_steps=3,mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10|M15|M30|H1,mart_sides=buy,mart_ungated_scale=0.5,confluence_memory_min=240,confluent_risk_scale=1.25,plain_risk_scale=0.9" --trade-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia|london|preny|ny|lclose/M10:min_quality=0.57/M15:min_quality=0.60/M30|H1:min_quality=0.57" --confluence-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia|london|preny|ny|lclose/M10:min_quality=0.50/M15:min_quality=0.60/M30|H1:min_quality=0.57" --state trader_state.json --log trader.log
+  python trader.py --symbol XAUUSD.t --risk 1.0 --min-quality 0.50 --commission 7 --timeframes M5,M10,M15,M20,M30,H1 --trader "tp_levels=0.6|1.2|2.4|4.8,tp_fracs=1|1|1|1,ladder_fallback=merge,dedupe_cross_tf=false,keep_replaced_bars=1,keep_replaced_tfs=M10|M15|M20|M30|H1,regime_metric=adr_ratio,regime_threshold=1.0,regime_short=5,regime_long=20,range_tp_levels=0.5|1.0|1.5|2.5,range_tp_fracs=1|1|1|1,range_sl_after_leg=0|0.3|x|x,mart_mode=mult,mart_mult=1.5,mart_max_steps=3,mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10|M15|M20|M30|H1,mart_sides=buy,mart_ungated_scale=0.5,confluence_memory_min=240,confluent_risk_scale=1.25,plain_risk_scale=0.9,tf_risk_scale=M20:0.4" --trade-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia|london|preny|ny|lclose/M10:min_quality=0.57/M15:min_quality=0.60/M30|H1:min_quality=0.57/M20:min_quality=0.99" --confluence-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia|london|preny|ny|lclose/M10:min_quality=0.50/M15:min_quality=0.60/M30|H1:min_quality=0.57/M20:min_quality=0.63" --state trader_state.json --log trader.log
 ) ELSE (
   python trader.py %*
 )

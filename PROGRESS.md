@@ -41,7 +41,7 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [x] 4. Grid `run_v16_levers.py` (resumable, workers 1) -> study_results/v16_levers/ + v16_levers.csv; judge16.
 - [x] 5a. Stress x6 + walk-forward of the finalists (v16_stress.csv, v16_walkforward.csv/.json).
 - [x] 5b. Judge 5a vs the v15-A stress rows (v15_stress.csv) -> DECISION v16-A / v16-B / v16-C (log below).
-- [ ] 5c. Port to run_trader.bat (v16-A strings: M20 timeframe, confluence bar M20 0.63, tf_risk_scale=M20:0.4), trader.py support check
+- [x] 5c. Port to run_trader.bat (v16-A strings: M20 timeframe, confluence bar M20 0.63, tf_risk_scale=M20:0.4), trader.py support check
         (M20 live scan, MT5 timeframe map), tests/test_bat_v16.py (strings parse, keys present, M20 in every per-TF key).
 - [ ] 6a. `make_v16_report.py` -> study_results/MORE_TRADES_V16.md + charts (every number read from the result files).
 - [ ] 6b. README (title v16, command table, section 0i), restore.sh v16 hints, save.
@@ -49,6 +49,15 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
         /home/user/uploaded_files - ask the user to re-upload XAUUSD.t_M1_202501020100_2026090423581112.csv), final save + archive.
 
 ## Log (v16)
+- 2026-10-07 17:50  step 5c DONE: run_trader.bat ships v16-A (header rewritten: what M20-confluent-only means, the numbers, the stress
+  summary, v16-B / v16-C / v15-A fallbacks, `REM v16 study: study_results/v16_levers/M20SC_0.63_x0.4.json` for verify_bat_v16.py).  Command
+  line: --timeframes M5,M10,M15,M20,M30,H1; --trade-filter + /M20:min_quality=0.99; --confluence-filter + /M20:min_quality=0.63;
+  --trader + tf_risk_scale=M20:0.4, M20 in keep_replaced_tfs and mart_tfs.  trader.py needed NO code change (tf_risk_scale, M20 resample
+  via TIMEFRAME_MINUTES, confluence gates were ported in session 1).  tests/test_bat_v16.py (5): the bat strings parse to the SAME
+  TraderConfig as the shipped study json field by field (only `timeframes` differs by construction: the live bot takes --timeframes);
+  live fake-MT5: a plain M20 zone (q 0.80) is rejected, a confluent M20 at q 0.60 is rejected, a confluent M20 at q 0.65 is placed with
+  risk_scale 1.25 x 0.4 = 0.5 (0.12 lots next to the 0.18-lot plain M15); the scanner derives M20 from M1.  test_bat_v13/v14 and
+  test_v15_levers relaxed to "the v14 TF sets are subsets of the shipped sets / the v14 filters are a prefix" (M20 appended).  155 pass.
 - 2026-10-07 17:20  SESSION 2 (the previous chat died after step 5a was pushed; nothing lost: GitHub main a960336 = stress + walk-forward
   complete).  Recovered: git clone, restore.sh (152 tests pass).  The M1 CSV is NOT in this sandbox (no /home/user/uploaded_files) -> every
   step that only reads result files (5b, 5c, 6a, 6b) is done first; 6c (final replay) waits for the re-upload.
