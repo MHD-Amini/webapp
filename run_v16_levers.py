@@ -59,10 +59,11 @@ def j(*parts: str) -> str:
     return ",".join(p for p in parts if p)
 
 
-def m20_filters(q: str) -> str:
-    """TraderConfig overrides that add an M20 rule (min_quality q) to both filters and put M20 into the TF-scoped keys."""
+def m20_filters(q: str, qc: str | None = None) -> str:
+    """TraderConfig overrides that add an M20 rule (min_quality q) to both filters and put M20 into the TF-scoped keys.
+    ``qc``: quality bar of the CONFLUENCE filter for M20 (default = q).  q=0.99 + qc=0.55 -> M20 traded ONLY when confluent."""
     flt = V15A_FLT + f"/M20:min_quality={q}"
-    cf = V15A_CF + f"/M20:min_quality={q}"
+    cf = V15A_CF + f"/M20:min_quality={qc if qc is not None else q}"
     # the override parser splits on ',' -> the filter strings must not contain ',' (they do not)
     return f"trade_filter={flt},confluence_filter={cf},keep_replaced_tfs=M10|M15|M20|M30|H1,mart_tfs=M10|M15|M20|M30|H1,timeframes={TF6}"
 
@@ -93,6 +94,14 @@ def variants() -> dict[str, str]:
     # --- M20 alone (rank 1)
     for bn, q in M20BARS.items():
         v[f"M20_{bn}"] = m20_filters(q)
+    # --- M20C: M20 only when CONFLUENT (plain M20 bar unreachable), confluence bar x; +KD (keep-demoted) combos
+    for qc in ("0.50", "0.55", "0.57", "0.60", "0.63"):
+        v[f"M20C_{qc}"] = m20_filters("0.99", qc)
+        v[f"M20C_{qc}_KD"] = j(m20_filters("0.99", qc), "max_rank=2", f"rank2_filter={R2BARS['none']}")
+    # M20 plain allowed only at a very high bar, confluent at a loose one
+    for q, qc in (("0.63", "0.55"), ("0.63", "0.57"), ("0.66", "0.55")):
+        v[f"M20C_{qc}_p{q}"] = m20_filters(q, qc)
+        v[f"M20C_{qc}_p{q}_KD"] = j(m20_filters(q, qc), "max_rank=2", f"rank2_filter={R2BARS['none']}")
     # --- CMB: M20 x rank-2
     for bn in ("q57", "q60"):
         for bar in ("same", "q57", "q60"):
