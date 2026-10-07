@@ -34,9 +34,9 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [x] 0. Session start: restore env (140 tests pass), PROGRESS v16 header + plan, v16_common.py (v15-A config + judge16), first save.
 - [x] 1. `record_selections_v16.py` (top-K per slot with `rank`, new TF M20 in TIMEFRAME_MINUTES/htf_parent) + pilot on one month (M10):
         rank-2 frequency, quality distribution, timing; rank-1 rows == v10 stream on that month.
-- [ ] 2. `run_v16_record.sh`: full-year streams Sep25-Sep26 in monthly chunks (6-week warm-up, carry-over), all TFs + M20, each chunk
+- [x] 2. `run_v16_record.sh`: full-year streams Sep25-Sep26 in monthly chunks (6-week warm-up, carry-over), all TFs + M20, each chunk
         committed; merge -> study_results/sel_v16_<TF>.pkl.  Runs in the background under the autosave loop.
-- [ ] 3. Simulator levers (defaults byte-identical, parity test): `max_rank`, `rank2_filter`, `rank2_risk_scale`, `rank2_tfs`; M20 support
+- [x] 3. Simulator levers (defaults byte-identical, parity test): `max_rank`, `rank2_filter`, `rank2_risk_scale`, `rank2_tfs`; M20 support
         (filter rule, keep_replaced_tfs, mart_tfs); unit tests tests/test_v16_levers.py; parity of v15-A on the sel_v16 rank-1 stream.
 - [ ] 4. Grid `run_v16_levers.py` (resumable, workers 1) -> study_results/v16_levers/ + v16_levers.csv; judge16.
 - [ ] 5. Stress x6 + walk-forward of the finalists; port to trader.py (live scanner: qualified() list, M20) + run_trader.bat (v16-A) +
@@ -44,6 +44,12 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [ ] 6. Final backtest `backtest_v16_final.py` -> study_results/FINAL_BACKTEST_V16.md, report MORE_TRADES_V16.md, README, final save + archive.
 
 ## Log (v16)
+- 2026-10-07 06:00  4th SANDBOX RESET (overnight, during the grid; 9 grid jsons + all 51 chunks + merged streams on GitHub).  Step 2 DONE:
+  study_results/sel_v16_{M5,M10,M15,M20,M30,H1}.pkl (57 345 events, top-3; rank-2 set events: M5 4527, M10 2109, M15 1124, M20 902,
+  M30 640, H1 286).  Step 3 DONE: ref on the v16 stream (rank 1, no M20) = 448 / +29 745 $ / DD -5.82 / PF 2.375 = FINAL_BACKTEST_V15
+  IDENTICAL.  Grid relaunched (run_v16_all.sh, 86 runs left, ~40 s each).  First rows: rank-2 at the SAME bar adds 42-56 trades but
+  PF 2.09-2.21, DD 6.2-6.9, win 72.8 -> fails hold_loss; x0.5 scale reaches more_profit (+30.0-30.7 k$) but DD still 6.2-6.5.
+  The stricter bars (q57/q60/q65), confluent-only and M20 are still to run.
 - 2026-10-06 21:00  PRELIMINARY full-year read on the 4 higher TFs (M10/M15/M30/H1, M5 not yet recorded), v15-A strings:
   v16 rank-1 stream == v10 stream IDENTICAL (248 tr / +15 774 $ / DD 4.66 / PF 2.83).  rank-2 same bar: 269 tr (+15 r2 fills) +16 548 $
   OOS +9 132 DD 5.59; rank-2 q0.60: 264 tr +16 537 DD 4.93 PF 2.73 win 77.3.  M20 q0.57: 310 tr but +14 622 DD 7.33 PF 2.13 (M20 at
