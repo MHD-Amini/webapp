@@ -1,0 +1,48 @@
+{
+ "n_variants": 170,
+ "is_pass": 67,
+ "oos_pass": 2,
+ "both": 0,
+ "spearman": {
+  "d_n": {
+   "rho": 0.949,
+   "p": 3.673733350466984e-86
+  },
+  "d_net": {
+   "rho": 0.521,
+   "p": 3.3863566686442037e-13
+  },
+  "d_PF": {
+   "rho": 0.39,
+   "p": 1.500567340967281e-07
+  }
+ },
+ "is_top": [
+  "M20C_0.63_KD",
+  "M20N_0.63_KD",
+  "CMB_m20q60_r2q60_1.0",
+  "CMB_m20q60_r2q60_0.75",
+  "CMB_m20q60_r2q60_0.5",
+  "M20C_0.60_KD",
+  "M20SC_0.60_x0.75_KD",
+  "M20N_0.60_KD",
+  "M20SC_0.63_x0.4_KD",
+  "M20SC_0.60_x0.6_KD",
+  "M20SC_0.60_x0.5_KD",
+  "M20SN_0.60_x0.5_KD"
+ ],
+ "is_top_oos_pass": [
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false
+ ]
+}
