@@ -44,6 +44,16 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [ ] 6. Final backtest `backtest_v16_final.py` -> study_results/FINAL_BACKTEST_V16.md, report MORE_TRADES_V16.md, README, final save + archive.
 
 ## Log (v16)
+- 2026-10-07 09:00  Stages 2+3 of the grid DONE (135 runs; 7th/8th resets in between - nothing lost).  12 variants score 3/4; NONE 4/4.
+  * M20 CONFLUENT-ONLY (plain M20 bar 0.99, confluence bar q): M20C_0.60 = 478 tr / +35 725 $ (+20 %) / OOS +24 340 / DD 5.80 / PF 2.415 /
+    win 75.3 / sl 24.3 / OOS PF 2.32 -> passes T, P, O; fails hold_loss ONLY on the worst day (-3.44 % vs band -2.92): the same
+    2026-04-08 cluster (3 confluent sells stopped in one minute) now carries one more plan.  M20C_0.63: 467 tr +33 587 DD 5.70 (same wd).
+  * KD (keep-demoted, no new zones): +28 tr +2.9 k$, DD 5.70, but OOS PF 2.12 (fails O).  M20C_0.60_KD: 509 tr / +39 298 / OOS +26 394 /
+    DD 5.81 / PF 2.33 / OOS PF 2.21 -> fails only on worst day (-3.36).
+  * Without martingale on M20 (M20N): no gain vs M20C (the big M20 stop on 2026-08-14 was not a step-up).  mart cap 2 %: no change.
+  * The binding constraint of every M20 variant is the WORST DAY (clustered confluent stops get one more leg).  Lever added:
+    `tf_risk_scale` (per-TF size, e.g. M20:0.5; simulator + trader.py + 2 tests, 152 pass).  Stage 4 running: M20S* = confluent-only
+    M20 at x0.5-0.75 size (x KD).
 - 2026-10-07 07:40  step 4 GRID (first 95) DONE after the 6th reset (study_results/v16_levers.csv): scores 3/4 = 1, 2 = 72, 1 = 22.
   READING: (1) genuine RANK-2 fills LOSE money at every bar (same bar: 42 tr -1.3 k$, 58 % win; q57: 31 tr -2.8 k$; q60: 13 tr
   -0.2 k$) - the scanner's ranking is right, the 2nd zone is worse than the 1st and its stop rate 40-58 % breaks hold_loss.
