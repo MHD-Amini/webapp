@@ -45,10 +45,14 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
         (M20 live scan, MT5 timeframe map), tests/test_bat_v16.py (strings parse, keys present, M20 in every per-TF key).
 - [ ] 6a. `make_v16_report.py` -> study_results/MORE_TRADES_V16.md + charts (every number read from the result files).
 - [ ] 6b. README (title v16, command table, section 0i), restore.sh v16 hints, save.
-- [ ] 6c. Final backtest `backtest_v16_final.py` -> FINAL_BACKTEST_V16.md + verify_bat_v16.py (NEEDS the M1 CSV: the new sandbox has no
-        /home/user/uploaded_files - ask the user to re-upload XAUUSD.t_M1_202501020100_2026090423581112.csv), final save + archive.
+- [x] 6c. Final backtest `backtest_v16_final.py` -> FINAL_BACKTEST_V16.md + verify_bat_v16.py (CSV re-uploaded by the user in session 2).
 
 ## Log (v16)
+- 2026-10-07 18:10  step 6c DONE (the user re-uploaded the M1 CSV; restore.sh relinked it, 157 tests pass).  backtest_v16_final.py
+  (strings READ FROM run_trader.bat, v16 streams top-3 incl. M20) -> study_results/FINAL_BACKTEST_V16.md + final_v16/* + charts/final_v16_equity.png:
+  v16-A = 467 tr / +30 175 $ / +301.75 % / DD -5.82 / PF 2.365 / win 75.2 / sl 24.4 / OOS +19 661 $ / 21 M20 trades / 0 rank-2 = IDENTICAL to
+  study_results/v16_levers/M20SC_0.63_x0.4.json; the v15-A reference (same strings minus M20 / tf_risk_scale) = 448 / +29 745 / +297.45 / -5.82 /
+  PF 2.375 = FINAL_BACKTEST_V15 IDENTICAL.  verify_bat_v16.py: IDENTICAL True (logs/verify_bat_v16.log).  Pushed (0c98c96).
 - 2026-10-07 17:50  step 5c DONE: run_trader.bat ships v16-A (header rewritten: what M20-confluent-only means, the numbers, the stress
   summary, v16-B / v16-C / v15-A fallbacks, `REM v16 study: study_results/v16_levers/M20SC_0.63_x0.4.json` for verify_bat_v16.py).  Command
   line: --timeframes M5,M10,M15,M20,M30,H1; --trade-filter + /M20:min_quality=0.99; --confluence-filter + /M20:min_quality=0.63;
