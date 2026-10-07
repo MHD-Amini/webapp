@@ -44,6 +44,13 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [ ] 6. Final backtest `backtest_v16_final.py` -> study_results/FINAL_BACKTEST_V16.md, report MORE_TRADES_V16.md, README, final save + archive.
 
 ## Log (v16)
+- 2026-10-07 09:40  Stage 4 DONE (159 runs, 9th reset in between): 29 variants at 3/4, still none 4/4.  The M20 size scale works as
+  intended: M20SC_0.60_x0.6 (confluent-only M20 at x0.6 of normal size) = 478 tr / +32 476 $ / OOS +21 631 / DD 5.67 / PF 2.39 /
+  OOS PF 2.28 / worst day -3.05 (band -2.92: the 2026-04-08 cluster = 2 confluent sells + the M20 leg stopped in one minute);
+  M20SC_0.60_x0.6_KD = 509 tr / +36 670 $ (+23 %) / OOS +24 430 / DD 5.60 / PF 2.31 / OOS PF 2.19 / worst day -2.94 (0.02 pt outside
+  the band; its worst day is 2026-08-19 where a kept-demoted M30 order adds a 3rd stop).  Stage 5 running: M20 x0.4 / x0.3.
+  DECISION RULE for step 5 (stress + walk-forward) finalists: the best 4/4 if stage 5 produces one, else the 3/4 variants that miss by
+  <= 0.1 pt on ONE metric, judged on the stress x6 + walk-forward like v15.
 - 2026-10-07 09:00  Stages 2+3 of the grid DONE (135 runs; 7th/8th resets in between - nothing lost).  12 variants score 3/4; NONE 4/4.
   * M20 CONFLUENT-ONLY (plain M20 bar 0.99, confluence bar q): M20C_0.60 = 478 tr / +35 725 $ (+20 %) / OOS +24 340 / DD 5.80 / PF 2.415 /
     win 75.3 / sl 24.3 / OOS PF 2.32 -> passes T, P, O; fails hold_loss ONLY on the worst day (-3.44 % vs band -2.92): the same
