@@ -49,6 +49,7 @@ R2BARS = {
     "q57": "M5:max_cost_r=0.08;min_quality=0.57;sessions=asia|london|preny|ny|lclose/M10|M15|M30|H1:min_quality=0.57",
     "q60": "M5:max_cost_r=0.08;min_quality=0.60;sessions=asia|london|preny|ny|lclose/M10|M15|M30|H1:min_quality=0.60",
     "q65": "M5:max_cost_r=0.08;min_quality=0.65;sessions=asia|london|preny|ny|lclose/M10|M15|M30|H1:min_quality=0.65",
+    "none": "M5|M10|M15|M20|M30|H1:min_quality=0.99",      # unreachable: no rank-2 zone is ever placed (keep-demoted effect only)
 }
 # M20 filter bars: the M20 rule is appended to the v15-A trade filter and confluence filter
 M20BARS = {"q55": "0.55", "q57": "0.57", "q60": "0.60", "q65": "0.65"}
@@ -75,11 +76,15 @@ def variants() -> dict[str, str]:
                 name = f"R2_{bar}_{sc}" + (f"_{tn}" if tn else "")
                 v[name] = j(f"timeframes={TF5}", "max_rank=2", f"rank2_filter={R2BARS[bar]}" if R2BARS[bar] else "",
                             f"rank2_risk_scale={sc}" if sc != 1.0 else "", f"rank2_tfs={tfs}" if tfs else "")
+    # --- KD: keep-demoted only (max_rank 2, no rank-2 zone can pass) - isolates the "demoted POI keeps its order" effect
+    v["KD"] = j(f"timeframes={TF5}", "max_rank=2", f"rank2_filter={R2BARS['none']}")
+    v["KD_htf"] = j(f"timeframes={TF5}", "max_rank=2", f"rank2_filter={R2BARS['none']}", "rank2_tfs=M10|M15|M30|H1")
     # --- R2C: rank-2 only when confluent
-    for bar in ("same", "q55", "q60"):
+    for bar in ("same", "q55", "q60", "q65"):
         for sc in (1.0, 0.75):
             v[f"R2C_{bar}_{sc}"] = j(f"timeframes={TF5}", "max_rank=2,rank2_confluent_only=true",
                                      f"rank2_filter={R2BARS[bar]}" if R2BARS[bar] else "", f"rank2_risk_scale={sc}" if sc != 1.0 else "")
+            v[f"R2C_{bar}_{sc}_htf"] = j(v[f"R2C_{bar}_{sc}"], "rank2_tfs=M10|M15|M30|H1")
     # --- R3: ranks 2 and 3
     for bar in ("same", "q57", "q60"):
         for sc in (1.0, 0.5):

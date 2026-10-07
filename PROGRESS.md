@@ -44,6 +44,14 @@ Parity requirement: the rank-1 rows of the new stream must reproduce v15-A (448 
 - [ ] 6. Final backtest `backtest_v16_final.py` -> study_results/FINAL_BACKTEST_V16.md, report MORE_TRADES_V16.md, README, final save + archive.
 
 ## Log (v16)
+- 2026-10-07 06:45  5th reset (50/95 grid runs on GitHub), relaunched.  FINDING while the grid runs: `max_rank=2` changes the result even
+  at a bar no rank-2 zone passes (R2_q65: 0 rank-2 fills, yet 476 tr / +32 670 $ vs ref 448 / +29 745): a POI DEMOTED from rank 1 to
+  rank 2 keeps its order (it is still shown on a slot) instead of being cancelled as "replaced" -> 36 new trades (+767 $, 72 % win,
+  OOS -681 $), 8 lost, and the common 440 trades shift +2.2 k$ through equity / martingale sequencing.  So the v16 effect has TWO parts:
+  (a) KEEP-DEMOTED orders (no new zones, cheap on DD: 5.70) and (b) genuine rank-2 fills (10-50 trades depending on the bar, PF cost).
+  Best so far: R2_q60_0.5_htf 482 tr / +32 810 / OOS +21 188 / DD 5.98 / PF 2.28 / wd -2.48 = score 3 (fails hold_oos only:
+  OOS PF 2.14 < 2.26 - 0.10) -> the OOS PF band is the binding constraint for every rank-2 variant so far.  Added to the grid: KD_*
+  (keep-demoted only = max_rank 2 with an unreachable rank-2 bar q0.99) to isolate effect (a), and R2C_q60 variants.
 - 2026-10-07 06:00  4th SANDBOX RESET (overnight, during the grid; 9 grid jsons + all 51 chunks + merged streams on GitHub).  Step 2 DONE:
   study_results/sel_v16_{M5,M10,M15,M20,M30,H1}.pkl (57 345 events, top-3; rank-2 set events: M5 4527, M10 2109, M15 1124, M20 902,
   M30 640, H1 286).  Step 3 DONE: ref on the v16 stream (rank 1, no M20) = 448 / +29 745 $ / DD -5.82 / PF 2.375 = FINAL_BACKTEST_V15
