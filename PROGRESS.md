@@ -1,4 +1,45 @@
-# PROGRESS — v16 NEW TRADE SOURCES for the v15-A trader: MORE TRADES & MORE PROFIT AT THE SAME LOSS PERCENTAGE — ALL STEPS COMPLETE (2026-10-07 18:45, session 2)
+# PROGRESS — v16b LOSS REDUCTION for the v16-A trader: REDUCE THE LOSS PERCENTAGE WHILE MAINTAINING THE PROFITABILITY PERCENTAGE (session 1, started 2026-10-09 16:15)
+
+**Recovery (read this first):** `git clone https://github.com/MHD-Amini/webapp.git /home/user/webapp`, `bash restore.sh`
+(relinks the CSV to `data/xauusd_m1.csv`, pip, tests), read this file, continue from the FIRST UNCHECKED step of the v16b plan below.
+Every step ends with `bash save.sh "msg"` (commit + push to GitHub origin = https://github.com/MHD-Amini/webapp).  Long jobs are resumable
+(one json per run in study_results/v16b_levers/, they skip outputs that exist) and run under `run_v16b_all.sh`, which autosaves (commit +
+push) every 4 minutes.  Data: `/home/user/uploaded_files/XAUUSD.t_M1_202501020100_2026090423581112.csv` (593 863 M1 bars 2025-01-02 ->
+2026-09-04; symlink `data/xauusd_m1.csv`).  Sandbox: 2 cores, ~1 GB RAM -> simulator with `--workers 1`, never two full-year sims at once.
+
+## User spec (v16b)
+1. Find a way for the v16 bot (run_trader.bat = v16-A) to REDUCE THE LOSS PERCENTAGE while MAINTAINING THE PROFITABILITY PERCENTAGE.
+2. Save the process after EVERY step without exception, recoverable if the session dies (GitHub + PROGRESS.md + resumable jobs).
+
+## Reference (v16-A, FINAL_BACKTEST_V16.md, full year 2025-09-01 -> 2026-09-04, $10 000, 1 % base risk)
+467 trades, +30 175 $ (+301.75 %), max DD -5.82 %, PF 2.365, win 75.2 %, stop-outs 24.4 %, worst day -2.64 % eq, gross loss -22 102 $,
+avg loss -190.5 $ / -0.996 R, OOS (>= 2026-03-01) net +19 661 $, OOS PF 2.247, OOS win 76.1, OOS sl 23.9, 13/13 months.
+Interpretation of the spec: "loss percentage" = the stop-out rate (sl_%) AND the max drawdown % AND the $ lost (gross loss) - all three
+must go DOWN; "profitability percentage" = return % (net $) AND profit factor AND OOS net - must be held (>= ref - small band).
+Judge (v16b_common.judge16b): less_loss = sl_% < ref AND max_dd_% better than ref AND gross_loss_$ smaller than ref (|.|);
+hold_profit = net >= 0.97 x ref AND PF >= ref - 0.05 AND OOS net >= 0.97 x OOS ref; hold_oos = OOS sl < ref AND OOS PF >= ref - 0.10;
+no_worse_days = worst day >= ref - 0.25 pt.  Score 0-4.
+
+## Plan (v16b)
+- [x] 0. Session start: restore env (157 tests pass), PROGRESS v16b header + plan, first save.
+- [ ] 1. Diagnosis `run_v16b_diag.py` -> study_results/v16b_diag/: the 114 stop-outs of v16-A (final_v16/v16A_trades.csv): by TF, side,
+        kind, session, regime, confluent, quality band, hold time, MAE/MFE path (how far did price go in our favour before the stop?),
+        time-to-stop, clustering (same-minute / same-day stops), the 2026-04-08 cluster; the BE / partial trades (what does a loser look
+        like before it loses?).  Candidate levers ranked by $ saved vs $ given up.
+- [ ] 2. Levers in TraderConfig / PortfolioSimulator (defaults byte-identical, parity 467 / +301.75 / -5.82 exact; tests): e.g. time stop
+        (cancel plan after N min without reaching +x R), early-exit on adverse structure, SL tightening after MFE >= x R before TP1,
+        max concurrent same-side positions / cluster cap, per-day loss cap below 4.5 %, stop-out-rate-aware quality bar per slice.
+- [ ] 3. Grid `run_v16b_levers.py` (resumable, workers 1) under `run_v16b_all.sh` (autosave) -> study_results/v16b_levers/ + v16b_levers.csv.
+- [ ] 4. Stress x6 + walk-forward of the finalists -> DECISION v16b-A / B / C.
+- [ ] 5. Port to run_trader.bat + trader.py (live support) + tests/test_bat_v16b.py + verify_bat_v16b.py.
+- [ ] 6. Final backtest `backtest_v16b_final.py` -> FINAL_BACKTEST_V16B.md; report `make_v16b_report.py` -> LESS_LOSS_V16B.md; README 0j; save.
+
+## Log (v16b)
+- 2026-10-09 16:15  step 0: GitHub origin verified (MHD-Amini/webapp, main c3c1c83), restore.sh OK (CSV linked, 157 tests pass, 171 v16 runs,
+  6 v16 streams on disk).  No "v16b" existed in the repo -> v16b = this new layer on top of v16-A.  Header + plan written.
+
+---
+# (previous) # PROGRESS — v16 NEW TRADE SOURCES for the v15-A trader: MORE TRADES & MORE PROFIT AT THE SAME LOSS PERCENTAGE — ALL STEPS COMPLETE (2026-10-07 18:45, session 2)
 
 **Recovery (read this first):** `git clone https://github.com/MHD-Amini/webapp.git /home/user/webapp`, `bash restore.sh`
 (relinks the CSV to `data/xauusd_m1.csv`, pip, tests), read this file, continue from the FIRST UNCHECKED step below.  Every step ends
