@@ -22,7 +22,7 @@ no_worse_days = worst day >= ref - 0.25 pt.  Score 0-4.
 
 ## Plan (v16b)
 - [x] 0. Session start: restore env (157 tests pass), PROGRESS v16b header + plan, first save.
-- [ ] 1. Diagnosis `run_v16b_diag.py` -> study_results/v16b_diag/: the 114 stop-outs of v16-A (final_v16/v16A_trades.csv): by TF, side,
+- [x] 1. Diagnosis `run_v16b_diag.py` -> study_results/v16b_diag/: the 114 stop-outs of v16-A (final_v16/v16A_trades.csv): by TF, side,
         kind, session, regime, confluent, quality band, hold time, MAE/MFE path (how far did price go in our favour before the stop?),
         time-to-stop, clustering (same-minute / same-day stops), the 2026-04-08 cluster; the BE / partial trades (what does a loser look
         like before it loses?).  Candidate levers ranked by $ saved vs $ given up.
@@ -35,6 +35,31 @@ no_worse_days = worst day >= ref - 0.25 pt.  Score 0-4.
 - [ ] 6. Final backtest `backtest_v16b_final.py` -> FINAL_BACKTEST_V16B.md; report `make_v16b_report.py` -> LESS_LOSS_V16B.md; README 0j; save.
 
 ## Log (v16b)
+- 2026-10-09 20:05  step 1 DONE: run_v16b_diag.py -> study_results/v16b_diag/DIAG.md + 37 csv (trades_enriched.csv carries the features).
+  SANDBOX RESET between the two chat turns (data/ symlink + an unsaved script lost) -> recovered with git + restore.sh in 1 min; nothing else lost.
+  THE LOSS STRUCTURE of v16-A (114 stop-outs, -22 072 $; 2 other small losers):
+  * SIDE is the biggest split: BUYS 308 tr / stop 20.1 % / +26 259 $; SELLS 159 tr / stop 32.7 % / +3 915 $ - stable on both halves
+    (IS 32.9 / OOS 32.4 %).  Sells are 34 % of the trades, 46 % of the stop-outs and 13 % of the profit.
+  * COUNTER-TREND SELLS (last closed daily close > SMA10/20, computable live at selection time): 93-100 tr, stop 35-39 %, ~0 $ net
+    (IS +0.6..1.8 k$, OOS -1.0..-1.5 k$).  Sells WITH the trend (close < SMA10): 66 tr, stop 24 %, +4.2 k$.  Counter-trend BUYS are
+    fine (stop 24-27 %, +7-8 k$) -> an asymmetric rule, like the v14 martingale.
+  * IMPULSIVE ARRIVALS: orders FILLED within 5 min of placement (price was already running into the zone when the scanner showed it):
+    61 tr, stop 39 %, -2.0 k$ (IS +0.3 k$, OOS -2.3 k$); 5-15 min: stop 17 %.  Not the same as "near zone" (corr 0.07 with distance).
+    Range-regime fast fills: 30 tr, 50 % stop, -3.1 k$.
+  * RANGE-REGIME SELLS: 75 tr, stop 36 %, -1.8 k$ (OOS 43 % stop, -2.6 k$) - overlaps the counter-trend set.
+  * Step-DOWN plans (mart -1, after a loss, x0.5): 73 tr, stop 37 % but +1.5 k$ (already half size) - leave.
+  * NOT a lever: quality band (0.55-0.60 stop 30 %, but 166 tr / +7.1 k$), session, kind, TF (M5/M30 stop 28 %), concurrency
+    (same-side open at fill = confluence = better), days (clusters of 2+ stops = 23 days, -3.7 k$: mostly the same cluster the
+    v15/v16 studies saw; a day-cap below 4.5 % would catch only 1-2 days).
+  * POST-FILL: 58/114 stop-outs (51 %) first went >= +0.2 R, 42 (37 %) >= +0.3 R (-6.9 k$) -> a BE trigger below TP1 (0.6 R) could
+    scratch some of them; but 126 of the 353 non-stop trades had MAE >= 0.5 R (+16 k$) and a BE at +0.3 R would be taken out of many
+    of those by the retrace -> must be simulated (be_trigger_r exists since v9; the v9 study said no at the old ladder, not tested on v16-A).
+  STATIC ESTIMATE (trade list, before re-simulation, sizing effects ignored): skip counter-trend sells (SMA10) + skip fills <= 5 min ->
+  stop rate 24.4 -> 17.7 %, gross loss -22.1 -> -11.5 k$, net 30.2 -> 32.3 k$.  Each alone: sells 20.9 % / 30.5 k$; fast fills 22.2 % / 32.2 k$.
+  LEVERS FOR STEP 2 (all pre-fill, all computable by the live bot): (1) `trend_filter` = daily SMA(N) trend gate with side asymmetry
+  (`trend_sma`, `trend_sides=sell`, `trend_mode=skip|scale`, `trend_risk_scale`); (2) `min_fill_age_min` / `min_fill_age_bars` = an
+  order that would fill within N minutes of placement is NOT filled (cancelled: the arrival is impulsive) - optional `fast_fill_scale`
+  instead of cancel; (3) `be_trigger_r` re-tested on v16-A; (4) `range_sell_scale` (regime x side).  Grid = each alone, then combos.
 - 2026-10-09 16:15  step 0: GitHub origin verified (MHD-Amini/webapp, main c3c1c83), restore.sh OK (CSV linked, 157 tests pass, 171 v16 runs,
   6 v16 streams on disk).  No "v16b" existed in the repo -> v16b = this new layer on top of v16-A.  Header + plan written.
 

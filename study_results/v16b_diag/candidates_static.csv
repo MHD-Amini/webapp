@@ -1,0 +1,15 @@
+lever,trades_affected,stops_affected,IS_net_$_affected,OOS_net_$_affected,new_sl_%,new_net_$,new_gross_loss_$
+skip sells when daily close > SMA10,93,36,647,-978,20.9,30505,-16203
+skip sells when daily close > SMA20,100,35,1755,-1460,21.5,29880,-16983
+skip counter-trend both sides SMA20,217,67,2853,4229,18.8,23093,-9274
+scale sells x0.5,159,52,1830,2085,24.4,28217,-17473
+scale counter-trend sells x0.5 (SMA20),100,35,1755,-1460,24.4,30027,-19542
+skip fills within 5 min of placement,61,24,343,-2339,22.2,32170,-16425
+skip fills within 3 min of placement,44,17,483,-2337,22.9,32028,-17741
+skip fills within 0.5 bar of own TF,50,18,511,-249,23.0,29913,-18308
+skip zones closer than 0.5 ATR at selection,39,12,316,229,23.8,29630,-19502
+skip range-regime sells,75,27,800,-2616,22.2,31991,-16336
+scale range-regime sells x0.5,75,27,800,-2616,24.4,31083,-19219
+skip step-down (mart -1) plans,73,27,323,1199,22.1,28653,-19739
+skip sells SMA10 + fills <= 5 min,139,56,354,-2441,17.7,32261,-11500
+skip sells SMA20 + fills <= 5 min,144,55,1443,-2742,18.3,31473,-12461

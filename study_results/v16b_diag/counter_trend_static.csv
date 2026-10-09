@@ -1,0 +1,9 @@
+rule,dropped,dropped_sl,dropped_net_$,dropped_IS_net_$,dropped_OOS_net_$,remaining_n,remaining_sl_%,remaining_net_$,remaining_gross_loss_$
+skip sells when close > SMA5,97,32,2579,568,2012,370,22.2,27595,-17312
+skip BOTH sides counter-trend SMA5,232,63,13075,2230,10845,235,21.7,17099,-10642
+skip sells when close > SMA10,93,36,-330,647,-978,374,20.9,30505,-16203
+skip BOTH sides counter-trend SMA10,228,69,7712,2063,5649,239,18.8,22463,-8527
+skip sells when close > SMA20,100,35,295,1755,-1460,367,21.5,29880,-16983
+skip BOTH sides counter-trend SMA20,217,67,7082,2853,4229,250,18.8,23093,-9274
+skip sells when close > SMA50,101,35,1552,1830,-278,366,21.6,28622,-17161
+skip BOTH sides counter-trend SMA50,217,60,14983,1830,13153,250,21.6,15191,-10380
