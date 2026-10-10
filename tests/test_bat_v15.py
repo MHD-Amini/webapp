@@ -20,4 +20,5 @@ def test_bat_trader_string_is_v15a():
     # the confluence filter (the bar the memory widens) is unchanged: M10 0.50
     cf = re.search(r'--confluence-filter "([^"]*)"', line).group(1)
     assert "M10:min_quality=0.50" in cf
-    assert "v15" in open("run_trader.bat", encoding="utf-8").read().splitlines()[1]
+    header = [l for l in open("run_trader.bat", encoding="utf-8").read().splitlines() if l.startswith("REM")]
+    assert any("v15-A" in l for l in header)          # the v15 layer is documented in the bat header (v16/v16b ship on top of it)

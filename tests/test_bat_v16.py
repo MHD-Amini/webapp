@@ -52,7 +52,7 @@ def test_bat_trader_string_is_v16a():
     assert t.confluence_memory_min == 240 and t.confluent_risk_scale == 1.25 and t.plain_risk_scale == 0.9
     assert t.mart_mode == "mult" and t.mart_mult == 1.5 and t.mart_scope == "tf" and t.mart_ungated_scale == 0.5
     assert t.regime_metric == "adr_ratio" and t.range_tp_levels == ("0.5", "1.0", "1.5", "2.5")
-    assert "v16" in open("run_trader.bat", encoding="utf-8").read().splitlines()[1]
+    assert "v16" in open("run_trader.bat", encoding="utf-8").read().splitlines()[1]      # v16b header mentions v16 too
 
 
 def test_bat_config_equals_shipped_study_config():
@@ -63,7 +63,10 @@ def test_bat_config_equals_shipped_study_config():
     assert study["name"] == "M20SC_0.63_x0.4" and study["trades"] == 467
     diffs = {f.name: (getattr(t, f.name), getattr(s, f.name)) for f in dataclasses.fields(TraderConfig)
              if getattr(t, f.name) != getattr(s, f.name)}
-    assert set(diffs) <= {"timeframes"}, diffs
+    # v16b (the layer shipped on top) adds its own keys; everything else must still be v16-A (tests/test_bat_v16b.py pins them)
+    V16B_LAYER = {"min_fill_age_min", "fast_fill_mode", "fast_fill_scale", "fast_fill_tfs", "fast_fill_regime", "regime_side_scale",
+                  "trend_sma", "trend_sides", "trend_mode", "trend_risk_scale", "trend_tfs", "trend_regime"}
+    assert set(diffs) <= {"timeframes"} | V16B_LAYER, diffs
     assert tuple(s.timeframes) == tfs
 
 

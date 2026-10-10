@@ -31,13 +31,25 @@ no_worse_days = worst day >= ref - 0.25 pt.  Score 0-4.
         max concurrent same-side positions / cluster cap, per-day loss cap below 4.5 %, stop-out-rate-aware quality bar per slice.
 - [x] 3. Grid `run_v16b_levers.py` (resumable, workers 1) under `run_v16b_all.sh` (autosave) -> study_results/v16b_levers/ + v16b_levers.csv.
 - [x] 4. Stress x6 + walk-forward of the finalists -> DECISION v16b-A / B / C.
-- [ ] 5. Port to run_trader.bat + trader.py (live support) + tests/test_bat_v16b.py + verify_bat_v16b.py.
+- [x] 5. Port to run_trader.bat + trader.py (live support) + tests/test_bat_v16b.py + verify_bat_v16b.py.
 - [ ] 6. Final backtest `backtest_v16b_final.py` -> FINAL_BACKTEST_V16B.md; report `make_v16b_report.py` -> LESS_LOSS_V16B.md; README 0j; save.
 
 ## Log (v16b)
 - 2026-10-10 07:50  SESSION 3 (the previous chat died right after step 4a was pushed: GitHub main d3a974c = stress x6 + walk-forward
   complete, 48 stress rows in v16b_stress.csv + v16b_walkforward.csv/.json).  Recovered: repo present, restore.sh (CSV relinked, 170 tests
   pass).  Continuing at step 4b (judge the stress + walk-forward -> DECISION), then 5, 6.
+- 2026-10-10 08:20  step 5 DONE: run_trader.bat ships v16b-A (new header: what the two levers do, the live meaning of the fast-fill guard
+  = close-at-market since a broker fills a limit order itself, the numbers, stress summary, v16b-B / v16b-C / F2-only / v16-A fallbacks,
+  `REM v16b study: study_results/v16b_levers/C_F2+RS_0.5.json`; the v16 header kept as "Previous layer (v16-A ...)" with its REM v16
+  study line so verify_bat_v16 / test_bat_v16 still work).  --trader gains `,min_fill_age_min=2,regime_side_scale=range:sell:0.5`
+  (nothing else changes: timeframes, both filters, every v13-v16 key identical).  trader.py needed NO code change (the three v16b levers
+  were ported in session 2 with tests/test_trader_v16b.py).  tests/test_bat_v16b.py (5): header + study pointer; the bat parses to
+  v16b-A with the other v16b levers OFF and v16-A untouched underneath; the bat config == the shipped study json field by field (only
+  `timeframes` differs by construction); bat minus the two keys == v16a_config (the reference of the final backtest); live fake-MT5 with
+  the shipped strings: range-regime SELL 0.10 lots (half) next to a 0.20-lot BUY, trend-regime sell full size, a 1-min fill is closed at
+  market + plan finished, a 3-min fill is kept.  test_bat_v16 relaxed to allow the v16b layer (same pattern as v14->v15->v16),
+  test_bat_v15 checks the v15 layer anywhere in the header.  175 tests pass.  verify_bat_v16b.py written (replay of the bat strings
+  vs the study json) - run in step 6a together with the final backtest (two full-year sims, ~16 s each).
 - 2026-10-10 08:00  step 4b DONE: judge_v16b_stress.py -> study_results/v16b_stress_judged.csv + v16b_stress_summary.csv (logs/v16b_judge.log).
   Each finalist x 6 scenarios (spread x2, commission x2, slip x3, worst intrabar, risk 0.5, risk 2) judged against the v16-A row of the
   SAME scenario (v16_stress.csv M20SC_0.63_x0.4) with the 4 v16b questions.  Walk-forward (v16b_walkforward.csv, split 2026-03-01 on
