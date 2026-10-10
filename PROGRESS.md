@@ -38,6 +38,11 @@ no_worse_days = worst day >= ref - 0.25 pt.  Score 0-4.
 - 2026-10-10 07:50  SESSION 3 (the previous chat died right after step 4a was pushed: GitHub main d3a974c = stress x6 + walk-forward
   complete, 48 stress rows in v16b_stress.csv + v16b_walkforward.csv/.json).  Recovered: repo present, restore.sh (CSV relinked, 170 tests
   pass).  Continuing at step 4b (judge the stress + walk-forward -> DECISION), then 5, 6.
+- 2026-10-10 08:40  step 6b DONE: make_v16b_report.py -> study_results/LESS_LOSS_V16B.md (76 blocks, 9 sections: answer, method, diagnosis
+  tables (side / counter-trend / regime x side / fill age / fast fills x regime / static estimate), levers, grid (10 x 4/4 table, singles per
+  family incl. the OUT list, combos, best per family), robustness (stress summary + scenario table with the v16-A row, walk-forward rows,
+  worst day), final backtest + where the reduction comes from (removed / new / common range sells half size), recommendation + honest
+  reading, files) + charts/v16b_{equity,scatter,monthly,levers}.png.  Every number read from the result files.
 - 2026-10-10 08:30  step 6a DONE (run_v16b_final.sh in the background; another SANDBOX RESET right after it finished - everything was already
   pushed, only the untracked logs/ went; the CSV was re-uploaded and restore.sh relinked it, 175 tests pass).  backtest_v16b_final.py
   (strings READ FROM run_trader.bat) -> study_results/FINAL_BACKTEST_V16B.md + final_v16b/{v16bA,ref}_{summary.json,trades,equity,
