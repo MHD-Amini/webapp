@@ -35,6 +35,9 @@ no_worse_days = worst day >= ref - 0.25 pt.  Score 0-4.
 - [ ] 6. Final backtest `backtest_v16b_final.py` -> FINAL_BACKTEST_V16B.md; report `make_v16b_report.py` -> LESS_LOSS_V16B.md; README 0j; save.
 
 ## Log (v16b)
+- 2026-10-10 07:50  SESSION 3 (the previous chat died right after step 4a was pushed: GitHub main d3a974c = stress x6 + walk-forward
+  complete, 48 stress rows in v16b_stress.csv + v16b_walkforward.csv/.json).  Recovered: repo present, restore.sh (CSV relinked, 170 tests
+  pass).  Continuing at step 4b (judge the stress + walk-forward -> DECISION), then 5, 6.
 - 2026-10-10 07:05  step 3 DONE: 96 variants (66 singles + 30 combos; study_results/v16b_levers.csv, one json + trade list + equity per
   run in study_results/v16b_levers/).  Parity ref IDENTICAL (467 / +301.75 / -5.82).  TEN variants score 4/4 (less_loss + hold_profit +
   hold_oos + no_worse_day), three families:
