@@ -29,12 +29,33 @@ no_worse_days = worst day >= ref - 0.25 pt.  Score 0-4.
 - [x] 2. Levers in TraderConfig / PortfolioSimulator (defaults byte-identical, parity 467 / +301.75 / -5.82 exact; tests): e.g. time stop
         (cancel plan after N min without reaching +x R), early-exit on adverse structure, SL tightening after MFE >= x R before TP1,
         max concurrent same-side positions / cluster cap, per-day loss cap below 4.5 %, stop-out-rate-aware quality bar per slice.
-- [ ] 3. Grid `run_v16b_levers.py` (resumable, workers 1) under `run_v16b_all.sh` (autosave) -> study_results/v16b_levers/ + v16b_levers.csv.
+- [x] 3. Grid `run_v16b_levers.py` (resumable, workers 1) under `run_v16b_all.sh` (autosave) -> study_results/v16b_levers/ + v16b_levers.csv.
 - [ ] 4. Stress x6 + walk-forward of the finalists -> DECISION v16b-A / B / C.
 - [ ] 5. Port to run_trader.bat + trader.py (live support) + tests/test_bat_v16b.py + verify_bat_v16b.py.
 - [ ] 6. Final backtest `backtest_v16b_final.py` -> FINAL_BACKTEST_V16B.md; report `make_v16b_report.py` -> LESS_LOSS_V16B.md; README 0j; save.
 
 ## Log (v16b)
+- 2026-10-10 07:05  step 3 DONE: 96 variants (66 singles + 30 combos; study_results/v16b_levers.csv, one json + trade list + equity per
+  run in study_results/v16b_levers/).  Parity ref IDENTICAL (467 / +301.75 / -5.82).  TEN variants score 4/4 (less_loss + hold_profit +
+  hold_oos + no_worse_day), three families:
+  * FAST-FILL GUARD (cancel an order that would fill < N min after placement): F2 447 tr / +33 089 $ (+10 %) / OOS 22 723 / DD 5.57 /
+    PF 2.651 / sl 23.5 / gl -20 036 / wd -2.67;  F3_m510 (M5|M10 only) 440 / +31 047 / DD 5.81 / sl 24.1 / gl -19 808;  F3_rng (range
+    regime only) 451 / +32 348 / DD 5.58 / sl 23.7 / gl -20 828.  F3 unscoped fails only the DD (5.94); F5+ cut the stop rate more
+    (22.8) but the DD climbs to 6.4-6.6 (dynamic: sizing on a different equity path) -> fail.  Scaling instead of cancelling (x0.5) does
+    nothing (fills happen anyway, sl stays 25.4).
+  * TREND GATE on sells, SCOPED: T20_rng (skip counter-trend sells placed in a RANGE regime, SMA20) 424 / +29 584 (-2 %) / DD 5.72 / PF
+    2.552 / sl 23.6 / gl -19 056 / wd -2.37;  T10_x0.5_htf (counter-trend sells on M15+ at half size) 465 / +32 112 / DD 5.63 / sl 24.3 /
+    gl -21 600.  The unscoped skips (T5/T10/T20) cut gross loss to -16 k$ but give up 8-20 % of the net and worsen the worst day (-3.14):
+    the 2026-04-08 cluster day is made of WITH-trend sells.  Both-sides gate (TB) = control: halves the trades and the profit.
+  * RANGE-SELL SIZE (regime x side): alone 3/4 (RS_0.25/0.5 fail less_loss on DD 5.85-6.00) but it is the best COMBINER: C_F2+RS_0.5
+    446 / +33 831 (+12 %) / OOS 23 958 / DD 5.55 / PF 2.999 / win 75.8 / sl 23.8 / gl -16 921 (-23 %) / wd -2.34 / OOS PF 3.12 / OOS sl
+    21.1 / 13/13;  C_F3_rng+RS_0.5 450 / +33 076 / DD 5.57 / PF 2.864 / gl -17 745;  C_T20_rng+F3_m510+RS_0.25 400 / +31 446 / DD 5.80 /
+    PF 3.085 / sl 23.0 / gl -15 081 (-32 %) / wd -2.89 (0.25 pt inside the band);  C_T10_x0.5_htf+F2 445 / +35 754 (+18 %, the most $) /
+    OOS 24 210 / DD 5.78 / PF 2.835 / sl 23.4 / gl -19 488 / wd -2.33.
+  * OUT: BE trigger before TP1 (BE0.3-0.5: sl 15.8-21.2 but net -23..-60 %: the winners' retrace takes them out, as the diagnosis
+    feared); day-loss cap 2.5-3.5 (worse DD AND worse worst day: the flatten locks the loss); T50 (12/13 months, -25 % net).
+  FINALISTS for step 4 (stress x6 + walk-forward): C_F2+RS_0.5, C_T10_x0.5_htf+F2, C_F3_rng+RS_0.5, C_T20_rng+F3_m510+RS_0.25, F2,
+  T20_rng, T10_x0.5_htf, F3_m510.  Launched: nohup bash run_v16b_stress.sh "<finalists>" (resumable, autosave).
 - 2026-10-10 06:20  SESSION 2 (the previous chat died after step 2 was pushed; nothing lost: GitHub main a95b8e3).  Recovered: repo already
   cloned, restore.sh (CSV relinked, 165 tests pass).  step 3 STARTED: run_v16b_levers.py (66 single-lever variants: T trend gate SMA
   5/10/20/50 skip|scale x0.75/0.5/0.25 x tf scope (M5|M10, M5-M15, M15+) x regime (range / trend) + TB both-sides control; F fast-fill
