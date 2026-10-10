@@ -35,6 +35,12 @@ no_worse_days = worst day >= ref - 0.25 pt.  Score 0-4.
 - [ ] 6. Final backtest `backtest_v16b_final.py` -> FINAL_BACKTEST_V16B.md; report `make_v16b_report.py` -> LESS_LOSS_V16B.md; README 0j; save.
 
 ## Log (v16b)
+- 2026-10-10 06:20  SESSION 2 (the previous chat died after step 2 was pushed; nothing lost: GitHub main a95b8e3).  Recovered: repo already
+  cloned, restore.sh (CSV relinked, 165 tests pass).  step 3 STARTED: run_v16b_levers.py (66 single-lever variants: T trend gate SMA
+  5/10/20/50 skip|scale x0.75/0.5/0.25 x tf scope (M5|M10, M5-M15, M15+) x regime (range / trend) + TB both-sides control; F fast-fill
+  guard 2/3/5/8/10 min cancel|scale x scope x range; RS range-sell scale 0.75/0.5/0.25/0; BE 0.3/0.4/0.5; DL 3.5/3.0/2.5; then stage
+  'combos' = T x F x RS/BE/DL from the single survivors, 25+ runs), run_v16b_all.sh (singles -> save -> combos -> save, autosave 4 min).
+  Launched in the background: nohup bash run_v16b_all.sh > logs/v16b_all.log.
 - 2026-10-10 05:55  step 2 DONE (SANDBOX RESET AGAIN between turns: the unsaved simulator edits + v16b_common.py were lost once and
   re-applied from this log in 3 min; from now on every file is pushed the minute it passes its tests).  Levers (lubot/execution.py
   TraderConfig, lubot/portfolio_sim.py, lubot/regime.py; defaults byte-identical, PARITY v16-A = 467 / +301.75 / -5.82 / PF 2.365 /
