@@ -213,6 +213,29 @@ class TraderConfig:
     rank2_confluent_only: bool = False        # rank >= 2 plans only when they are confluent (another TF active on the level)
     #: PER-TIMEFRAME risk scale, e.g. "M20:0.5|M5:0.8" (unlisted TFs x1).  Applied on top of the v15 conviction scales.
     tf_risk_scale: str = ""
+    # ---- v16b "less loss" levers (defaults = byte-identical to v16).  All decided BEFORE the fill, from data the live bot has.
+    #: DAILY TREND GATE: the close of the last CLOSED server day vs its SMA(trend_sma).  A plan whose side goes AGAINST that
+    #: trend (sell while close > SMA, buy while close < SMA) and whose side is listed in ``trend_sides`` is skipped
+    #: (trend_mode=skip) or sized x ``trend_risk_scale`` (trend_mode=scale).  0 = off.  The v16b diagnosis: counter-trend
+    #: SELLS stop out 35-39 % and earn ~0 $ a year; counter-trend buys are fine -> ``trend_sides=sell``.
+    trend_sma: int = 0
+    trend_sides: Tuple[str, ...] = ("sell",)
+    trend_mode: str = "skip"                  # skip | scale
+    trend_risk_scale: float = 0.5
+    trend_tfs: Tuple[str, ...] = ()           # () = every timeframe
+    trend_regime: str = ""                    # "" | range | trend: gate only plans placed in this regime
+    #: IMPULSIVE-ARRIVAL GUARD: a pending order that WOULD fill within ``min_fill_age_min`` minutes of its placement (price was
+    #: already running into the zone when the scanner showed it) is cancelled instead (fast_fill_mode=cancel: 39 % stop, -2 k$
+    #: a year in v16-A) or filled at x ``fast_fill_scale`` of its size (fast_fill_mode=scale).  0 = off.  Live: the bot
+    #: keeps the plan WITHOUT a broker order for the first N minutes and places the limit order only when the age is reached
+    #: and price is still in front of the entry (an order that would have filled earlier is dropped) - same decision, no fill.
+    min_fill_age_min: int = 0
+    fast_fill_mode: str = "cancel"            # cancel | scale
+    fast_fill_scale: float = 0.5
+    fast_fill_tfs: Tuple[str, ...] = ()       # () = every timeframe
+    fast_fill_regime: str = ""                # "" | range | trend
+    #: REGIME x SIDE SIZING, e.g. "range:sell:0.5|trend:buy:1.0": risk multiplier for plans of that side placed in that regime.
+    regime_side_scale: str = ""
     one_trade_per_poi: bool = True
     min_quality: Optional[float] = None   # extra filter on top of the scanner's min_quality (None = scanner default)
     grades: Tuple[str, ...] = ()          # e.g. ("A", "B") -> only these grades; () = all
@@ -299,6 +322,8 @@ class TradePlan:
     grid_parent: str = ""         # v14: key of the edge plan the deep leg belongs to
     tier: bool = False            # v15: True = admitted through ``tier_filter`` (second tier, reduced risk)
     rank: int = 1                 # v16: scanner rank of the zone on its side (1 = slot winner)
+    counter_trend: bool = False   # v16b: the plan goes against the daily trend (trend_mode=scale -> sized x trend_risk_scale)
+    fast_fill: bool = False       # v16b: the order would have filled within min_fill_age_min (fast_fill_mode=scale -> reduced)
 
     # ---------------------------------------------------------- helpers
     @property

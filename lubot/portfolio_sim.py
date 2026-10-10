@@ -179,6 +179,20 @@ class PortfolioSimulator:
             from .regime import minute_metric
             self.regime_val = minute_metric(m, tcfg.regime_metric, tcfg.regime_short, tcfg.regime_long)
         self.regime_counts: Dict[str, int] = {"range": 0, "trend": 0}
+        # v16b: daily trend sign per M1 bar (closed days only) for the trend gate; regime x side sizing map; counters
+        self.trend_val: Optional[np.ndarray] = None
+        if tcfg.trend_sma > 0:
+            from .regime import minute_trend
+            self.trend_val = minute_trend(m, tcfg.trend_sma)
+        self.regime_side: Dict[Tuple[str, str], float] = {}
+        for part in (tcfg.regime_side_scale or "").split("|"):
+            bits = part.split(":")
+            if len(bits) == 3:
+                self.regime_side[(bits[0].strip(), bits[1].strip())] = float(bits[2])
+        self.trend_skipped = 0
+        self.trend_scaled = 0
+        self.fast_cancelled = 0
+        self.fast_scaled = 0
         # v14: martingale state (sequence sizing) + grid bookkeeping
         self.mart = Martingale(tcfg)
         self.grid_placed = 0
@@ -195,6 +209,26 @@ class PortfolioSimulator:
             return ""
         from .regime import regime_of
         return regime_of(float(self.regime_val[minute]), self.tcfg.regime_threshold)
+
+    def _trend_gated(self, plan: TradePlan, minute: int) -> bool:
+        """v16b: the plan goes against the daily trend AND falls under the gate's side / tf / regime scope."""
+        from .regime import counter_trend
+        tc = self.tcfg
+        if plan.side not in tc.trend_sides:
+            return False
+        if tc.trend_tfs and plan.tf not in tc.trend_tfs:
+            return False
+        if tc.trend_regime and plan.regime != tc.trend_regime:
+            return False
+        return counter_trend(plan.side, float(self.trend_val[minute]))
+
+    def _fast_scope(self, plan: TradePlan) -> bool:
+        tc = self.tcfg
+        if tc.fast_fill_tfs and plan.tf not in tc.fast_fill_tfs:
+            return False
+        if tc.fast_fill_regime and plan.regime != tc.fast_fill_regime:
+            return False
+        return True
 
     def _margin_used(self, price: float) -> float:
         return sum(self.spec.margin_required(p.open_lots, price) for p in self.positions.values())
@@ -340,6 +374,13 @@ class PortfolioSimulator:
         if plan.regime == "range" and self.tcfg.range_risk_scale <= 0:
             self.skipped.append((plan.key, "range regime (no trading)"))
             return
+        # v16b daily trend gate (decided at placement from the last CLOSED day; the live bot does the same)
+        if self.trend_val is not None and self._trend_gated(plan, minute):
+            if self.tcfg.trend_mode == "skip":
+                self.trend_skipped += 1
+                self.skipped.append((plan.key, "counter-trend"))
+                return
+            plan.counter_trend = True
         why = self._accept_plan(plan)
         if why:
             self.skipped.append((plan.key, why))
@@ -390,6 +431,8 @@ class PortfolioSimulator:
         exp_min = minute + self.tcfg.max_pending_bars * self._tf_minutes(row.tf) if self.tcfg.order_policy == "persist" else 10 ** 12
         self.pending[plan.key] = Pending(plan, pd.Timestamp(self.idx[minute]), minute, sz.lots_leg1, sz.lots_leg2, exp_min,
                                          lots_legs=sz.lots_legs)
+        if plan.counter_trend:
+            self.trend_scaled += 1                     # v16b: counter-trend orders PLACED at the reduced size
         self._place_deep(plan, base, minute, exp_min)
 
     # ------------------------------------------------------------------ v14 martingale / grid
@@ -409,6 +452,10 @@ class PortfolioSimulator:
             if plan.reentry_n == 0:
                 self.rank2_placed += 1
         rs *= self.tf_scale.get(plan.tf, 1.0)          # v16 per-TF scale
+        if plan.counter_trend:                         # v16b trend_mode=scale
+            rs *= tc.trend_risk_scale
+        if self.regime_side and plan.regime:           # v16b regime x side scale
+            rs *= self.regime_side.get((plan.regime, plan.side), 1.0)
         plan.risk_scale = rs
 
     def _apply_v14(self, plan: TradePlan, base: float) -> None:
@@ -536,6 +583,25 @@ class PortfolioSimulator:
             if self.high[minute] < plan.entry:
                 return None
             fill = max(plan.entry, self.open_[minute])
+        # v16b impulsive-arrival guard: the order would fill within min_fill_age_min minutes of its placement
+        tc = self.tcfg
+        if tc.min_fill_age_min > 0 and not plan.grid_leg and plan.reentry_n == 0 and self._fast_scope(plan) \
+                and (minute - pend.placed_minute) < tc.min_fill_age_min:
+            if tc.fast_fill_mode == "cancel":
+                self.fast_cancelled += 1
+                self._cancel(plan.key, "fast fill", minute)
+                return None
+            if not plan.fast_fill:
+                plan.fast_fill = True
+                self.fast_scaled += 1
+                f = tc.fast_fill_scale
+                pend.lots_leg1 = self.spec.round_volume_down(pend.lots_leg1 * f)
+                pend.lots_leg2 = self.spec.round_volume_down(pend.lots_leg2 * f)
+                pend.lots_legs = tuple(self.spec.round_volume_down(x * f) for x in pend.lots_legs)
+                if pend.lots_leg1 + pend.lots_leg2 <= 0 and sum(pend.lots_legs) <= 0:
+                    self.fast_cancelled += 1
+                    self._cancel(plan.key, "fast fill (below min volume)", minute)
+                    return None
         if plan.grid_leg:
             # v14 deep leg: belongs to the edge plan -> does not take a slot; only fills while the edge plan is still alive
             if plan.grid_parent not in self.positions and plan.grid_parent not in self.pending:
@@ -995,6 +1061,8 @@ class SimResult:
                 "grid_leg": bool(p.plan.grid_leg), "grid_parent": p.plan.grid_parent,
                 "tier": bool(getattr(p.plan, "tier", False)), "risk_scale": round(p.plan.risk_scale, 4),
                 "rank": int(getattr(p.plan, "rank", 1)),
+                "counter_trend": bool(getattr(p.plan, "counter_trend", False)),
+                "fast_fill": bool(getattr(p.plan, "fast_fill", False)),
                 "legs": ";".join(f"{l.lots}@{l.close_price:.2f}:{l.close_reason}" for l in p.legs),
             })
         df = pd.DataFrame(rows)
@@ -1025,7 +1093,11 @@ class SimResult:
                                  "tier_placed": s.tier_trades_placed,
                                  "tier_trades": int(t.tier.sum()) if len(t) and "tier" in t else 0,
                                  "rank2_placed": s.rank2_placed,
-                                 "rank2_trades": int((t["rank"] > 1).sum()) if len(t) and "rank" in t else 0}
+                                 "rank2_trades": int((t["rank"] > 1).sum()) if len(t) and "rank" in t else 0,
+                                 "trend_skipped": s.trend_skipped, "trend_scaled": s.trend_scaled,
+                                 "fast_cancelled": s.fast_cancelled, "fast_scaled": s.fast_scaled,
+                                 "counter_trend_trades": int(t.counter_trend.sum()) if len(t) and "counter_trend" in t else 0,
+                                 "fast_fill_trades": int(t.fast_fill.sum()) if len(t) and "fast_fill" in t else 0}
         if not len(t):
             return out
         r = t.r_net

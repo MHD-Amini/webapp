@@ -80,3 +80,40 @@ def latest_metric(daily: pd.DataFrame, metric: str, short: int = 5, long: int = 
         return float("nan")
     v = _raw_metric(d, metric, short, long).iloc[-1]
     return float(v) if np.isfinite(v) else float("nan")
+
+
+# ---------------------------------------------------------------------------- v16b daily trend
+def trend_series(daily: pd.DataFrame, sma: int) -> pd.Series:
+    """+1 / -1 per day: the close of the day STRICTLY BEFORE it vs the SMA(sma) of the closes up to that day (shift(1), so
+    usable at the day's open).  NaN while the history is too short (the trader treats NaN as 'no gate')."""
+    c = daily["close"].astype(float)
+    ma = c.rolling(sma).mean()
+    up = (c > ma).astype(float).where(ma.notna())
+    return (up * 2 - 1).shift(1)
+
+
+def minute_trend(m1: pd.DataFrame, sma: int) -> np.ndarray:
+    """Daily trend sign (+1 up / -1 down / NaN) for every M1 bar (the value of its server day)."""
+    daily = daily_bars(m1)
+    s = trend_series(daily, sma)
+    return s.reindex(m1.index.normalize()).to_numpy(dtype=float)
+
+
+def latest_trend(daily: pd.DataFrame, sma: int, today: Optional[pd.Timestamp] = None) -> float:
+    """Live bot: trend sign valid NOW from daily bars whose last row may be the unfinished current day (excluded)."""
+    d = daily
+    if today is None and len(d):
+        today = d.index[-1].normalize()
+    if today is not None:
+        d = d[d.index.normalize() < today]
+    if len(d) < sma:
+        return float("nan")
+    c = d["close"].astype(float)
+    return 1.0 if float(c.iloc[-1]) > float(c.rolling(sma).mean().iloc[-1]) else -1.0
+
+
+def counter_trend(side: str, trend: float) -> bool:
+    """True when the plan's side goes against the daily trend (NaN trend -> False)."""
+    if trend is None or not np.isfinite(trend):
+        return False
+    return (side == "sell" and trend > 0) or (side == "buy" and trend < 0)
