@@ -30,7 +30,7 @@ no_worse_days = worst day >= ref - 0.25 pt.  Score 0-4.
         (cancel plan after N min without reaching +x R), early-exit on adverse structure, SL tightening after MFE >= x R before TP1,
         max concurrent same-side positions / cluster cap, per-day loss cap below 4.5 %, stop-out-rate-aware quality bar per slice.
 - [x] 3. Grid `run_v16b_levers.py` (resumable, workers 1) under `run_v16b_all.sh` (autosave) -> study_results/v16b_levers/ + v16b_levers.csv.
-- [ ] 4. Stress x6 + walk-forward of the finalists -> DECISION v16b-A / B / C.
+- [x] 4. Stress x6 + walk-forward of the finalists -> DECISION v16b-A / B / C.
 - [ ] 5. Port to run_trader.bat + trader.py (live support) + tests/test_bat_v16b.py + verify_bat_v16b.py.
 - [ ] 6. Final backtest `backtest_v16b_final.py` -> FINAL_BACKTEST_V16B.md; report `make_v16b_report.py` -> LESS_LOSS_V16B.md; README 0j; save.
 
@@ -38,6 +38,45 @@ no_worse_days = worst day >= ref - 0.25 pt.  Score 0-4.
 - 2026-10-10 07:50  SESSION 3 (the previous chat died right after step 4a was pushed: GitHub main d3a974c = stress x6 + walk-forward
   complete, 48 stress rows in v16b_stress.csv + v16b_walkforward.csv/.json).  Recovered: repo present, restore.sh (CSV relinked, 170 tests
   pass).  Continuing at step 4b (judge the stress + walk-forward -> DECISION), then 5, 6.
+- 2026-10-10 08:00  step 4b DONE: judge_v16b_stress.py -> study_results/v16b_stress_judged.csv + v16b_stress_summary.csv (logs/v16b_judge.log).
+  Each finalist x 6 scenarios (spread x2, commission x2, slip x3, worst intrabar, risk 0.5, risk 2) judged against the v16-A row of the
+  SAME scenario (v16_stress.csv M20SC_0.63_x0.4) with the 4 v16b questions.  Walk-forward (v16b_walkforward.csv, split 2026-03-01 on
+  close time, from the trade lists): all 8 finalists PASS the OOS half (fewer $ lost, stop rate down, net >= 97 %, PF held, worst day
+  in R held); NO variant passes the IS half with less_loss (the IS half Sep25-Feb26 has 25.0 % stops and the levers cut 0.1-1.6 pt but
+  the IS net goes -1..-9 % for the F/RS family) - the loss slices the diagnosis found (counter-trend sells, impulsive fills, range
+  sells) are an OOS-heavy phenomenon (IS +0.3..1.8 k$, OOS -1..-3 k$), so the levers pay where it matters and cost a little where it
+  does not.  Spearman IS->OOS of the deltas over the 95 variants: $ lost rho 0.77, net rho 0.69 (the gains carry over), sl rho 0.22.
+  STRESS SUMMARY (scenarios passed out of 6: less_loss / hold_profit / hold_oos / no_worse_day / all-4 ; $ saved summed ; net delta summed):
+    F3_m510                   5/6/6/6  all4 5  saved +19.4 k  net +7.5 k   (miss: risk0.5 sl 28.5 = ref, a tie)
+    C_T10_x0.5_htf+F2         5/6/6/5  all4 5  saved +22.0 k  net +33.7 k  (miss: risk 2 only - sl +0.5, DD -0.17, wd -0.41)
+    C_F2+RS_0.5               5/6/6/5  all4 4  saved +34.6 k  net +39.5 k  (miss: slip x3 DD 5.98 vs 5.82; risk0.5 wd -2.16 vs -1.90)
+    T20_rng                   5/5/6/6  all4 4  saved +23.7 k  net -3.7 k   (miss: slip x3 net 95.7 %; risk 2 DD tie)
+    F2                        5/6/6/5  all4 4  saved +13.6 k  net +25.5 k  (miss: commission x2 wd -2.72 vs -2.35; slip x3 DD 6.05)
+    C_T20_rng+F3_m510+RS_0.25 6/6/6/3  all4 3  saved +55.0 k  net +18.7 k  (the most $ saved, -32 % gross loss, but the worst day
+                                                                            -2.9..-3.0 is 0.35-0.59 pt outside the band in 3/6)
+    C_F3_rng+RS_0.5           3/6/6/5  all4 3  saved +27.8 k  net +29.7 k  (sl ties / DD at slip x3)
+    T10_x0.5_htf              2/6/4/5  all4 2  saved +8.5 k   net +6.4 k   (the weakest: sl barely moves when the sells are only scaled)
+  READING: the fast-fill guard is the ROBUST lever (F2 / F3_m510 cut the stop rate in 5-6 of 6 scenarios and never cost net); the
+  range-sell half-size (RS_0.5) is the lever that CUTS THE $ LOST most (it shrinks exactly the trades that stop out 36-43 %) and lifts
+  the PF from 2.37 to 3.0; the two together (C_F2+RS_0.5) give the biggest profit gain of the robust set and the second-biggest $
+  saved.  Its two misses are tiny (slip x3 DD +0.16 pt; risk 0.5 worst day -0.26 pt = 0.01 pt beyond the band) and in the base
+  scenario it is 4/4 with DD 5.55 (better), worst day -2.34 (better), 13/13 months.  C_T10_x0.5_htf+F2 earns the most $ (+35.8 k)
+  but saves less (gross loss -19.5 k vs -16.9 k) and the trend gate adds a daily-SMA state to the live bot for a 2.6 k$ gain over F2.
+  DECISION:  v16b-A = C_F2+RS_0.5 = v16-A + min_fill_age_min=2 (an order that would fill < 2 min after placement is cancelled: the
+             arrival is impulsive) + regime_side_scale=range:sell:0.5 (sells placed in a RANGE regime at half size):
+             446 tr (-21) / +33 831 $ (+12.1 %) / OOS +23 958 $ (+21.9 %) / DD 5.55 (-0.27) / PF 2.999 (+0.63) / win 75.8 (+0.6) /
+             sl 23.8 (-0.6) / gross loss -16 921 $ (-23.4 %) / avg loss smaller / worst day -2.34 % (+0.30) / OOS PF 3.12 (+0.88) /
+             OOS sl 21.1 (-2.8) / 13/13 months.  Stress: 4/6 all-4, 6/6 hold_profit, 6/6 hold_oos.  WF OOS pass.
+             v16b-B (most $ saved, -32 % gross loss, PF 3.09; worst day 0.25 pt worse) = C_T20_rng+F3_m510+RS_0.25:
+             400 tr / +31 446 $ / DD 5.80 / sl 23.0 / gl -15 081 / wd -2.89 / OOS PF 3.24 - adds trend_sma=20,trend_sides=sell,
+             trend_regime=range + min_fill_age_min=3,fast_fill_tfs=M5|M10 + regime_side_scale=range:sell:0.25.
+             v16b-C (most $ earned, +18 %) = C_T10_x0.5_htf+F2: 445 tr / +35 754 $ / DD 5.78 / sl 23.4 / gl -19 488 / wd -2.33 -
+             trend_sma=10,trend_sides=sell,trend_mode=scale,trend_risk_scale=0.5,trend_tfs=M15|M20|M30|H1 + min_fill_age_min=2.
+             Plain F2 (one key, 447 tr / +33 089 / gl -20 036) = the minimal change if the user wants a single lever.
+  LIVE NOTE for step 5: trader.py already carries the three levers (ported in session 2 with tests/test_trader_v16b.py, 5 tests): the
+  fast-fill guard can not stop a broker from filling a limit order, so the bot closes a position it SEES opened < N min after placement
+  at market (cost = spread) or reduces it; the simulator cancels before the fill - the live cost is one spread per guarded fill (13-19
+  cases a year at F2).  regime_side_scale uses the shipped adr_ratio regime (already live since v13).
 - 2026-10-10 07:05  step 3 DONE: 96 variants (66 singles + 30 combos; study_results/v16b_levers.csv, one json + trade list + equity per
   run in study_results/v16b_levers/).  Parity ref IDENTICAL (467 / +301.75 / -5.82).  TEN variants score 4/4 (less_loss + hold_profit +
   hold_oos + no_worse_day), three families:
