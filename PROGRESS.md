@@ -38,6 +38,8 @@ no_worse_days = worst day >= ref - 0.25 pt.  Score 0-4.
 - 2026-10-10 07:50  SESSION 3 (the previous chat died right after step 4a was pushed: GitHub main d3a974c = stress x6 + walk-forward
   complete, 48 stress rows in v16b_stress.csv + v16b_walkforward.csv/.json).  Recovered: repo present, restore.sh (CSV relinked, 170 tests
   pass).  Continuing at step 4b (judge the stress + walk-forward -> DECISION), then 5, 6.
+- 2026-10-10 08:55  FINAL ARCHIVE (code + models + all study results incl. v16b, no node_modules/.git/dist/data): https://www.genspark.ai/api/files/s/lcIlDRjO
+  (extract to /home/user, re-upload the CSV to /home/user/uploaded_files/, then bash webapp/restore.sh).  GitHub origin main = the same state.
 - 2026-10-10 08:50  step 6c DONE: README (title v16b, live command row rebuilt from the bat, two v16b command-table rows, results pointer, new
   section 0j with spec / diagnosis / levers / grid / result table (numbers from final_v16b/*_summary.json) / stress / walk-forward / alternatives /
   honest reading, layout block for the 13 v16b files, next steps, last-updated), restore.sh v16b hints (run counts).  175 tests pass.
