@@ -42,6 +42,8 @@ Judge (v16c_common.judge16c): less_dd = max DD better by >= 0.25 pt AND OOS max 
 - [ ] 6. Final backtest `backtest_v16c_final.py` -> FINAL_BACKTEST_V16C.md; report `make_v16c_report.py` -> LESS_DD_V16C.md; README 0k; save.
 
 ## Log (v16c)
+- 2026-10-10 14:30  SESSION 2 (the previous chat died after step 1 was pushed: GitHub main 167b4e4 = diagnosis complete).  Recovered:
+  repo cloned, CSV re-uploaded, restore.sh (CSV relinked, 179 tests pass).  Continuing at step 2 (levers), then 3-6.
 - 2026-10-10 14:20  step 1 DONE: run_v16c_diag.py -> study_results/v16c_diag/DIAG.md + 15 csv (trades_enriched.csv carries risk % eq at the
   fill, open risk % eq, same-side count, DD band).  (SANDBOX RESET between the turns again: the diag script was lost once and rewritten
   from this log; the CSV was re-uploaded, restore.sh relinked it, 179 tests pass.)  THE DRAWDOWN STRUCTURE of v16b-A:
