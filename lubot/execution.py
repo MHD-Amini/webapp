@@ -236,6 +236,32 @@ class TraderConfig:
     fast_fill_regime: str = ""                # "" | range | trend
     #: REGIME x SIDE SIZING, e.g. "range:sell:0.5|trend:buy:1.0": risk multiplier for plans of that side placed in that regime.
     regime_side_scale: str = ""
+    # ---- v16c "less drawdown" levers (defaults = byte-identical to v16b).  All decided at PLACEMENT from the account state the
+    #: live bot has (equity, balance, peak equity, day-start equity, the open positions' stops).
+    #: DRAWDOWN THROTTLE: while the account is more than ``dd_throttle_pct`` % below its peak (``dd_basis`` = equity | balance;
+    #: the peak is the running maximum of that series), every NEW plan is sized x ``dd_throttle_scale`` (0 = no new plans).
+    #: ``dd_throttle_ramp`` > 0: linear ramp instead of a step - the scale falls from 1 at ``dd_throttle_pct`` to
+    #: ``dd_throttle_scale`` at ``dd_throttle_pct + dd_throttle_ramp`` (and stays there deeper).  0 = off.
+    dd_throttle_pct: float = 0.0
+    dd_throttle_scale: float = 0.5
+    dd_throttle_ramp: float = 0.0
+    dd_basis: str = "equity"
+    dd_throttle_tfs: Tuple[str, ...] = ()        # () = every timeframe
+    #: DAY SOFT CAP: once the day's equity is ``day_soft_loss_pct`` % below the day-start equity (same base as max_daily_loss_pct),
+    #: new plans are sized x ``day_soft_scale`` (0 = skipped) for the rest of the server day.  Nothing is flattened.  0 = off.
+    day_soft_loss_pct: float = 0.0
+    day_soft_scale: float = 0.5
+    #: OPEN-RISK CAP: the sum of the risk-at-stop of the OPEN positions (each leg: |stop - entry| x lots, 0 for legs at BE or
+    #: better) plus the risk of the PENDING orders (``open_risk_pending`` = True) in % of equity.  A new plan whose own risk would
+    #: push the total over ``max_open_risk_pct`` is scaled down to fit (``open_risk_mode`` = fit) or skipped (skip).  0 = off.
+    max_open_risk_pct: float = 0.0
+    open_risk_mode: str = "fit"                 # fit | skip
+    open_risk_pending: bool = False
+    #: LOSS-STREAK THROTTLE (control): after ``streak_n`` consecutive losing closes (r_net <= -mart_loss_r) within ``streak_days``
+    #: days, new plans are sized x ``streak_scale`` until a non-losing close.  0 = off.
+    streak_n: int = 0
+    streak_scale: float = 0.5
+    streak_days: float = 5.0
     one_trade_per_poi: bool = True
     min_quality: Optional[float] = None   # extra filter on top of the scanner's min_quality (None = scanner default)
     grades: Tuple[str, ...] = ()          # e.g. ("A", "B") -> only these grades; () = all
@@ -324,6 +350,8 @@ class TradePlan:
     rank: int = 1                 # v16: scanner rank of the zone on its side (1 = slot winner)
     counter_trend: bool = False   # v16b: the plan goes against the daily trend (trend_mode=scale -> sized x trend_risk_scale)
     fast_fill: bool = False       # v16b: the order would have filled within min_fill_age_min (fast_fill_mode=scale -> reduced)
+    dd_scale: float = 1.0         # v16c: the drawdown / day-soft / streak / open-risk multiplier applied at placement (1 = none)
+    dd_pct_at: float = 0.0        # v16c: account drawdown % from its peak at placement (positive number, 0 = at the peak)
 
     # ---------------------------------------------------------- helpers
     @property

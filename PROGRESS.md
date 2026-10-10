@@ -32,7 +32,7 @@ Judge (v16c_common.judge16c): less_dd = max DD better by >= 0.25 pt AND OOS max 
         the floating component (equity vs balance DD), what share of each episode is sizing (risk % eq at the time) vs count of losers;
         DD-path simulation on the trade list (static): equity-DD-aware risk throttle, loss-streak throttle, cluster caps, max risk at
         once; candidate levers ranked by DD cut vs net given up.
-- [ ] 2. Levers in TraderConfig / PortfolioSimulator (defaults byte-identical, parity 446 / +338.31 / -5.55 exact; tests): e.g.
+- [x] 2. Levers in TraderConfig / PortfolioSimulator (defaults byte-identical, parity 446 / +338.31 / -5.55 exact; tests): e.g.
         dd_throttle (risk x s while equity is > x % below its peak), streak throttle (after k losses in N days), max open risk % eq
         (sum of open plans' risk), same-side concurrency cap, day-loss soft cap (no new plans after -x % that day, no flatten),
         per-week loss cap.  All computable by the live bot from its own state.
@@ -42,6 +42,16 @@ Judge (v16c_common.judge16c): less_dd = max DD better by >= 0.25 pt AND OOS max 
 - [ ] 6. Final backtest `backtest_v16c_final.py` -> FINAL_BACKTEST_V16C.md; report `make_v16c_report.py` -> LESS_DD_V16C.md; README 0k; save.
 
 ## Log (v16c)
+- 2026-10-10 14:55  step 2 DONE: four v16c levers in TraderConfig (lubot/execution.py) + PortfolioSimulator._apply_v16c (after every
+  other multiplier, before the volume): (1) dd_throttle_pct / dd_throttle_scale / dd_throttle_ramp / dd_basis=equity|balance /
+  dd_throttle_tfs (sim keeps peak_equity = running max of the basis, updated every minute = what the live bot stores);
+  (2) day_soft_loss_pct / day_soft_scale (vs day_start_equity, no flatten); (3) max_open_risk_pct / open_risk_mode=fit|skip /
+  open_risk_pending (open_risk_usd = sum over open legs of max(0, entry - stop) x lots x contract, BE legs = 0; fit scales the new
+  plan into the remaining budget, below min volume -> skipped); (4) streak_n / streak_scale / streak_days (control).  TradePlan.dd_scale
+  + dd_pct_at recorded per trade; summary counters dd_scaled / dd_skipped / dd_days / day_soft_* / open_risk_* / streak_scaled.
+  tests/test_v16c_levers.py (7) -> 186 pass.  smoke_v16c.py: PARITY IDENTICAL (446 / +338.31 / -5.55).  First dynamic look:
+  dd_throttle_pct=3.5 x0.5 on EQUITY basis: DD -4.96 (-0.59 pt) but net 94.4 %, ulcer 1.750 (> ref) -> the equity basis fires inside
+  the floating dips of winning positions; the grid must test the BALANCE basis, 3.0-4.5 thresholds, ramps, tf scopes, and combos.
 - 2026-10-10 14:30  SESSION 2 (the previous chat died after step 1 was pushed: GitHub main 167b4e4 = diagnosis complete).  Recovered:
   repo cloned, CSV re-uploaded, restore.sh (CSV relinked, 179 tests pass).  Continuing at step 2 (levers), then 3-6.
 - 2026-10-10 14:20  step 1 DONE: run_v16c_diag.py -> study_results/v16c_diag/DIAG.md + 15 csv (trades_enriched.csv carries risk % eq at the

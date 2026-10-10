@@ -193,6 +193,18 @@ class PortfolioSimulator:
         self.trend_scaled = 0
         self.fast_cancelled = 0
         self.fast_scaled = 0
+        # v16c: drawdown-aware sizing state (all computable live from the account + the open positions)
+        self.peak_equity = tcfg.balance              # running max of the dd_basis series (equity or balance)
+        self.day_start_equity = tcfg.balance         # for the day soft cap (== day_start_balance, kept separate for clarity)
+        self.streak_losses: List[pd.Timestamp] = []  # close times of the current run of consecutive losing closes
+        self.dd_scaled = 0                           # plans placed at a reduced size because of the DD throttle
+        self.dd_skipped = 0                          # plans skipped (scale 0) because of the DD throttle
+        self.day_soft_scaled = 0
+        self.day_soft_skipped = 0
+        self.open_risk_scaled = 0
+        self.open_risk_skipped = 0
+        self.streak_scaled = 0
+        self.dd_minutes = 0                          # minutes spent below the DD throttle threshold
         # v14: martingale state (sequence sizing) + grid bookkeeping
         self.mart = Martingale(tcfg)
         self.grid_placed = 0
@@ -418,6 +430,11 @@ class PortfolioSimulator:
             return
         base = self.equity if self.tcfg.size_on == "equity" else self.tcfg.balance
         self._apply_v14(plan, base)
+        # v16c drawdown-aware sizing (after every other multiplier, before the volume is computed)
+        why = self._apply_v16c(plan, base)
+        if why:
+            self.skipped.append((plan.key, why))
+            return
         sz = size_plan(plan, base, self.tcfg, self.spec)
         if not sz.ok:
             self.skipped.append((plan.key, sz.reason))
@@ -434,6 +451,97 @@ class PortfolioSimulator:
         if plan.counter_trend:
             self.trend_scaled += 1                     # v16b: counter-trend orders PLACED at the reduced size
         self._place_deep(plan, base, minute, exp_min)
+
+    # ------------------------------------------------------------------ v16c drawdown-aware sizing
+    def _dd_now(self) -> float:
+        """account drawdown from its peak in % (>= 0) on the configured basis."""
+        cur = self.equity if self.tcfg.dd_basis == "equity" else self.balance
+        return max(0.0, 100.0 * (1.0 - cur / self.peak_equity)) if self.peak_equity > 0 else 0.0
+
+    def dd_throttle_scale(self, dd_pct: float) -> float:
+        """the DD-throttle multiplier for a given drawdown % (step, or linear ramp when dd_throttle_ramp > 0)."""
+        tc = self.tcfg
+        if tc.dd_throttle_pct <= 0 or dd_pct <= tc.dd_throttle_pct:
+            return 1.0
+        if tc.dd_throttle_ramp > 0:
+            f = min(1.0, (dd_pct - tc.dd_throttle_pct) / tc.dd_throttle_ramp)
+            return 1.0 - f * (1.0 - tc.dd_throttle_scale)
+        return tc.dd_throttle_scale
+
+    def open_risk_usd(self, bid: float, include_pending: bool = False) -> float:
+        """risk-at-stop of the open positions (legs at BE or better = 0) [+ the pending orders' initial risk]."""
+        tot = 0.0
+        for p in self.positions.values():
+            sgn = 1.0 if p.plan.is_buy else -1.0
+            for l in p.legs:
+                if l.open:
+                    tot += max(0.0, sgn * (p.entry_price - l.sl)) * l.lots * self.spec.contract_size
+        if include_pending:
+            for pd_ in self.pending.values():
+                lots = (sum(pd_.lots_legs) if pd_.lots_legs else pd_.lots_leg1 + pd_.lots_leg2)
+                tot += pd_.plan.risk * lots * self.spec.contract_size
+        return tot
+
+    def _apply_v16c(self, plan: TradePlan, base: float) -> Optional[str]:
+        """multiplies ``plan.risk_scale`` by the DD throttle / day soft cap / streak throttle / open-risk fit.  Returns a skip
+        reason or None.  Defaults (all 0) -> byte-identical to v16b."""
+        tc = self.tcfg
+        if plan.grid_leg:
+            return None
+        f = 1.0
+        dd = self._dd_now()
+        plan.dd_pct_at = round(dd, 3)
+        if tc.dd_throttle_pct > 0 and (not tc.dd_throttle_tfs or plan.tf in tc.dd_throttle_tfs):
+            s = self.dd_throttle_scale(dd)
+            if s < 1.0:
+                if s <= 0:
+                    self.dd_skipped += 1
+                    return f"dd throttle ({dd:.2f} %)"
+                f *= s
+                self.dd_scaled += 1
+        if tc.day_soft_loss_pct > 0 and self.day_start_equity > 0 and \
+                self.equity <= self.day_start_equity * (1.0 - tc.day_soft_loss_pct / 100.0):
+            if tc.day_soft_scale <= 0:
+                self.day_soft_skipped += 1
+                return "day soft cap"
+            f *= tc.day_soft_scale
+            self.day_soft_scaled += 1
+        if tc.streak_n > 0 and len(self.streak_losses) >= tc.streak_n:
+            f *= tc.streak_scale
+            self.streak_scaled += 1
+        if f != 1.0:
+            plan.risk_scale = (plan.risk_scale if plan.risk_scale > 0 else 1.0) * f
+        if tc.max_open_risk_pct > 0:
+            bid = self.open_[self.cur_minute]
+            used = self.open_risk_usd(bid, tc.open_risk_pending)
+            budget = base * tc.max_open_risk_pct / 100.0 - used
+            own = base * tc.risk_pct / 100.0 * (plan.risk_scale if plan.risk_scale > 0 else 1.0) \
+                * (plan.mart_scale if plan.mart_scale > 0 else 1.0)
+            if own > budget + 1e-9:
+                per_unit = self.spec.usd_per_price_unit(1.0) * plan.risk
+                fit_lots = self.spec.round_volume_down(budget / per_unit) if (budget > 0 and per_unit > 0) else 0.0
+                if tc.open_risk_mode == "skip" or fit_lots < self.spec.volume_min:
+                    self.open_risk_skipped += 1
+                    return f"open risk cap ({100 * used / base:.2f} % used)"
+                g = budget / own
+                plan.risk_scale = (plan.risk_scale if plan.risk_scale > 0 else 1.0) * g
+                f *= g
+                self.open_risk_scaled += 1
+        plan.dd_scale = round(f, 4)
+        return None
+
+    def _streak_update(self, pos: Position) -> None:
+        """v16c loss-streak state from the closed EDGE plans (same loss definition as the martingale: r_net <= -mart_loss_r)."""
+        tc = self.tcfg
+        if tc.streak_n <= 0 or pos.plan.grid_leg:
+            return
+        net = sum(l.pnl for l in pos.legs) - pos.commission + pos.swap
+        r = net / pos.risk_money if pos.risk_money > 0 else 0.0
+        if r <= -tc.mart_loss_r:
+            t = pos.close_time
+            self.streak_losses = [x for x in self.streak_losses if (t - x).total_seconds() <= tc.streak_days * 86400] + [t]
+        elif r > 0:
+            self.streak_losses = []
 
     # ------------------------------------------------------------------ v14 martingale / grid
     def _apply_v15(self, plan: TradePlan) -> None:
@@ -916,6 +1024,7 @@ class PortfolioSimulator:
             self.mart.on_close(pos.plan.tf, net, net / pos.risk_money if pos.risk_money > 0 else 0.0, pos.plan.mart_step)
         if not pos.plan.grid_leg:
             self._grid_sync(pos.plan.key, "edge closed", self.cur_minute)
+        self._streak_update(pos)
         # v12: re-arm the zone after a break-even exit
         if self.tcfg.reentry_bars > 0 and pos.outcome in self.tcfg.reentry_outcomes and not pos.plan.grid_leg:
             self._rearm(pos, self.cur_minute)
@@ -990,6 +1099,7 @@ class PortfolioSimulator:
                     self.balance += s
             if last_day is not None and day != last_day:
                 self.day_start_balance = self.balance + self._floating(self.close[m], self.close[m] + self.spread[m])
+                self.day_start_equity = self.day_start_balance
                 self.daily_halt_day = None                  # a new server day: trading allowed again
             last_day = day
             # optional weekend flatten
@@ -1018,6 +1128,13 @@ class PortfolioSimulator:
                 self._force_close_all(m, "stopout")
                 self.stopped_out = True
                 self.equity = self.balance
+            # v16c: running peak of the dd basis (the live bot keeps the same number in trader_state.json)
+            cur = self.equity if self.tcfg.dd_basis == "equity" else self.balance
+            if cur > self.peak_equity:
+                self.peak_equity = cur
+            if self.tcfg.dd_throttle_pct > 0 and self.peak_equity > 0 and \
+                    100.0 * (1.0 - cur / self.peak_equity) > self.tcfg.dd_throttle_pct:
+                self.dd_minutes += 1
             if m % sample_every == 0 or m == self.n - 1:
                 self.equity_curve.append((t64, self.balance, self.equity))
             if progress and m % 50000 == 0:
@@ -1063,6 +1180,7 @@ class SimResult:
                 "rank": int(getattr(p.plan, "rank", 1)),
                 "counter_trend": bool(getattr(p.plan, "counter_trend", False)),
                 "fast_fill": bool(getattr(p.plan, "fast_fill", False)),
+                "dd_scale": float(getattr(p.plan, "dd_scale", 1.0)), "dd_pct_at": float(getattr(p.plan, "dd_pct_at", 0.0)),
                 "legs": ";".join(f"{l.lots}@{l.close_price:.2f}:{l.close_reason}" for l in p.legs),
             })
         df = pd.DataFrame(rows)
@@ -1097,7 +1215,12 @@ class SimResult:
                                  "trend_skipped": s.trend_skipped, "trend_scaled": s.trend_scaled,
                                  "fast_cancelled": s.fast_cancelled, "fast_scaled": s.fast_scaled,
                                  "counter_trend_trades": int(t.counter_trend.sum()) if len(t) and "counter_trend" in t else 0,
-                                 "fast_fill_trades": int(t.fast_fill.sum()) if len(t) and "fast_fill" in t else 0}
+                                 "fast_fill_trades": int(t.fast_fill.sum()) if len(t) and "fast_fill" in t else 0,
+                                 "dd_scaled": s.dd_scaled, "dd_skipped": s.dd_skipped, "dd_days": round(s.dd_minutes / 1440.0, 1),
+                                 "day_soft_scaled": s.day_soft_scaled, "day_soft_skipped": s.day_soft_skipped,
+                                 "open_risk_scaled": s.open_risk_scaled, "open_risk_skipped": s.open_risk_skipped,
+                                 "streak_scaled": s.streak_scaled,
+                                 "dd_scaled_trades": int((t.dd_scale < 1.0).sum()) if len(t) and "dd_scale" in t else 0}
         if not len(t):
             return out
         r = t.r_net
