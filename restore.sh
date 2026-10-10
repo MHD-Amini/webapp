@@ -13,6 +13,9 @@ mkdir -p data logs models study_results
 pip install -q scikit-learn lightgbm 2>/dev/null || true
 python3 -m pytest tests -q 2>&1 | tail -1
 echo "--- next step (PROGRESS.md):"; grep -m1 "^- \[ \]" PROGRESS.md
+echo "--- v16b (all complete): python3 verify_bat_v16b.py (bat == study), bash run_v16b_final.sh (FINAL BACKTEST -> study_results/FINAL_BACKTEST_V16B.md + verify), python3 judge_v16b_stress.py, python3 walkforward_v16b.py, python3 make_v16b_report.py; diag: python3 run_v16b_diag.py; grid: bash run_v16b_all.sh / bash run_v16b_stress.sh \"<finalists>\" (resumable, autosave)"
+ls study_results/v16b_levers/*.json 2>/dev/null | grep -v __ | wc -l | sed 's/^/    v16b runs on disk (96 expected): /'
+ls study_results/v16b_levers/*__*.json 2>/dev/null | wc -l | sed 's/^/    v16b stress runs on disk (48 expected): /'
 echo "--- v16 (all complete): python3 verify_bat_v16.py (bat == study), python3 backtest_v16_final.py --study study_results/v16_levers/M20SC_0.63_x0.4.json (FINAL BACKTEST -> study_results/FINAL_BACKTEST_V16.md), python3 walkforward_v16.py, python3 make_v16_report.py; streams: bash run_v16_record.sh; grid: bash run_v16_all.sh / bash run_v16_stress.sh (resumable, autosave)"
 ls study_results/v16_levers/*.json 2>/dev/null | grep -v __ | wc -l | sed 's/^/    v16 runs on disk (171 expected): /'
 ls study_results/sel_v16_*.pkl 2>/dev/null | wc -l | sed 's/^/    v16 streams (6 expected): /'

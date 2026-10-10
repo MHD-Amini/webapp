@@ -1,4 +1,4 @@
-# PROGRESS — v16b LOSS REDUCTION for the v16-A trader: REDUCE THE LOSS PERCENTAGE WHILE MAINTAINING THE PROFITABILITY PERCENTAGE (session 1, started 2026-10-09 16:15)
+# PROGRESS — v16b LOSS REDUCTION for the v16-A trader: REDUCE THE LOSS PERCENTAGE WHILE MAINTAINING THE PROFITABILITY PERCENTAGE — ALL STEPS COMPLETE (2026-10-10 08:50, session 3)
 
 **Recovery (read this first):** `git clone https://github.com/MHD-Amini/webapp.git /home/user/webapp`, `bash restore.sh`
 (relinks the CSV to `data/xauusd_m1.csv`, pip, tests), read this file, continue from the FIRST UNCHECKED step of the v16b plan below.
@@ -32,12 +32,16 @@ no_worse_days = worst day >= ref - 0.25 pt.  Score 0-4.
 - [x] 3. Grid `run_v16b_levers.py` (resumable, workers 1) under `run_v16b_all.sh` (autosave) -> study_results/v16b_levers/ + v16b_levers.csv.
 - [x] 4. Stress x6 + walk-forward of the finalists -> DECISION v16b-A / B / C.
 - [x] 5. Port to run_trader.bat + trader.py (live support) + tests/test_bat_v16b.py + verify_bat_v16b.py.
-- [ ] 6. Final backtest `backtest_v16b_final.py` -> FINAL_BACKTEST_V16B.md; report `make_v16b_report.py` -> LESS_LOSS_V16B.md; README 0j; save.
+- [x] 6. Final backtest `backtest_v16b_final.py` -> FINAL_BACKTEST_V16B.md; report `make_v16b_report.py` -> LESS_LOSS_V16B.md; README 0j; save.
 
 ## Log (v16b)
 - 2026-10-10 07:50  SESSION 3 (the previous chat died right after step 4a was pushed: GitHub main d3a974c = stress x6 + walk-forward
   complete, 48 stress rows in v16b_stress.csv + v16b_walkforward.csv/.json).  Recovered: repo present, restore.sh (CSV relinked, 170 tests
   pass).  Continuing at step 4b (judge the stress + walk-forward -> DECISION), then 5, 6.
+- 2026-10-10 08:50  step 6c DONE: README (title v16b, live command row rebuilt from the bat, two v16b command-table rows, results pointer, new
+  section 0j with spec / diagnosis / levers / grid / result table (numbers from final_v16b/*_summary.json) / stress / walk-forward / alternatives /
+  honest reading, layout block for the 13 v16b files, next steps, last-updated), restore.sh v16b hints (run counts).  175 tests pass.
+  ALL v16b STEPS COMPLETE.  GitHub main = the final state; archive link below.
 - 2026-10-10 08:40  step 6b DONE: make_v16b_report.py -> study_results/LESS_LOSS_V16B.md (76 blocks, 9 sections: answer, method, diagnosis
   tables (side / counter-trend / regime x side / fill age / fast fills x regime / static estimate), levers, grid (10 x 4/4 table, singles per
   family incl. the OUT list, combos, best per family), robustness (stress summary + scenario table with the v16-A row, walk-forward rows,

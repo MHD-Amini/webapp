@@ -1,4 +1,4 @@
-# LU-POI TRADER — Liquidity University POI trading bot for XAUUSD.t (MT5)   *(v16)*
+# LU-POI TRADER — Liquidity University POI trading bot for XAUUSD.t (MT5)   *(v16b)*
 
 **v7 turns the POI scanner into a trading bot.**  For every POI the scanner shows (M5 / M10 / M15 / M30 / H1) the
 bot places a **limit order at the start of the zone** with the **stop at the end of the zone**, closes **50 % at
@@ -7,7 +7,9 @@ terminal that is already open and logged in on your Windows PC — **no login op
 
 | what | command |
 |---|---|
-| **Live trading** (Windows, MT5 open) | `run_trader.bat`  or  `python trader.py --symbol XAUUSD.t --risk 1.0 --min-quality 0.50 --commission 7 --timeframes M5,M10,M15,M20,M30,H1 --trader "tp_levels=0.6\|1.2\|2.4\|4.8,tp_fracs=1\|1\|1\|1,ladder_fallback=merge,dedupe_cross_tf=false,keep_replaced_bars=1,keep_replaced_tfs=M10\|M15\|M20\|M30\|H1,regime_metric=adr_ratio,regime_threshold=1.0,regime_short=5,regime_long=20,range_tp_levels=0.5\|1.0\|1.5\|2.5,range_tp_fracs=1\|1\|1\|1,range_sl_after_leg=0\|0.3\|x\|x,mart_mode=mult,mart_mult=1.5,mart_max_steps=3,mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10\|M15\|M20\|M30\|H1,mart_sides=buy,mart_ungated_scale=0.5,confluence_memory_min=240,confluent_risk_scale=1.25,plain_risk_scale=0.9,tf_risk_scale=M20:0.4" --trade-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.57/M15:min_quality=0.60/M30\|H1:min_quality=0.57/M20:min_quality=0.99" --confluence-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.50/M15:min_quality=0.60/M30\|H1:min_quality=0.57/M20:min_quality=0.63"` (**v16-A**; drop M20 from `--timeframes`, both filters, `keep_replaced_tfs`, `mart_tfs` and drop `tf_risk_scale` for v15-A; then `confluence_memory_min` / `confluent_risk_scale` / `plain_risk_scale` for v14-A, every `mart_*` key too for v13-A) |
+| **Live trading** (Windows, MT5 open) | `run_trader.bat`  or  `python trader.py --symbol XAUUSD.t --risk 1.0 --min-quality 0.50 --commission 7 --timeframes M5,M10,M15,M20,M30,H1 --trader "tp_levels=0.6\|1.2\|2.4\|4.8,tp_fracs=1\|1\|1\|1,ladder_fallback=merge,dedupe_cross_tf=false,keep_replaced_bars=1,keep_replaced_tfs=M10\|M15\|M20\|M30\|H1,regime_metric=adr_ratio,regime_threshold=1.0,regime_short=5,regime_long=20,range_tp_levels=0.5\|1.0\|1.5\|2.5,range_tp_fracs=1\|1\|1\|1,range_sl_after_leg=0\|0.3\|x\|x,mart_mode=mult,mart_mult=1.5,mart_max_steps=3,mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10\|M15\|M20\|M30\|H1,mart_sides=buy,mart_ungated_scale=0.5,confluence_memory_min=240,confluent_risk_scale=1.25,plain_risk_scale=0.9,tf_risk_scale=M20:0.4,min_fill_age_min=2,regime_side_scale=range:sell:0.5" --trade-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.57/M15:min_quality=0.60/M30\|H1:min_quality=0.57/M20:min_quality=0.99" --confluence-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.50/M15:min_quality=0.60/M30\|H1:min_quality=0.57/M20:min_quality=0.63" --state trader_state.json --log trader.log` |
+| **FINAL BACKTEST of v16b-A on the CSV** (strings read from `run_trader.bat`, v16-A alongside) | `python backtest_v16b_final.py --csv data/xauusd_m1.csv --study "study_results/v16b_levers/C_F2+RS_0.5.json"` (or `bash run_v16b_final.sh`) → **`study_results/FINAL_BACKTEST_V16B.md`** + `final_v16b/*` + `charts/final_v16b_equity.png` |
+| **v16b loss-reduction study** (diagnosis of the stop-outs, 96 variants, stress ×6, walk-forward) | `python run_v16b_diag.py; bash run_v16b_all.sh; bash run_v16b_stress.sh "<finalists>"; python judge_v16b_stress.py; python walkforward_v16b.py; bash run_v16b_final.sh; python make_v16b_report.py; python verify_bat_v16b.py` (resumable, autosave) → **`study_results/LESS_LOSS_V16B.md`** |
 | **FINAL BACKTEST of v16-A on the CSV** (strings read from `run_trader.bat`, v15-A alongside) | `python backtest_v16_final.py --csv data/xauusd_m1.csv --study study_results/v16_levers/M20SC_0.63_x0.4.json` → **`study_results/FINAL_BACKTEST_V16.md`** + `final_v16/*` + `charts/final_v16_equity.png` |
 | **v16 new-trade-sources study** (top-3 recorder incl. M20, 171 variants, stress ×6, walk-forward) | `bash run_v16_record.sh; bash run_v16_all.sh; bash run_v16_stress.sh; python walkforward_v16.py; python backtest_v16_final.py; python make_v16_report.py; python verify_bat_v16.py` (resumable, autosave) → **`study_results/MORE_TRADES_V16.md`** |
 | **FINAL BACKTEST of v15-A on the CSV** (strings read from `run_trader.bat`, v14-A alongside) | `python backtest_v15_final.py --csv data/xauusd_m1.csv` → **`study_results/FINAL_BACKTEST_V15.md`** + `final_v15/*` + `charts/final_v15_equity.png` |
@@ -25,7 +27,63 @@ terminal that is already open and logged in on your Windows PC — **no login op
 | Full sensitivity study + report | `python run_trader_study.py --csv data.csv` → `study_results/TRADER_BACKTEST.md` |
 | POI scanner only (v6) | `python bot.py scan --csv data.csv` / `python bot.py live` |
 
-→ **Results: section 0i (v16 new trade sources: M20 confluent-only + FINAL BACKTEST), 0h (v15 confluence memory + conviction sizing), 0g (v14 asymmetric martingale + FINAL BACKTEST), 0f (v13 weak months / regime-adaptive management), 0e (v12 more trades round 2), 0d (v11 more trades), 0c (v10 multi-TP + full year + loss rules), 0b (v9 management), 0a/0 below, `study_results/MULTI_TP_STUDY.md` (v10), `study_results/RISK_MGMT_STUDY.md` (v9), `TRADER_V8.md` (v8), `TRADER_BACKTEST.md` (v7).**
+→ **Results: section 0j (v16b LESS LOSS: fast-fill guard + range sells at half size + FINAL BACKTEST), 0i (v16 new trade sources: M20 confluent-only + FINAL BACKTEST), 0h (v15 confluence memory + conviction sizing), 0g (v14 asymmetric martingale + FINAL BACKTEST), 0f (v13 weak months / regime-adaptive management), 0e (v12 more trades round 2), 0d (v11 more trades), 0c (v10 multi-TP + full year + loss rules), 0b (v9 management), 0a/0 below, `study_results/MULTI_TP_STUDY.md` (v10), `study_results/RISK_MGMT_STUDY.md` (v9), `TRADER_V8.md` (v8), `TRADER_BACKTEST.md` (v7).**
+
+---
+
+## 0j. v16b — REDUCE THE LOSS PERCENTAGE while MAINTAINING THE PROFITABILITY PERCENTAGE; FINAL BACKTEST
+
+**Spec.**  Find a way for the v16 bot (`run_trader.bat` = v16-A) to reduce the loss percentage while maintaining the profitability percentage; save after every
+step (recoverable).  "Loss percentage" was read as the stop-out rate AND the max drawdown AND the $ lost - all three must fall; "profitability" as the net $,
+the profit factor and the OOS net - held within 3 % / 0.05 PF.  Judge: `v16b_common.judge16b` (less_loss / hold_profit / hold_oos / no_worse_day, score 0-4).
+
+**Diagnosis** (`run_v16b_diag.py` → `study_results/v16b_diag/DIAG.md`, 37 tables on the 114 stop-outs of v16-A).  The losses sit in three slices, all visible
+BEFORE the fill: (1) **sells** stop out 32.7 % vs buys 20.1 % and earn 3.9 k$ of the 30.2 k$; (2) **counter-trend sells** (daily close above SMA10/20): 93-100
+trades, 35-39 % stop, ~0 $; **range-regime sells** (the v13 adr_ratio regime): 75 trades, 36 % stop, -1.8 k$ (43 % stop OOS); (3) **impulsive arrivals** -
+orders FILLED within 5 min of placement (price already running into the zone when the scanner showed it): 61 trades, 39 % stop, -2.0 k$; range-regime fast
+fills 50 % stop, -3.1 k$.  Not levers: quality band, session, kind, timeframe, concurrency, martingale step-down, day clusters.
+
+**Levers** (`TraderConfig`, simulator + `trader.py`, defaults byte-identical: parity 467 / +301.75 / -5.82 exact): `trend_sma` / `trend_sides` / `trend_mode` /
+`trend_risk_scale` / `trend_tfs` / `trend_regime` (daily trend gate), `min_fill_age_min` / `fast_fill_mode` / `fast_fill_scale` / `fast_fill_tfs` / `fast_fill_regime`
+(impulsive-arrival guard), `regime_side_scale` (regime x side sizing); `be_trigger_r` and `max_daily_loss_pct` re-tested.  Grid: 96 full-year runs (66 singles +
+30 combos, `run_v16b_levers.py`, resumable, autosaved to GitHub every 4 min - survived three sandbox resets and two dead chat sessions).  **Ten variants score 4/4**,
+three families: the fast-fill guard (F2: -0.9 pt stop, +10 % net, DD 5.57), the SCOPED trend gate on sells (range-only or M15+ at half size) and the range-sell
+size as the best combiner.  OUT: a break-even trigger before TP1 (stop rate 16-21 % but -23..-60 % net - the winners' retrace takes them out), tighter day-loss
+caps (DD and worst day get WORSE: the flatten locks the loss in), the trend gate on both sides, the unscoped trend skip (-8..-25 % net), scaling fast fills.
+
+**Result — `run_trader.bat` ships v16b-A = v16-A + `min_fill_age_min=2` + `regime_side_scale=range:sell:0.5`.**  (1) a pending order that would fill < 2 min
+after placement is cancelled - live, since a broker fills a limit order itself, the bot closes a position it sees opened < 2 min after placement at market
+(cost: one spread; 22 cases a year); (2) a SELL placed while the daily regime is "range" is sized at half risk.  FINAL BACKTEST on the CSV
+(`backtest_v16b_final.py`, 359 813 M1 bars 2025-09-01 → 2026-09-04, $10 000, 1 % base risk, real costs; the reference = the bat strings minus the two keys):
+
+| | v16-A reference | **v16b-A (shipped)** |
+|---|---|---|
+| trades | 467 | **446** (-21) |
+| **stop-outs %** | 24.4 | **23.8** (-0.6 pt) |
+| **gross $ lost** | -22,102 | **-16,921** (-23.4 %) |
+| avg loss $ | -191 | **-157** |
+| **max drawdown %** | -5.82 | **-5.55** |
+| worst day % of equity | -2.64 | **-2.34** |
+| net profit $ / return % | +30,175 / +301.75 | **+33,831 / +338.31** (+12.1 %) |
+| profit factor | 2.365 | **2.999** |
+| win % | 75.2 | **75.8** |
+| OOS (Mar-Sep 26) net $ / PF / stop % | +19,661 / 2.25 / 23.9 | **+23,958 / 3.12 / 21.1** |
+| months positive | 13/13 | 13/13 |
+
+Every loss metric improves AND every profit metric improves (score 4/4): the removed / shrunk trades were net losers and the freed slots and better equity path
+go to the remaining plans.  Stress ×6 (spread ×2, commission ×2, slip ×3, worst intrabar, risk 0.5 / 2 %, each judged against the v16-A row of the same
+scenario): profit held 6/6, OOS held 6/6, less loss 5/6 (slip ×3 DD 5.98 vs 5.82), worst day in band 5/6 (risk 0.5: -2.16 vs -1.90, 0.01 pt beyond).  Walk-forward
+(split 2026-03-01): the OOS half passes every band; the IS half holds the profit but the loss slices earn a little there (they are an OOS-heavy phenomenon),
+IS→OOS Spearman of the $-lost deltas over 95 variants 0.77.  Alternatives documented in the bat: **v16b-B** (most $ saved: + range counter-trend sells skipped
+SMA20, F3 on M5|M10, range sells x0.25 → 400 tr, +31 446 $, $ lost -15 081 = -32 %, PF 3.09, but worst day -2.89), **v16b-C** (most $ earned: F2 + counter-trend
+sells on M15+ at half size → 445 tr, +35 754 $, $ lost -19 488), **F2 alone** (447 tr, +33 089 $, $ lost -20 036).  `verify_bat_v16b.py` replays the bat strings:
+IDENTICAL to the study json.  Live bot: `trader.py` carries the three levers (`tests/test_trader_v16b.py`, `tests/test_bat_v16b.py`: range sell 0.10 lots next to a
+0.20-lot buy, a 1-min fill closed at market, a 3-min fill kept).  175 tests pass.
+
+**Honest reading.**  v16b removes exactly the two loss slices the data points at and nothing else; the gain is real on the whole year and on the OOS half but it
+is one year of one instrument, and the levers were chosen on the full year (then stress-tested and walk-forward checked).  Live, the fast-fill guard costs one
+spread per guarded fill instead of nothing.  Judge it on the demo account on the same metrics (stop %, $ lost, DD, worst day, PF) before trusting the size.
+Details: **`study_results/LESS_LOSS_V16B.md`**, `FINAL_BACKTEST_V16B.md`, `v16b_diag/DIAG.md`, `charts/v16b_*.png`, `charts/final_v16b_equity.png`.
 
 ---
 
@@ -779,14 +837,26 @@ lubot/plotting.py          chart rendering
 lubot/mt5_connector.py     MetaTrader5 connection / rates / live price
 tests/                     131 tests (detectors, execution, portfolio sim, plan replay parity, live trader vs fake MT5, trade filter, management systems, regime, martingale)
 backtest_results/          stats.csv, charts/
+v16b_common.py             v16b shared: v16-A config exactly as shipped (cross-checked against the bat), REF16B, judge16b (less_loss / hold_profit / hold_oos / no_worse_day)
+run_v16b_diag.py           v16b diagnosis of the 114 stop-outs of v16-A (side, counter-trend, regime x side, fill age, MFE path, clusters, static estimate) -> study_results/v16b_diag/
+run_v16b_levers.py         v16b grid of 96 variants on top of v16-A (T trend gate / F fast-fill guard / RS range-sell size / BE / DL / C_ combos, --stress) -> v16b_levers/, v16b_levers.csv, v16b_stress.csv
+run_v16b_all.sh / run_v16b_stress.sh / run_v16b_final.sh   v16b resumable launchers with 4-min autosave (grid / stress + walk-forward / final backtest + verify)
+judge_v16b_stress.py       v16b stress judged scenario by scenario vs the v16-A rows of v16_stress.csv -> v16b_stress_judged.csv, v16b_stress_summary.csv
+walkforward_v16b.py        v16b walk-forward on the IS/OOS halves from the trade lists -> v16b_walkforward.csv/.json
+backtest_v16b_final.py     FINAL BACKTEST of the bat strings (v16b-A) with the v16-A reference alongside -> study_results/FINAL_BACKTEST_V16B.md, final_v16b/*
+verify_bat_v16b.py         replays the exact run_trader.bat strings in the simulator (must equal the v16b-A study json)
+make_v16b_report.py        v16b report -> study_results/LESS_LOSS_V16B.md + charts/v16b_*.png
+smoke_v16b.py              v16b parity smoke (v16-A through the v16b simulator = 467 / +301.75 / -5.82)
+tests/test_v16b_levers.py, tests/test_trader_v16b.py, tests/test_bat_v16b.py   v16b lever / live fake-MT5 / bat tests
 ```
 
 ## 6. Not implemented / next steps
-- v7 trader: trailing stop after TP2 / time-based exit, news filter, Telegram alerts of fills (per-timeframe risk: done in v16, `tf_risk_scale`)
+- v7 trader: trailing stop after TP2 / time-based exit, news filter, Telegram alerts of fills (per-timeframe risk: done in v16, `tf_risk_scale`; pre-fill loss filters: done in v16b)
+- v16b follow-ups: judge v16b-A on the demo account (stop %, $ lost, DD, worst day, PF vs FINAL_BACKTEST_V16B); if the live fast-fill guard costs more than one spread per case, try `fast_fill_tfs=M5|M10` (F3_m510, the most robust single lever in the stress); a native pending-order expiry per bar would make the guard free
 - Retrain the quality model on data that includes bearish gold months (sells under-perform OOS) - after v16 this is THE remaining lever: more trades at the same loss percentage now needs a better entry model, not more trade sources or admission rules
 - Trend-line liquidity (needs a subjective line-fit; not used for POI selection)
 - Entry models from the PDF (Confirmation / PA / Direct entry), stacking, hedging – the bot delivers the POIs; execution is left to the trader or a follow-up module
 - Order placement through MT5 (`order_send`) – easy to add on top of `select()`
 - Telegram / webhook alerts when a selection changes (`--json` already exposes the state)
 
-Last updated: 2026-10-07 (v16: M20 timeframe confluent-only at x0.4 — 467 trades / +30 175 $ / DD 5.82 % / PF 2.365 at the v15-A loss percentage; rank-2 zones rejected; FINAL_BACKTEST_V16.md)
+Last updated: 2026-10-10 (v16b: fast-fill guard 2 min + range-regime sells at half size — 446 trades / +33 831 $ / DD 5.55 % / PF 3.00 / stop-outs 23.8 % / $ lost -16 921 (-23 %) vs v16-A 467 / +30 175 / 5.82 / 2.37 / 24.4 / -22 102; FINAL_BACKTEST_V16B.md)
