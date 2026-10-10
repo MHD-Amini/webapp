@@ -38,6 +38,13 @@ no_worse_days = worst day >= ref - 0.25 pt.  Score 0-4.
 - 2026-10-10 07:50  SESSION 3 (the previous chat died right after step 4a was pushed: GitHub main d3a974c = stress x6 + walk-forward
   complete, 48 stress rows in v16b_stress.csv + v16b_walkforward.csv/.json).  Recovered: repo present, restore.sh (CSV relinked, 170 tests
   pass).  Continuing at step 4b (judge the stress + walk-forward -> DECISION), then 5, 6.
+- 2026-10-10 08:30  step 6a DONE (run_v16b_final.sh in the background; another SANDBOX RESET right after it finished - everything was already
+  pushed, only the untracked logs/ went; the CSV was re-uploaded and restore.sh relinked it, 175 tests pass).  backtest_v16b_final.py
+  (strings READ FROM run_trader.bat) -> study_results/FINAL_BACKTEST_V16B.md + final_v16b/{v16bA,ref}_{summary.json,trades,equity,
+  monthly,by_tf}.csv + charts/final_v16b_equity.png:  v16b-A = 446 tr / net +33 831 $ / +338.31 % / DD -5.55 / PF 2.999 / win 75.8 /
+  sl 23.8 / gross loss -16 921 $ / avg loss -156.7 $ (-190.5) / worst day -2.34 / OOS net +23 958 / OOS PF 3.12 / OOS sl 21.1 / 13/13 =
+  IDENTICAL to study_results/v16b_levers/C_F2+RS_0.5.json; the reference (bat minus the two v16b keys) = 467 / +301.75 / -5.82 / PF
+  2.365 = FINAL_BACKTEST_V16 IDENTICAL.  verify_bat_v16b.py: IDENTICAL True (22 fast fills cancelled, 20 M20 trades).  Score 4/4.
 - 2026-10-10 08:20  step 5 DONE: run_trader.bat ships v16b-A (new header: what the two levers do, the live meaning of the fast-fill guard
   = close-at-market since a broker fills a limit order itself, the numbers, stress summary, v16b-B / v16b-C / F2-only / v16-A fallbacks,
   `REM v16b study: study_results/v16b_levers/C_F2+RS_0.5.json`; the v16 header kept as "Previous layer (v16-A ...)" with its REM v16
