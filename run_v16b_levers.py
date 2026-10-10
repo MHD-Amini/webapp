@@ -183,7 +183,7 @@ def run_one(name: str, over: str, m1, sel, extra_s: str = "", tag: str = "", out
         row["by_tf_n"] = tr.groupby("tf").size().to_dict()
         row["by_side_n"] = tr.groupby("side").size().to_dict()
         row["by_side_net"] = tr.groupby("side").net.sum().round(2).to_dict()
-        row["by_side_sl_%"] = (100 * tr.groupby("side").apply(lambda g: (g.outcome == "sl").mean())).round(1).to_dict()
+        row["by_side_sl_%"] = (100 * tr.assign(_sl=(tr.outcome == "sl").astype(float)).groupby("side")._sl.mean()).round(1).to_dict()
         row["outcomes"] = tr.outcome.value_counts().to_dict()
         tr.to_csv(out / f"{key}_trades.csv", index=False)
     res.equity.to_csv(out / f"{key}_equity.csv")
