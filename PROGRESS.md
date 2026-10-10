@@ -27,7 +27,7 @@ Judge (v16c_common.judge16c): less_dd = max DD better by >= 0.25 pt AND OOS max 
 ## Plan (v16c)
 - [x] 0. Session start: restore env (175 tests pass), PROGRESS v16c header + plan, v16c_common.py (v16b-A strings frozen == bat, REF16C,
         judge16c, dd_episodes) + tests/test_v16c_common.py, first save.
-- [ ] 1. Diagnosis `run_v16c_diag.py` -> study_results/v16c_diag/: the top-5 DD episodes of v16b-A: the trades inside each (TF, side,
+- [x] 1. Diagnosis `run_v16c_diag.py` -> study_results/v16c_diag/: the top-5 DD episodes of v16b-A: the trades inside each (TF, side,
         kind, regime, confluent, mart step, risk_scale, risk $ / % eq, concurrency at fill, same-direction clusters, hold time, MAE/MFE),
         the floating component (equity vs balance DD), what share of each episode is sizing (risk % eq at the time) vs count of losers;
         DD-path simulation on the trade list (static): equity-DD-aware risk throttle, loss-streak throttle, cluster caps, max risk at
@@ -42,6 +42,32 @@ Judge (v16c_common.judge16c): less_dd = max DD better by >= 0.25 pt AND OOS max 
 - [ ] 6. Final backtest `backtest_v16c_final.py` -> FINAL_BACKTEST_V16C.md; report `make_v16c_report.py` -> LESS_DD_V16C.md; README 0k; save.
 
 ## Log (v16c)
+- 2026-10-10 14:20  step 1 DONE: run_v16c_diag.py -> study_results/v16c_diag/DIAG.md + 15 csv (trades_enriched.csv carries risk % eq at the
+  fill, open risk % eq, same-side count, DD band).  (SANDBOX RESET between the turns again: the diag script was lost once and rewritten
+  from this log; the CSV was re-uploaded, restore.sh relinked it, 179 tests pass.)  THE DRAWDOWN STRUCTURE of v16b-A:
+  * FIVE episodes within 1.5 pt of each other: #1 -5.55 % (2026-08-06, 4 days: realised -3.80 + FLOATING -1.74 = 3 buys open at the
+    trough, 3.6 % open risk, all of them later won +875 $), #2 -5.09 % (2025-10-21, 24 days, all realised: 10 closes / 6 stops, small
+    sizes 0.6 % eq), #3 -4.68 % (2025-09-23, 23 days, all realised: 25 closes / 12 stops / 17 sells -1 031 $), #4 -4.30 % (2026-03-25:
+    -3.78 realised + -0.52 floating), #5 -4.11 % (2026-01-02: -2.46 realised + -1.64 floating, 3 sells open).  Balance-path DD is
+    only -5.07 %: the floating part of open (eventually winning) positions adds the last 0.5 pt of the max DD.
+  * The trades that close while the account is > 2 % under water EARN money (82 tr, +3.2 k$, stop 28 %), as do the trades after 2-3
+    consecutive losses (+1.8 k$) -> a throttle in drawdown costs recovery; it can only win on DEPTH, and the static re-walk says
+    how much: DDT_3.5_x0.5 (size x0.5 while balance DD > 3.5 %) balance DD 5.07 -> 4.45 (-0.62 pt) at 98.0 % net / 98.5 % OOS;
+    DDT_3.5_x0.6 -> 4.57 at 98.1 %; DDT_3.0_x0.75 -> 4.61 at 97.5 %; DDT_3.5_x0.75 -> 4.76 at 98.9 %; DDT_3.0_x0.5 -> 4.15 at
+    95.6 % (fails the 97 % band); every earlier / harder throttle (x < 3, s <= 0.5) gives up 10-45 % of the net.  Ramp throttles
+    (DDR) are too costly (70-80 % net).  These are the ONLY static candidates (DD >= 0.2 pt shallower, net and OOS >= 97 %).
+  * NOT a lever: loss-streak throttle (0.0-0.2 pt), week-loss cap (never triggers), per-plan risk cap (no DD gain, -6..-31 % net),
+    same-side cap (concurrent same-side plans WIN: 1-2 open same-side = stop 13-19 %, +16 k$; the cap halves the profit), open-risk
+    skip/fit caps (-22..-67 % net: the big-open-risk fills are the confluence winners), day soft cap (DAY_1.0 -0.78 pt but 94 % net;
+    DAY_1.0_x0.5 -0.57 pt at 97.0 % = borderline; the trades after -1 % intraday EARN +2.8 k$).
+  * Sizing: plans at 1.1-1.4 % eq (confluent x1.25) stop out 14.7 % and earn 20.5 k$; the small plans (<= 0.5 % eq, stepped-down /
+    M20 / range sells) stop 35 % and earn 1.1 k$ - sizing already follows quality; nothing to cut there.
+  LEVERS FOR STEP 2 (all computable by the live bot from its own state): (1) `dd_throttle` = risk x s while the account's equity is
+  more than x % below its peak (step; optional ramp; basis equity|balance; the live bot keeps peak_equity in trader_state.json);
+  (2) `day_soft_loss_pct` / `day_soft_scale` = new plans x s (or skipped) once the day's equity is x % below the day start (no flatten,
+  unlike max_daily_loss_pct); (3) `max_open_risk_pct` = the new plan is scaled to fit the open risk-at-stop (BE legs = 0 risk) under
+  x % eq - a floating cap for episode #1/#5 (static could only test it with the initial risk, which over-counts); (4) `streak_throttle`
+  as a control.  Grid = each alone, then DDT x day cap x open-risk fit.
 - 2026-10-10 12:10  step 0 DONE: GitHub origin verified (MHD-Amini/webapp, main 6bab3ee = v16b complete), restore.sh OK (CSV linked, 175
   tests pass, 96 v16b runs + 48 stress runs on disk).  No "v16c" existed in the repo -> v16c = this new layer on top of v16b-A.
   v16c_common.py (V16B_TRADER = V16A_TRADER + the two v16b keys, checked == run_trader.bat field by field; REF16C from the final
