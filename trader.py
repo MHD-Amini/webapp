@@ -171,6 +171,24 @@ class Trader:
                           f"risk x{self.t.range_risk_scale} ({'|'.join(self.t.range_tfs) or 'all TFs'})")
         self.regime_value: float = float("nan")
         self.regime: str = ""
+        # v16b: daily trend gate, impulsive-arrival (fast fill) guard, regime x side sizing - same arithmetic as the simulator
+        self.trend_value: float = float("nan")
+        self.regime_side: Dict[Tuple[str, str], float] = {}
+        for part in (self.t.regime_side_scale or "").split("|"):
+            bits = part.split(":")
+            if len(bits) == 3:
+                self.regime_side[(bits[0].strip(), bits[1].strip())] = float(bits[2])
+        if self.t.trend_sma > 0:
+            self.log.info(f"v16b trend gate: daily close vs SMA{self.t.trend_sma} (last CLOSED server day), counter-trend "
+                          f"{'|'.join(self.t.trend_sides)} plans -> {self.t.trend_mode}"
+                          f"{(' x' + str(self.t.trend_risk_scale)) if self.t.trend_mode == 'scale' else ''} "
+                          f"({'|'.join(self.t.trend_tfs) or 'all TFs'}, regime {self.t.trend_regime or 'any'})")
+        if self.t.min_fill_age_min > 0:
+            self.log.info(f"v16b fast-fill guard: an order filled < {self.t.min_fill_age_min} min after placement is "
+                          f"{'closed at market' if self.t.fast_fill_mode == 'cancel' else 'reduced to x' + str(self.t.fast_fill_scale)} "
+                          f"({'|'.join(self.t.fast_fill_tfs) or 'all TFs'}, regime {self.t.fast_fill_regime or 'any'})")
+        if self.regime_side:
+            self.log.info(f"v16b regime x side risk scale: {self.regime_side}")
         # v14: martingale state rebuilt from the persisted closed-plan list (same code as the simulator)
         self.mart = Martingale.replay(self.t, self.state.closed)
         if self.t.mart_mode:
@@ -211,6 +229,38 @@ class Trader:
             self.log.info(f"regime -> {r} ({self.t.regime_metric} = {v:.3f}, threshold {self.t.regime_threshold})")
         self.regime_value, self.regime = v, r
         return r
+
+    def current_trend(self) -> float:
+        """v16b: +1 / -1 daily trend sign (close of the last CLOSED server day vs its SMA(trend_sma)); NaN = off / short history.
+        Same code as the simulator (lubot/regime.py latest_trend); the unfinished current day is excluded."""
+        if self.t.trend_sma <= 0 or self.m1 is None:
+            return float("nan")
+        from lubot.regime import daily_bars, latest_trend
+        v = latest_trend(daily_bars(self.m1), self.t.trend_sma)
+        if v != self.trend_value and not (math.isnan(v) and math.isnan(self.trend_value)):
+            self.log.info(f"daily trend -> {'UP' if v > 0 else 'DOWN' if v < 0 else 'n/a'} (close vs SMA{self.t.trend_sma})")
+        self.trend_value = v
+        return v
+
+    def _trend_gated(self, plan: TradePlan) -> bool:
+        """v16b: the plan goes against the daily trend AND falls under the gate's side / tf / regime scope (simulator rule)."""
+        from lubot.regime import counter_trend
+        t = self.t
+        if plan.side not in t.trend_sides:
+            return False
+        if t.trend_tfs and plan.tf not in t.trend_tfs:
+            return False
+        if t.trend_regime and plan.regime != t.trend_regime:
+            return False
+        return counter_trend(plan.side, self.trend_value)
+
+    def _fast_scope(self, pl: dict) -> bool:
+        t = self.t
+        if t.fast_fill_tfs and pl.get("tf") not in t.fast_fill_tfs:
+            return False
+        if t.fast_fill_regime and pl.get("regime") != t.fast_fill_regime:
+            return False
+        return True
 
     def scan(self) -> Dict[str, dict]:
         """Run the scanner on the closed bars.  The last M1 bar returned by MT5 is the FORMING one -> drop it."""
@@ -364,6 +414,7 @@ class Trader:
         shown_keys = set()
         slot_shown: Dict[Tuple[str, str], str] = {}          # (tf, side) -> key shown now (v12 keep_replaced)
         regime = self.current_regime()                        # v13
+        self.current_trend()                                  # v16b
         for tf, r in result.items():
             for side in ("above", "below"):
                 # v16: the ranked list (index 0 == the slot winner); rank-1 only when max_rank is 1 / the scan has no list
@@ -391,6 +442,12 @@ class Trader:
         if plan.regime == "range" and self.t.range_risk_scale <= 0:
             self.log.debug(f"skip {key}: range regime (no trading)")
             return
+        # v16b daily trend gate (decided at placement from the last CLOSED day, exactly as the simulator)
+        if self.t.trend_sma > 0 and self._trend_gated(plan):
+            if self.t.trend_mode == "skip":
+                self.log.info(f"skip {key}: counter-trend {plan.side} (daily close vs SMA{self.t.trend_sma})")
+                return
+            plan.counter_trend = True
         why = self._accept(plan)
         if why == "active":
             # v12: a kept (replaced) order that is shown again is kept for good
@@ -432,6 +489,11 @@ class Trader:
             rs *= self.t.rank2_risk_scale                # v16
             self.log.info(f"rank {rank} {key}: admitted at x{self.t.rank2_risk_scale}")
         rs *= self.tf_scale.get(tf, 1.0)                 # v16 per-TF scale
+        if plan.counter_trend:                           # v16b trend_mode=scale
+            rs *= self.t.trend_risk_scale
+            self.log.info(f"counter-trend {key}: admitted at x{self.t.trend_risk_scale}")
+        if self.regime_side and plan.regime:             # v16b regime x side scale
+            rs *= self.regime_side.get((plan.regime, plan.side), 1.0)
         plan.risk_scale = rs
         self.open_plan(plan)
 
@@ -541,7 +603,7 @@ class Trader:
                    leg_b_ticket=(tickets[1] if self.mode == "split" else tickets[0]) if not ladder_legs else None,
                    ladder=ladder_legs, n_closed=0,
                    lots_total=sz.lots_total, lots_leg1=sz.lots_leg1, lots_leg2=sz.lots_leg2, risk_money=sz.risk_money,
-                   placed=time.strftime("%Y-%m-%d %H:%M:%S"))
+                   placed=time.strftime("%Y-%m-%d %H:%M:%S"), placed_tick=self._tick_time())
         self.state.plans[plan.key] = rec
         # v16 FIX: the POI counts as traded when an order FILLS (PortfolioSimulator semantics), not at placement - a cancelled
         # unfilled order of a POI that is shown again is re-placed, exactly as in every backtest
@@ -554,6 +616,72 @@ class Trader:
         return True
 
     # ------------------------------------------------------------------ management
+    # ------------------------------------------------------------------ v16b fast-fill guard (live)
+    def _tick_time(self) -> float:
+        """Server tick time (epoch seconds) of the current quote - the clock the fast-fill guard runs on (same clock as the
+        broker's position open time, so a PC clock offset cannot bias the age)."""
+        try:
+            px = self.b.price()
+            return float(px.get("time") or time.time())
+        except Exception:  # noqa: BLE001
+            return time.time()
+
+    def _pos_by_ticket(self, ticket: int):
+        for p in self.b.positions(self.magic):
+            if p.ticket == ticket:
+                return p
+        return None
+
+    def _fast_fill_guard(self, key: str, pl: dict, pos) -> bool:
+        """v16b impulsive-arrival guard, live version.  The simulator refuses the fill of an order younger than
+        ``min_fill_age_min``; a broker fills a limit order itself, so the bot does the next best thing the moment it SEES the
+        fill: a position opened < N min after the order was placed is closed at market (fast_fill_mode=cancel; the cost is the
+        spread) or reduced to x fast_fill_scale (fast_fill_mode=scale).  Decided once per plan (``fast_fill_checked``)."""
+        t = self.t
+        if t.min_fill_age_min <= 0 or pl.get("fast_fill_checked") or pl.get("grid_leg") or pl.get("reentry_n"):
+            return False
+        pl["fast_fill_checked"] = True
+        placed = pl.get("placed_tick")
+        if placed is None or not self._fast_scope(pl):
+            return False
+        opened = getattr(pos, "time", None)
+        try:
+            opened_s = float(opened.timestamp()) if hasattr(opened, "timestamp") else (float(opened) if opened is not None else self._tick_time())
+        except Exception:  # noqa: BLE001
+            opened_s = self._tick_time()
+        age_min = (opened_s - float(placed)) / 60.0
+        if age_min >= t.min_fill_age_min:
+            return False
+        pl["fast_fill"] = True
+        acted = False
+        for tk in list(pl["position_tickets"]):
+            p = self._pos_by_ticket(tk)
+            if p is None:
+                continue
+            if t.fast_fill_mode == "cancel":
+                ok = self._close_partial(p, p.volume)
+                self.log.info(f"{key}: FAST FILL ({age_min:.1f} min after placement < {t.min_fill_age_min}) -> position #{tk} "
+                              f"closed at market ({'ok' if ok else 'FAILED'})")
+            else:
+                keep = self.spec.round_volume_down(p.volume * t.fast_fill_scale)
+                cut = round(p.volume - keep, 8)
+                if keep < self.spec.volume_min:
+                    ok = self._close_partial(p, p.volume)
+                    self.log.info(f"{key}: FAST FILL ({age_min:.1f} min) -> #{tk} closed (x{t.fast_fill_scale} below min volume) ({'ok' if ok else 'FAILED'})")
+                elif cut < self.spec.volume_min - 1e-9:
+                    ok = True
+                    self.log.info(f"{key}: FAST FILL ({age_min:.1f} min) -> #{tk} kept (cut below min volume)")
+                else:
+                    ok = self._close_partial(p, cut)
+                    self.log.info(f"{key}: FAST FILL ({age_min:.1f} min) -> #{tk} reduced {p.volume} -> {keep} x{t.fast_fill_scale} ({'ok' if ok else 'FAILED'})")
+            acted = acted or bool(ok)
+        # the other (still pending) legs of a cancelled plan go too: the plan is void, as in the simulator
+        if t.fast_fill_mode == "cancel":
+            for tk in list(pl["order_tickets"]):
+                self._cancel(tk)
+            pl["order_tickets"] = []
+        return acted
+
     # ------------------------------------------------------------------ v10 account protection
     def _server_day(self) -> str:
         """Server date (YYYY-MM-DD) of the current tick - the broker's trading day."""
@@ -653,6 +781,14 @@ class Trader:
             pl["order_tickets"] = still
             open_pos = [poss[t] for t in pl["position_tickets"] if t in poss]
             pl["position_tickets"] = [p.ticket for p in open_pos]
+            # 1b) v16b fast-fill guard: the first time a fill of this plan is seen
+            if open_pos and self.t.min_fill_age_min > 0 and not pl.get("fast_fill_checked"):
+                if self._fast_fill_guard(key, pl, open_pos[0]):
+                    poss = {p.ticket: p for p in self.b.positions(self.magic)}
+                    orders = {o.ticket: o for o in self.b.orders(self.magic)}
+                    open_pos = [poss[t] for t in pl["position_tickets"] if t in poss]
+                    pl["position_tickets"] = [p.ticket for p in open_pos]
+                changed = True
             # 2a) v10 ladder (3+ legs): stop schedule for the remaining legs after every closed target leg
             if pl.get("ladder") and open_pos:
                 if self._manage_ladder(key, pl, orders, poss, open_pos):
@@ -821,6 +957,8 @@ class Trader:
         rk = self.state.risk
         flag = " | HALTED" if rk.get("halted") else (" | daily limit hit - flat until next day" if rk.get("daily_halt_day") else "")
         rg = f" | regime {self.regime} ({self.t.regime_metric} {self.regime_value:.3f} < {self.t.regime_threshold})" if self.regime else ""   # v13
+        if self.t.trend_sma > 0 and not math.isnan(self.trend_value):                                                           # v16b
+            rg += f" | trend {'UP' if self.trend_value > 0 else 'DOWN'} (SMA{self.t.trend_sma})"
         mt = ""
         if self.mart.on:                                                                                                        # v14
             st = self.mart.snapshot()
