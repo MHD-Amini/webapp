@@ -1,4 +1,54 @@
-# PROGRESS — v16b LOSS REDUCTION for the v16-A trader: REDUCE THE LOSS PERCENTAGE WHILE MAINTAINING THE PROFITABILITY PERCENTAGE — ALL STEPS COMPLETE (2026-10-10 08:50, session 3)
+# PROGRESS — v16c REDUCE THE MAX DRAWDOWN % of the v16b-A trader WHILE MAINTAINING THE PROFITABILITY % — IN PROGRESS (2026-10-10, session 1)
+
+**Recovery (read this first):** `git clone https://github.com/MHD-Amini/webapp.git /home/user/webapp`, `bash restore.sh`
+(relinks the CSV to `data/xauusd_m1.csv`, pip, tests), read this file, continue from the FIRST UNCHECKED step of the v16c plan below.
+Every step ends with `bash save.sh "msg"` (commit + push to GitHub origin = https://github.com/MHD-Amini/webapp).  Long jobs are resumable
+(one json per run in study_results/v16c_levers/, they skip outputs that exist) and run under `run_v16c_all.sh`, which autosaves (commit +
+push) every 4 minutes.  Data: `/home/user/uploaded_files/XAUUSD.t_M1_202501020100_2026090423581112.csv` (593 863 M1 bars 2025-01-02 ->
+2026-09-04; symlink `data/xauusd_m1.csv`).  Sandbox: 2 cores, ~1 GB RAM -> simulator with `--workers 1`, never two full-year sims at once.
+
+## User spec (v16c)
+1. Find a way for the last version of the bot (run_trader.bat = v16b-A) to REDUCE THE MAX DRAWDOWN PERCENTAGE while MAINTAINING THE
+   PROFITABILITY PERCENTAGE.
+2. Save the process after EVERY step without exception, recoverable if the session dies (GitHub + PROGRESS.md + resumable jobs).
+
+## Reference (v16b-A, FINAL_BACKTEST_V16B.md / final_v16b/v16bA_summary.json, full year 2025-09-01 -> 2026-09-04, $10 000, 1 % base risk)
+446 trades, +33 831 $ (+338.31 %), max DD -5.55 % (-2 257 $), PF 2.999, win 75.8 %, stop-outs 23.8 %, worst day -2.34 % eq, gross loss
+-16 921 $, ulcer 1.691, return/DD 60.96, OOS (>= 2026-03-01) net +23 958 $, OOS PF 3.124, OOS sl 21.1, OOS max DD -5.55, 13/13 months.
+THE DD EPISODES (v16c_common.dd_episodes on final_v16b/v16bA_equity.csv): #1 -5.55 % 2026-08-06 -> trough 08-10 -> rec 08-10 (4.1 days);
+#2 -5.09 % 2025-10-21 -> 10-27 -> 11-13 (23.9 days); #3 -4.68 % 2025-09-23 -> 10-15 -> 10-16 (22.8 days); #4 -4.30 % 2026-03-25 (7.7 d).
+=> a lever has to cut ALL of the top-3 episodes (they are 0.9 pt apart), otherwise the max DD just moves to the next one.
+Interpretation of the spec: "max drawdown percentage" = max_dd_% on the equity path (closed + floating, the number of every report);
+"profitability percentage" = return % (net $) AND PF AND OOS net - must be held (>= ref - small band).  v16b's loss gains must not regress.
+Judge (v16c_common.judge16c): less_dd = max DD better by >= 0.25 pt AND OOS max DD not worse AND ulcer <= ref; hold_profit = net >=
+0.97 x ref AND PF >= ref - 0.10 AND OOS net >= 0.97 x OOS ref; hold_loss = sl <= ref + 1 pt AND gross loss <= 1.05 x ref AND worst day
+>= ref - 0.25 pt; hold_oos = OOS PF >= ref - 0.10 AND OOS sl <= ref + 1 pt AND 13/13 months.  Score 0-4.
+
+## Plan (v16c)
+- [x] 0. Session start: restore env (175 tests pass), PROGRESS v16c header + plan, v16c_common.py (v16b-A strings frozen == bat, REF16C,
+        judge16c, dd_episodes) + tests/test_v16c_common.py, first save.
+- [ ] 1. Diagnosis `run_v16c_diag.py` -> study_results/v16c_diag/: the top-5 DD episodes of v16b-A: the trades inside each (TF, side,
+        kind, regime, confluent, mart step, risk_scale, risk $ / % eq, concurrency at fill, same-direction clusters, hold time, MAE/MFE),
+        the floating component (equity vs balance DD), what share of each episode is sizing (risk % eq at the time) vs count of losers;
+        DD-path simulation on the trade list (static): equity-DD-aware risk throttle, loss-streak throttle, cluster caps, max risk at
+        once; candidate levers ranked by DD cut vs net given up.
+- [ ] 2. Levers in TraderConfig / PortfolioSimulator (defaults byte-identical, parity 446 / +338.31 / -5.55 exact; tests): e.g.
+        dd_throttle (risk x s while equity is > x % below its peak), streak throttle (after k losses in N days), max open risk % eq
+        (sum of open plans' risk), same-side concurrency cap, day-loss soft cap (no new plans after -x % that day, no flatten),
+        per-week loss cap.  All computable by the live bot from its own state.
+- [ ] 3. Grid `run_v16c_levers.py` (resumable, workers 1) under `run_v16c_all.sh` (autosave) -> study_results/v16c_levers/ + v16c_levers.csv.
+- [ ] 4. Stress x6 + walk-forward of the finalists -> DECISION v16c-A / B / C.
+- [ ] 5. Port to run_trader.bat + trader.py (live support) + tests/test_bat_v16c.py + verify_bat_v16c.py.
+- [ ] 6. Final backtest `backtest_v16c_final.py` -> FINAL_BACKTEST_V16C.md; report `make_v16c_report.py` -> LESS_DD_V16C.md; README 0k; save.
+
+## Log (v16c)
+- 2026-10-10 12:10  step 0 DONE: GitHub origin verified (MHD-Amini/webapp, main 6bab3ee = v16b complete), restore.sh OK (CSV linked, 175
+  tests pass, 96 v16b runs + 48 stress runs on disk).  No "v16c" existed in the repo -> v16c = this new layer on top of v16b-A.
+  v16c_common.py (V16B_TRADER = V16A_TRADER + the two v16b keys, checked == run_trader.bat field by field; REF16C from the final
+  summary json; judge16c; dd_episodes) + tests/test_v16c_common.py (4; 179 pass).  Header + plan written.
+
+---
+# (previous) # PROGRESS — v16b LOSS REDUCTION for the v16-A trader: REDUCE THE LOSS PERCENTAGE WHILE MAINTAINING THE PROFITABILITY PERCENTAGE — ALL STEPS COMPLETE (2026-10-10 08:50, session 3)
 
 **Recovery (read this first):** `git clone https://github.com/MHD-Amini/webapp.git /home/user/webapp`, `bash restore.sh`
 (relinks the CSV to `data/xauusd_m1.csv`, pip, tests), read this file, continue from the FIRST UNCHECKED step of the v16b plan below.
