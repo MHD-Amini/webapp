@@ -26,7 +26,7 @@ no_worse_days = worst day >= ref - 0.25 pt.  Score 0-4.
         kind, session, regime, confluent, quality band, hold time, MAE/MFE path (how far did price go in our favour before the stop?),
         time-to-stop, clustering (same-minute / same-day stops), the 2026-04-08 cluster; the BE / partial trades (what does a loser look
         like before it loses?).  Candidate levers ranked by $ saved vs $ given up.
-- [ ] 2. Levers in TraderConfig / PortfolioSimulator (defaults byte-identical, parity 467 / +301.75 / -5.82 exact; tests): e.g. time stop
+- [x] 2. Levers in TraderConfig / PortfolioSimulator (defaults byte-identical, parity 467 / +301.75 / -5.82 exact; tests): e.g. time stop
         (cancel plan after N min without reaching +x R), early-exit on adverse structure, SL tightening after MFE >= x R before TP1,
         max concurrent same-side positions / cluster cap, per-day loss cap below 4.5 %, stop-out-rate-aware quality bar per slice.
 - [ ] 3. Grid `run_v16b_levers.py` (resumable, workers 1) under `run_v16b_all.sh` (autosave) -> study_results/v16b_levers/ + v16b_levers.csv.
@@ -35,6 +35,24 @@ no_worse_days = worst day >= ref - 0.25 pt.  Score 0-4.
 - [ ] 6. Final backtest `backtest_v16b_final.py` -> FINAL_BACKTEST_V16B.md; report `make_v16b_report.py` -> LESS_LOSS_V16B.md; README 0j; save.
 
 ## Log (v16b)
+- 2026-10-10 05:55  step 2 DONE (SANDBOX RESET AGAIN between turns: the unsaved simulator edits + v16b_common.py were lost once and
+  re-applied from this log in 3 min; from now on every file is pushed the minute it passes its tests).  Levers (lubot/execution.py
+  TraderConfig, lubot/portfolio_sim.py, lubot/regime.py; defaults byte-identical, PARITY v16-A = 467 / +301.75 / -5.82 / PF 2.365 /
+  gross loss -22 101.53 IDENTICAL via smoke_v16b.py):
+  * `trend_sma=N` daily trend gate (close of the last CLOSED server day vs SMA N; regime.py trend_series/minute_trend/latest_trend/
+    counter_trend), `trend_sides` (default sell), `trend_mode=skip|scale`, `trend_risk_scale`, `trend_tfs`, `trend_regime`.
+  * `min_fill_age_min=N` impulsive-arrival guard in _try_fill (an order that would fill < N min after placement is cancelled
+    "fast fill" or, `fast_fill_mode=scale`, filled at x `fast_fill_scale`), `fast_fill_tfs`, `fast_fill_regime`.
+  * `regime_side_scale=range:sell:0.5|...` regime x side sizing in _apply_v15.
+  * trade list columns counter_trend / fast_fill; summary counters trend_skipped / trend_scaled / fast_cancelled / fast_scaled.
+  v16b_common.py: v16-A strings frozen (== run_trader.bat, checked), REF16B, judge16b (less_loss / hold_profit / hold_oos /
+  no_worse_day, score 0-4), fmt16b.  tests/test_v16b_levers.py (8 tests; 165 pass).  smoke_v16b.py.
+  FIRST FULL-YEAR LOOK (study_results/v16b_smoke.jsonl):  T10 (skip counter-trend sells, SMA10): 377 tr / net 27 781 (-8 %) / OOS
+  18 287 / DD 5.30 / PF 2.724 / sl 21.5 / gross loss -16 118 / wd -3.14 -> less_loss + hold_oos, FAILS hold_profit (net < 97 %) and
+  the worst day.  F5 (cancel fills < 5 min): 412 tr / net 31 369 (+4 %) / OOS 21 558 / DD 6.43 / PF 2.828 / sl 22.8 / gl -17 162 /
+  wd -3.06 -> hold_profit, FAILS less_loss on the DD (6.43 > 5.82) and the worst day.  Both cut the stop rate and the $ lost as the
+  diagnosis said; the dynamic effects (equity-based sizing, slot / overlap / confluence-memory interactions) move the DD and the
+  worst day -> the grid (step 3) has to find the scope (tf / regime / scale) that keeps them: scale instead of skip, range-only, M5|M10 only.
 - 2026-10-09 20:05  step 1 DONE: run_v16b_diag.py -> study_results/v16b_diag/DIAG.md + 37 csv (trades_enriched.csv carries the features).
   SANDBOX RESET between the two chat turns (data/ symlink + an unsaved script lost) -> recovered with git + restore.sh in 1 min; nothing else lost.
   THE LOSS STRUCTURE of v16-A (114 stop-outs, -22 072 $; 2 other small losers):
