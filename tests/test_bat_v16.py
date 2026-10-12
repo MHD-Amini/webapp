@@ -66,7 +66,9 @@ def test_bat_config_equals_shipped_study_config():
     # v16b (the layer shipped on top) adds its own keys; everything else must still be v16-A (tests/test_bat_v16b.py pins them)
     V16B_LAYER = {"min_fill_age_min", "fast_fill_mode", "fast_fill_scale", "fast_fill_tfs", "fast_fill_regime", "regime_side_scale",
                   "trend_sma", "trend_sides", "trend_mode", "trend_risk_scale", "trend_tfs", "trend_regime"}
-    assert set(diffs) <= {"timeframes"} | V16B_LAYER, diffs
+    # v16c (the drawdown layer shipped on top of v16b) adds its own keys too (tests/test_bat_v16c.py pins them)
+    V16C_LAYER = {"dd_throttle_pct", "dd_throttle_scale", "dd_throttle_ramp", "dd_basis", "dd_throttle_tfs", "day_soft_loss_pct", "day_soft_scale"}
+    assert set(diffs) <= {"timeframes"} | V16B_LAYER | V16C_LAYER, diffs
     assert tuple(s.timeframes) == tfs
 
 

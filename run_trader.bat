@@ -1,5 +1,20 @@
 @echo off
-REM LU-POI TRADER v16b - live MT5 bot.  v16b-A (study_results/LESS_LOSS_V16B.md) = v16-A + TWO LOSS-REDUCTION LEVERS (fewer stop-outs, fewer $ lost,
+REM LU-POI TRADER v16c - live MT5 bot.  v16c-A (study_results/LESS_DD_V16C.md) = v16b-A + ONE DRAWDOWN LEVER (a smaller max drawdown %% at the
+REM   same profitability): dd_throttle_pct=3.5,dd_throttle_scale=0.5,dd_throttle_tfs=M15|M20|M30|H1 = EQUITY-DRAWDOWN THROTTLE ON THE HIGHER
+REM   TIMEFRAMES: while the account EQUITY (balance + floating) is more than 3.5 %% below its running peak, every NEW M15 / M20 / M30 / H1 plan is
+REM   sized at HALF risk; M5 / M10 plans keep full size (the v16c diagnosis: the M5/M10 trades are the ones that RECOVER a drawdown - throttling
+REM   them costs 6-12 %% of the net; the higher-TF plans carry the biggest risk per plan and the floating part of every deep episode).  Nothing is
+REM   closed or cancelled; the size comes back as soon as equity is within 3.5 %% of the peak.  The peak is persisted in trader_state.json
+REM   (risk.peak_equity, refreshed every loop) so a restart inside a drawdown keeps throttling.  Logged 'drawdown x.xx %% below peak -> risk x0.5'.
+REM   Full year Sep25-Sep26 (FINAL_BACKTEST_V16C.md): 445 trades (-1), max DD 5.07 %% (5.55 = -0.48 pt), 2nd/3rd episodes 4.65 / 4.32 (5.09 / 4.68),
+REM   ulcer 1.628 (1.691), net +34 092 $ (+0.8 %% vs +33 831), PF 2.967 (2.999), win 75.5 %%, stop-outs 24.0 %% (23.8), worst day -2.25 %% (-2.34),
+REM   OOS net +24 063 $ (+23 958), OOS PF 3.10 (3.12), OOS max DD 5.07 (5.55), return/DD 67.2 (61.0), 13/13 months positive.  Walk-forward: the DD is
+REM   cut in BOTH halves (IS -0.44 pt at 101.6 %% net, OOS -0.48 pt at 100.4 %%).  Stress x6: see LESS_DD_V16C.md.
+REM   v16c-B (deepest cut at 4/4: DD 4.93 = -0.62 pt, net 99.8 %%): add day_soft_loss_pct=1.5,day_soft_scale=0.5 (new plans at half size once the day is
+REM     -1.5 %% of equity; no flatten).   v16c-C (all timeframes, linear ramp: DD 5.15, net +34 126 $, PF 3.01): dd_throttle_pct=3.0,dd_throttle_scale=0.5,
+REM     dd_throttle_ramp=2.0 and drop dd_throttle_tfs.   v16b-A: drop the three dd_throttle_* keys.
+REM v16c study: study_results/v16c_levers/DDT3.5_x0.5_htf.json
+REM Previous layer (v16b-A, study_results/LESS_LOSS_V16B.md) = v16-A + TWO LOSS-REDUCTION LEVERS (fewer stop-outs, fewer $ lost,
 REM   MORE profit): the v16b diagnosis of the 114 stop-outs of v16-A found two loss slices computable before the fill:
 REM   (1) min_fill_age_min=2 = IMPULSIVE-ARRIVAL GUARD: a pending order that fills < 2 min after it was placed (price was already running into
 REM       the zone when the scanner showed it: 39 %% stop rate, -2 k$/year) is NOT traded.  The simulator cancels the order before the fill; a
@@ -62,7 +77,7 @@ REM Windows: open + log in your MT5 terminal FIRST, then double-click this file.
 REM v13-C (fewest new rules): drop range_sl_after_leg=0|0.3|x|x.   v12-A (no regime switch): drop every regime_*/range_* key.
 cd /d "%~dp0"
 IF "%1"=="" (
-  python trader.py --symbol XAUUSD.t --risk 1.0 --min-quality 0.50 --commission 7 --timeframes M5,M10,M15,M20,M30,H1 --trader "tp_levels=0.6|1.2|2.4|4.8,tp_fracs=1|1|1|1,ladder_fallback=merge,dedupe_cross_tf=false,keep_replaced_bars=1,keep_replaced_tfs=M10|M15|M20|M30|H1,regime_metric=adr_ratio,regime_threshold=1.0,regime_short=5,regime_long=20,range_tp_levels=0.5|1.0|1.5|2.5,range_tp_fracs=1|1|1|1,range_sl_after_leg=0|0.3|x|x,mart_mode=mult,mart_mult=1.5,mart_max_steps=3,mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10|M15|M20|M30|H1,mart_sides=buy,mart_ungated_scale=0.5,confluence_memory_min=240,confluent_risk_scale=1.25,plain_risk_scale=0.9,tf_risk_scale=M20:0.4,min_fill_age_min=2,regime_side_scale=range:sell:0.5" --trade-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia|london|preny|ny|lclose/M10:min_quality=0.57/M15:min_quality=0.60/M30|H1:min_quality=0.57/M20:min_quality=0.99" --confluence-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia|london|preny|ny|lclose/M10:min_quality=0.50/M15:min_quality=0.60/M30|H1:min_quality=0.57/M20:min_quality=0.63" --state trader_state.json --log trader.log
+  python trader.py --symbol XAUUSD.t --risk 1.0 --min-quality 0.50 --commission 7 --timeframes M5,M10,M15,M20,M30,H1 --trader "tp_levels=0.6|1.2|2.4|4.8,tp_fracs=1|1|1|1,ladder_fallback=merge,dedupe_cross_tf=false,keep_replaced_bars=1,keep_replaced_tfs=M10|M15|M20|M30|H1,regime_metric=adr_ratio,regime_threshold=1.0,regime_short=5,regime_long=20,range_tp_levels=0.5|1.0|1.5|2.5,range_tp_fracs=1|1|1|1,range_sl_after_leg=0|0.3|x|x,mart_mode=mult,mart_mult=1.5,mart_max_steps=3,mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10|M15|M20|M30|H1,mart_sides=buy,mart_ungated_scale=0.5,confluence_memory_min=240,confluent_risk_scale=1.25,plain_risk_scale=0.9,tf_risk_scale=M20:0.4,min_fill_age_min=2,regime_side_scale=range:sell:0.5,dd_throttle_pct=3.5,dd_throttle_scale=0.5,dd_throttle_tfs=M15|M20|M30|H1" --trade-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia|london|preny|ny|lclose/M10:min_quality=0.57/M15:min_quality=0.60/M30|H1:min_quality=0.57/M20:min_quality=0.99" --confluence-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia|london|preny|ny|lclose/M10:min_quality=0.50/M15:min_quality=0.60/M30|H1:min_quality=0.57/M20:min_quality=0.63" --state trader_state.json --log trader.log
 ) ELSE (
   python trader.py %*
 )

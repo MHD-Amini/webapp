@@ -15,7 +15,9 @@ def test_v16b_config_equals_the_bat():
     s = v16b_config()
     diffs = {f.name: (getattr(t, f.name), getattr(s, f.name)) for f in dataclasses.fields(TraderConfig)
              if getattr(t, f.name) != getattr(s, f.name)}
-    assert set(diffs) <= {"timeframes"}, diffs        # the live bot takes --timeframes separately
+    # the live bot takes --timeframes separately; since step 5 the bat ships the v16c layer ON TOP of these frozen v16b-A strings
+    V16C_LAYER = {"dd_throttle_pct", "dd_throttle_scale", "dd_throttle_ramp", "dd_basis", "dd_throttle_tfs", "day_soft_loss_pct", "day_soft_scale"}
+    assert set(diffs) <= {"timeframes"} | V16C_LAYER, diffs
     assert tuple(s.timeframes) == tfs == ("M5", "M10", "M15", "M20", "M30", "H1")
     assert s.min_fill_age_min == 2 and s.regime_side_scale == "range:sell:0.5"
 

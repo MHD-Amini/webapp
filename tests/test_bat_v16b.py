@@ -27,7 +27,8 @@ def _study_config():
 
 def test_bat_header_is_v16b_and_names_the_study():
     bat = open("run_trader.bat", encoding="utf-8").read().splitlines()
-    assert "v16b" in bat[1] and "LESS_LOSS_V16B" in bat[1]
+    header = [l for l in bat if l.startswith("REM")]
+    assert any("v16b-A" in l and "LESS_LOSS_V16B" in l for l in header)         # the v16b layer is documented (v16c ships on top of it)
     assert any(l.startswith("REM v16b study: study_results/v16b_levers/C_F2+RS_0.5.json") for l in bat)
     assert any(l.startswith("REM Previous layer (v16-A") for l in bat)          # the v16 header is kept as history
     assert any(l.startswith("REM v16 study: ") for l in bat)                     # test_bat_v16 still finds the v16 study
@@ -60,7 +61,9 @@ def test_bat_config_equals_shipped_study_config():
     assert study["name"] == "C_F2+RS_0.5" and study["trades"] == 446 and study["score"] == 4
     diffs = {f.name: (getattr(t, f.name), getattr(s, f.name)) for f in dataclasses.fields(TraderConfig)
              if getattr(t, f.name) != getattr(s, f.name)}
-    assert set(diffs) <= {"timeframes"}, diffs
+    # v16c (the drawdown layer shipped on top) adds its own keys; everything else must still be v16b-A (tests/test_bat_v16c.py pins them)
+    V16C_LAYER = {"dd_throttle_pct", "dd_throttle_scale", "dd_throttle_ramp", "dd_basis", "dd_throttle_tfs", "day_soft_loss_pct", "day_soft_scale"}
+    assert set(diffs) <= {"timeframes"} | V16C_LAYER, diffs
     assert tuple(s.timeframes) == tfs
 
 
@@ -71,6 +74,8 @@ def test_bat_minus_v16b_keys_is_v16a():
     from run_v10_study import BASE
     line = _bat_line()
     trader = re.search(r'--trader "([^"]*)"', line).group(1)
+    from backtest_v16c_final import strip_v16c
+    trader = strip_v16c(trader)                                                   # the v16c layer on top is dropped first
     dropped = {kv.partition("=")[0] for kv in trader.split(",")} - {kv.partition("=")[0] for kv in strip_v16b(trader).split(",")}
     assert dropped == V16B_KEYS
     t = TraderConfig(risk_pct=1.0, trade_filter=V16A_FLT, confluence_filter=V16A_CF, max_daily_loss_pct=4.5,
