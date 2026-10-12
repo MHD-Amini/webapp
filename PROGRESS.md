@@ -40,10 +40,26 @@ Judge (v16c_common.judge16c): less_dd = max DD better by >= 0.25 pt AND OOS max 
 - [x] 4a. Walk-forward of the whole grid (walkforward_v16c.py, result files only) -> v16c_walkforward.csv/.json.
 - [ ] 4b. Stress x6 of the finalists (run_v16c_stress.sh, NEEDS THE CSV) + judge_v16c_stress.py -> DECISION v16c-A / B / C.
 - [x] 5a. trader.py live support of the dd throttle + day soft cap (peak persisted in trader_state.json) + tests/test_trader_v16c.py.
-- [ ] 5b. Port the DECISION to run_trader.bat + tests/test_bat_v16c.py + verify_bat_v16c.py (after 4b).
-- [ ] 6. Final backtest `backtest_v16c_final.py` -> FINAL_BACKTEST_V16C.md; report `make_v16c_report.py` -> LESS_DD_V16C.md; README 0k; save.
+- [x] 5b. run_trader.bat ships the leading candidate DDT3.5_x0.5_htf + tests/test_bat_v16c.py + verify_bat_v16c.py + backtest_v16c_final.py
+        + run_v16c_final.sh (the stress of 4b may still re-point the bat: then only the header numbers / study line / the 3 pinned values in
+        test_bat_v16c change).
+- [ ] 6a. Final backtest `bash run_v16c_final.sh` (NEEDS THE CSV) -> FINAL_BACKTEST_V16C.md + final_v16c/* + verify_bat_v16c IDENTICAL.
+- [ ] 6b. Report `make_v16c_report.py` -> LESS_DD_V16C.md (+ charts), README section 0k, restore.sh hints; final save + archive.
 
 ## Log (v16c)
+- 2026-10-12 15:50  step 5b DONE (ANOTHER SANDBOX RESET mid-step: the four unsaved new files were lost and rewritten; run_trader.bat
+  and the test edits survived because they were on disk - the files are now committed BEFORE the test run, not after).  run_trader.bat
+  ships v16c-A = DDT3.5_x0.5_htf (new header: what the lever does, why the higher TFs only, the persisted peak, the numbers from the grid
+  json, walk-forward, v16c-B = +DAY1.5_x0.5 / v16c-C = ramp alternatives, "v16b-A: drop the three dd_throttle_* keys",
+  `REM v16c study: study_results/v16c_levers/DDT3.5_x0.5_htf.json`; the v16b header kept as "Previous layer (v16b-A ...)").  --trader gains
+  `,dd_throttle_pct=3.5,dd_throttle_scale=0.5,dd_throttle_tfs=M15|M20|M30|H1` (nothing else changes).  tests/test_bat_v16c.py (5: header +
+  study pointer; the bat parses to v16c-A with the other v16c levers OFF and v16b-A untouched underneath; bat config == study json field by
+  field (only timeframes); bat minus the 3 keys == v16b_config; live fake-MT5 with the shipped strings: M15 plan at the peak 0.20 lots, 3 %
+  under 0.20, 4 % under 0.09 (x0.5 of 9 600), peak read back after a restart).  test_bat_v16 / test_bat_v16b / test_v16c_common relaxed to
+  allow the v16c layer on top (same pattern as v15->v16->v16b).  195 pass.  backtest_v16c_final.py (strings READ FROM the bat; reference =
+  bat minus the v16c keys must reproduce FINAL_BACKTEST_V16B 446 / +338.31 / -5.55; study json from the bat header; writes
+  FINAL_BACKTEST_V16C.md with the episodes table, the resized-common-keys slice, throttled population, monthly throttled count, chart),
+  verify_bat_v16c.py, run_v16c_final.sh (both sims + verify + save).  WAITING FOR THE CSV for 4b (stress) and 6a (final backtest).
 - 2026-10-12 15:20  step 5a DONE (while the CSV is awaited): trader.py carries the two v16c levers of every finalist, same arithmetic
   as PortfolioSimulator._apply_v16c: Trader._apply_v16c (after every other multiplier, before open_plan; grid legs untouched) ->
   dd throttle (step / ramp / tf scope / scale 0 = skip; dd = 1 - basis / peak) + day soft cap (equity vs state.risk.day_start_equity,
