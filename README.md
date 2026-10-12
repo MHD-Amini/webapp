@@ -1,4 +1,4 @@
-# LU-POI TRADER — Liquidity University POI trading bot for XAUUSD.t (MT5)   *(v16b)*
+# LU-POI TRADER — Liquidity University POI trading bot for XAUUSD.t (MT5)   *(v16c)*
 
 **v7 turns the POI scanner into a trading bot.**  For every POI the scanner shows (M5 / M10 / M15 / M30 / H1) the
 bot places a **limit order at the start of the zone** with the **stop at the end of the zone**, closes **50 % at
@@ -7,7 +7,9 @@ terminal that is already open and logged in on your Windows PC — **no login op
 
 | what | command |
 |---|---|
-| **Live trading** (Windows, MT5 open) | `run_trader.bat`  or  `python trader.py --symbol XAUUSD.t --risk 1.0 --min-quality 0.50 --commission 7 --timeframes M5,M10,M15,M20,M30,H1 --trader "tp_levels=0.6\|1.2\|2.4\|4.8,tp_fracs=1\|1\|1\|1,ladder_fallback=merge,dedupe_cross_tf=false,keep_replaced_bars=1,keep_replaced_tfs=M10\|M15\|M20\|M30\|H1,regime_metric=adr_ratio,regime_threshold=1.0,regime_short=5,regime_long=20,range_tp_levels=0.5\|1.0\|1.5\|2.5,range_tp_fracs=1\|1\|1\|1,range_sl_after_leg=0\|0.3\|x\|x,mart_mode=mult,mart_mult=1.5,mart_max_steps=3,mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10\|M15\|M20\|M30\|H1,mart_sides=buy,mart_ungated_scale=0.5,confluence_memory_min=240,confluent_risk_scale=1.25,plain_risk_scale=0.9,tf_risk_scale=M20:0.4,min_fill_age_min=2,regime_side_scale=range:sell:0.5" --trade-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.57/M15:min_quality=0.60/M30\|H1:min_quality=0.57/M20:min_quality=0.99" --confluence-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.50/M15:min_quality=0.60/M30\|H1:min_quality=0.57/M20:min_quality=0.63" --state trader_state.json --log trader.log` |
+| **Live trading** (Windows, MT5 open) | `run_trader.bat`  or  `python trader.py --symbol XAUUSD.t --risk 1.0 --min-quality 0.50 --commission 7 --timeframes M5,M10,M15,M20,M30,H1 --trader "tp_levels=0.6\|1.2\|2.4\|4.8,tp_fracs=1\|1\|1\|1,ladder_fallback=merge,dedupe_cross_tf=false,keep_replaced_bars=1,keep_replaced_tfs=M10\|M15\|M20\|M30\|H1,regime_metric=adr_ratio,regime_threshold=1.0,regime_short=5,regime_long=20,range_tp_levels=0.5\|1.0\|1.5\|2.5,range_tp_fracs=1\|1\|1\|1,range_sl_after_leg=0\|0.3\|x\|x,mart_mode=mult,mart_mult=1.5,mart_max_steps=3,mart_max_risk_pct=3,mart_scope=tf,mart_tfs=M10\|M15\|M20\|M30\|H1,mart_sides=buy,mart_ungated_scale=0.5,confluence_memory_min=240,confluent_risk_scale=1.25,plain_risk_scale=0.9,tf_risk_scale=M20:0.4,min_fill_age_min=2,regime_side_scale=range:sell:0.5,dd_throttle_pct=3.5,dd_throttle_scale=0.5,dd_throttle_tfs=M15\|M20\|M30\|H1" --trade-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.57/M15:min_quality=0.60/M30\|H1:min_quality=0.57/M20:min_quality=0.99" --confluence-filter "M5:max_cost_r=0.08;min_quality=0.55;sessions=asia\|london\|preny\|ny\|lclose/M10:min_quality=0.50/M15:min_quality=0.60/M30\|H1:min_quality=0.57/M20:min_quality=0.63" --state trader_state.json --log trader.log` |
+| **FINAL BACKTEST of v16c-A on the CSV** (strings read from `run_trader.bat`, v16b-A alongside) | `bash run_v16c_final.sh` (= `python backtest_v16c_final.py` + `python verify_bat_v16c.py`) → **`study_results/FINAL_BACKTEST_V16C.md`** + `final_v16c/*` + `charts/final_v16c_equity.png` |
+| **v16c drawdown-reduction study** (diagnosis of the DD episodes, 117 variants, walk-forward, stress ×6) | `python run_v16c_diag.py; bash run_v16c_all.sh; python walkforward_v16c.py; bash run_v16c_stress.sh; python judge_v16c_stress.py; bash run_v16c_final.sh; python make_v16c_report.py` (resumable, autosave) → **`study_results/LESS_DD_V16C.md`** |
 | **FINAL BACKTEST of v16b-A on the CSV** (strings read from `run_trader.bat`, v16-A alongside) | `python backtest_v16b_final.py --csv data/xauusd_m1.csv --study "study_results/v16b_levers/C_F2+RS_0.5.json"` (or `bash run_v16b_final.sh`) → **`study_results/FINAL_BACKTEST_V16B.md`** + `final_v16b/*` + `charts/final_v16b_equity.png` |
 | **v16b loss-reduction study** (diagnosis of the stop-outs, 96 variants, stress ×6, walk-forward) | `python run_v16b_diag.py; bash run_v16b_all.sh; bash run_v16b_stress.sh "<finalists>"; python judge_v16b_stress.py; python walkforward_v16b.py; bash run_v16b_final.sh; python make_v16b_report.py; python verify_bat_v16b.py` (resumable, autosave) → **`study_results/LESS_LOSS_V16B.md`** |
 | **FINAL BACKTEST of v16-A on the CSV** (strings read from `run_trader.bat`, v15-A alongside) | `python backtest_v16_final.py --csv data/xauusd_m1.csv --study study_results/v16_levers/M20SC_0.63_x0.4.json` → **`study_results/FINAL_BACKTEST_V16.md`** + `final_v16/*` + `charts/final_v16_equity.png` |
@@ -27,7 +29,73 @@ terminal that is already open and logged in on your Windows PC — **no login op
 | Full sensitivity study + report | `python run_trader_study.py --csv data.csv` → `study_results/TRADER_BACKTEST.md` |
 | POI scanner only (v6) | `python bot.py scan --csv data.csv` / `python bot.py live` |
 
-→ **Results: section 0j (v16b LESS LOSS: fast-fill guard + range sells at half size + FINAL BACKTEST), 0i (v16 new trade sources: M20 confluent-only + FINAL BACKTEST), 0h (v15 confluence memory + conviction sizing), 0g (v14 asymmetric martingale + FINAL BACKTEST), 0f (v13 weak months / regime-adaptive management), 0e (v12 more trades round 2), 0d (v11 more trades), 0c (v10 multi-TP + full year + loss rules), 0b (v9 management), 0a/0 below, `study_results/MULTI_TP_STUDY.md` (v10), `study_results/RISK_MGMT_STUDY.md` (v9), `TRADER_V8.md` (v8), `TRADER_BACKTEST.md` (v7).**
+→ **Results: section 0k (v16c LESS DRAWDOWN: equity-drawdown throttle on the higher timeframes + FINAL BACKTEST), 0j (v16b LESS LOSS: fast-fill guard + range sells at half size + FINAL BACKTEST), 0i (v16 new trade sources: M20 confluent-only + FINAL BACKTEST), 0h (v15 confluence memory + conviction sizing), 0g (v14 asymmetric martingale + FINAL BACKTEST), 0f (v13 weak months / regime-adaptive management), 0e (v12 more trades round 2), 0d (v11 more trades), 0c (v10 multi-TP + full year + loss rules), 0b (v9 management), 0a/0 below, `study_results/MULTI_TP_STUDY.md` (v10), `study_results/RISK_MGMT_STUDY.md` (v9), `TRADER_V8.md` (v8), `TRADER_BACKTEST.md` (v7).**
+
+---
+
+## 0k. v16c — REDUCE THE MAX DRAWDOWN PERCENTAGE while MAINTAINING THE PROFITABILITY PERCENTAGE; FINAL BACKTEST
+
+**Spec.**  Find a way for the last version of the bot (`run_trader.bat` = v16b-A) to reduce the max drawdown percentage while maintaining the profitability
+percentage; save after every step (recoverable).  "Max drawdown percentage" = the max peak-to-trough fall of the EQUITY path (closed + floating, the number of
+every report); "profitability percentage" = the return % (net $) AND the profit factor AND the OOS net - held within 3 % / 0.10 PF; v16b's loss gains (stop %,
+$ lost, worst day) must not regress.  Judge: `v16c_common.judge16c` (less_dd / hold_profit / hold_loss / hold_oos, score 0-4).
+
+**Diagnosis** (`run_v16c_diag.py` → `study_results/v16c_diag/DIAG.md`, 15 tables).  v16b-A's five deepest episodes lie within 1.5 pt of each other (-5.55 Aug 26,
+-5.09 Oct 25, -4.68 Sep/Oct 25, -4.30 Mar 26, -4.11 Jan 26) - a lever has to cut ALL of the top three or the max DD just moves to the next one.  #1 is a third
+FLOATING (three confluent buys open at the trough, 3.7 % open risk, all won afterwards); #2 / #3 are 3-week all-realised grinds of small losers.  The trades taken
+while the account is under water EARN (they are the recovery: -1..0 % band +8.9 k$, -3..-2 % +2.0 k$) - so a throttle can only win on DEPTH, and the deeper
+bands are small (25 trades below -3 %).  NOT levers: a loss-streak throttle (the trades after 2-3 losses are fine), a day-loss soft cap alone (only multi-day
+episodes matter), an open-risk cap (it shrinks exactly the confluence winners: net 53-95 %), a balance-basis throttle (never moves the floating episode).
+
+**Levers** (`TraderConfig`, simulator + `trader.py`, defaults byte-identical: parity 446 / +338.31 / -5.55 exact): `dd_throttle_pct` / `dd_throttle_scale` /
+`dd_throttle_tfs` / `dd_throttle_ramp` / `dd_basis` (equity-drawdown throttle: new plans scaled while equity is x % under its running peak), `day_soft_loss_pct` /
+`day_soft_scale` (new plans scaled after a -x % day, no flatten), `streak_n` / `streak_scale` / `streak_days` (loss-streak throttle), `max_open_risk_pct` /
+`open_risk_mode` / `open_risk_pending` (open-risk cap: fit / skip).  Grid: 117 full-year runs
+(`run_v16c_levers.py`, resumable, autosaved to GitHub every 4 min - survived two sandbox resets and a dead chat session).  **7 variants score 4/4**, all the
+equity-drawdown throttle scoped to the higher timeframes or with a ramp.  Scoping is the finding: the same throttle on ALL timeframes cuts the DD but gives up
+5-64 % of the net (the throttled M5/M10 plans are the recovery); M15+ only gives the same DD cut at 99-101 % of the net.  Walk-forward (split 2026-03-01, each
+half on its own equity path): 4 variants cut the DD in BOTH halves with the net held in both - the htf throttle is not fitted to one episode (IS holds #2 #3, OOS
+holds #1 #4); IS→OOS Spearman of the DD deltas over 116 variants 0.49, ulcer 0.62, net 0.58 (p < 1e-7).  Stress ×6 of 6 finalists (spread ×2, commission ×2,
+slip ×3, worst intrabar, risk 0.5 / 2 %, each judged against the v16b-A row of the SAME scenario): DDT3.5_x0.5_htf passes 4/4 in 5/6 scenarios (the miss is
+risk 0.5 %, where no variant ever gets 3.5 % under the peak - a no-op) and is the only finalist that never loses more than 4 % of the net anywhere (it GAINS net
+in 3 of 6: risk 2 % +6.7 k$ with the worst day -4.84 vs -6.37).  The ramp family cuts the DD most (risk 2 %: -8.8 vs -12.0) but costs 23-28 % of the net there.
+
+**Result — `run_trader.bat` ships v16c-A = v16b-A + `dd_throttle_pct=3.5,dd_throttle_scale=0.5,dd_throttle_tfs=M15|M20|M30|H1`.**  While the account equity
+(balance + floating P/L) is more than 3.5 % below its running peak, every NEW M15 / M20 / M30 / H1 plan is sized at half risk; M5 / M10 plans keep full size;
+nothing is closed or cancelled; the size comes back as soon as equity is within 3.5 % of the peak.  Live, the peak is persisted in `trader_state.json`
+(`risk.peak_equity`, refreshed every loop) so a restart inside a drawdown keeps throttling; logged `drawdown x.xx % below peak -> risk x0.5`.  FINAL BACKTEST on
+the CSV (`backtest_v16c_final.py`, 359 813 M1 bars 2025-09-01 → 2026-09-04, $10 000, 1 % base risk, real costs; the reference = the bat strings minus the three keys):
+
+| | v16b-A reference | **v16c-A (shipped)** |
+|---|---|---|
+| trades | 446 | **445** (-1; 96 plans throttled) |
+| **max drawdown %** | -5.55 | **-5.07** (-0.48 pt = 9 % less) |
+| max drawdown $ | -2,257 | **-2,091** |
+| 2nd / 3rd deepest episode % | -5.09 / -4.68 | **-4.65 / -4.32** |
+| ulcer index | 1.691 | **1.628** |
+| return / max DD | 61.0 | **67.2** |
+| OOS (Mar-Sep 26) max DD % | -5.55 | **-5.07** |
+| net profit $ / return % | +33,831 / +338.31 | **+34,092 / +340.92** (+0.8 %) |
+| profit factor | 2.999 | 2.967 |
+| win % / stop-outs % | 75.8 / 23.8 | 75.5 / 24.0 |
+| worst day % of equity | -2.34 | **-2.25** |
+| OOS net $ / PF | +23,958 / 3.12 | +24,063 / 3.10 |
+| months positive | 13/13 | 13/13 |
+
+All three top episodes are cut and the max DD falls 0.48 pt with the net UP 0.8 % and PF within 0.03 (score 4/4): the throttled plans are the big higher-TF
+plans that carry the floating part of every deep episode, and the smaller size at the trough costs almost no recovery because the M5/M10 recovery trades are
+untouched.  Alternatives documented in the bat: **v16c-B** (deepest cut at 4/4: + `day_soft_loss_pct=1.5,day_soft_scale=0.5` → DD -4.93 = -0.62 pt at 99.8 % net,
+stress 4/6), **v16c-C** (all timeframes, linear ramp 3.0 → 5.0 %: `dd_throttle_pct=3.0,dd_throttle_scale=0.5,dd_throttle_ramp=2.0`, no tfs → DD -5.15, PF 3.01,
+the deepest cut at 2 % risk but net 77-99 % under stress), **v16b-A**: drop the three `dd_throttle_*` keys.  `verify_bat_v16c.py` replays the bat strings:
+IDENTICAL to the study json.  Live bot: `trader.py` carries the throttle + day soft cap (`tests/test_trader_v16c.py`, `tests/test_bat_v16c.py`: an M15 plan 0.20
+lots at the peak, 0.20 at 3 % under, 0.09 at 4 % under; the peak read back after a restart).  195 tests pass.
+
+**Honest reading.**  -0.48 pt of max DD (9 %) is a real but modest cut - the drawdowns of v16b-A are made of normal losing streaks of a 24 %-stop system at 1 %
+risk, not of one fixable slice, and the diagnosis shows that cutting deeper costs the recovery trades (every "less DD" variant beyond this one gives up net).
+The gain holds in both walk-forward halves and in 5 of 6 stress scenarios, but it is one year of one instrument, and the threshold was chosen on the full year.
+The live peak is sampled once per loop (seconds) instead of once per minute bar - same quantity, slightly coarser.  Judge it on the demo account on the same
+metrics (max DD %, ulcer, net, PF) before trusting the size.  Details: **`study_results/LESS_DD_V16C.md`**, `FINAL_BACKTEST_V16C.md`, `v16c_diag/DIAG.md`,
+`charts/v16c_*.png`, `charts/final_v16c_equity.png`.
 
 ---
 
