@@ -5,6 +5,18 @@ max DD -5.07 % (v16b-A -5.55, -0.48 pt), 2nd/3rd episodes -4.65/-4.32 (-5.09/-4.
 OOS DD -5.07 (-5.55), 13/13 months; walk-forward passes both halves, stress 5/6 all-4.  Reports: `study_results/LESS_DD_V16C.md`,
 `study_results/FINAL_BACKTEST_V16C.md`, README section 0k.  195 tests pass; `verify_bat_v16c.py` IDENTICAL.  Nothing left to do for v16c.
 
+## v16c-MQL5 (follow-up, 2026-10-12): deliver the final v16c-A risk layer as an MQL5 Expert Advisor
+User: "Deliver the final file in mql5 language" -> option B agreed: a self-contained EA `mql5/LU_RiskGovernor_v16c.mq5` that
+implements the v16c-A account layer EXACTLY as trader.py / PortfolioSimulator do it (drawdown throttle on the equity peak with
+TF scope, day soft cap, open-risk cap, loss-streak throttle, daily / total loss limits with flatten), with two modes:
+GOVERNOR (sizes/blocks orders of the Python bot by magic number via a lot-request file) and STANDALONE (own zone-limit entry +
+0.6/1.2/2.4/4.8R ladder, BE after leg 1, +0.3R after leg 2).  The ML scanner (LightGBM quality model, ~8.5 k lines) is NOT ported -
+a full port is a separate project (see the chat).  Defaults = v16c-A (3.5 % / x0.5 / M15|M20|M30|H1).
+- [x] M0. Session 2 recovered; local grid (branch v16c-session2-grid, 117 runs) independently reproduced the winner DDT3.5_x0.5_htf.
+- [ ] M1. mql5/LU_RiskGovernor_v16c.mq5 + mql5/README_MQL5.md written, compiled-syntax reviewed, committed.
+- [ ] M2. tests/test_mql5_parity.py: the MQL5 throttle formula (ported to Python 1:1) == PortfolioSimulator.dd_throttle_scale on a grid.
+- [ ] M3. README pointer + final save.
+
 **Recovery (read this first):** `git clone https://github.com/MHD-Amini/webapp.git /home/user/webapp`, `bash restore.sh`
 (relinks the CSV to `data/xauusd_m1.csv`, pip, tests), read this file, continue from the FIRST UNCHECKED step of the v16c plan below.
 Every step ends with `bash save.sh "msg"` (commit + push to GitHub origin = https://github.com/MHD-Amini/webapp).  Long jobs are resumable
