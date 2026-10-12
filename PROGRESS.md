@@ -39,10 +39,21 @@ Judge (v16c_common.judge16c): less_dd = max DD better by >= 0.25 pt AND OOS max 
 - [x] 3. Grid `run_v16c_levers.py` (resumable, workers 1) under `run_v16c_all.sh` (autosave) -> study_results/v16c_levers/ + v16c_levers.csv.
 - [x] 4a. Walk-forward of the whole grid (walkforward_v16c.py, result files only) -> v16c_walkforward.csv/.json.
 - [ ] 4b. Stress x6 of the finalists (run_v16c_stress.sh, NEEDS THE CSV) + judge_v16c_stress.py -> DECISION v16c-A / B / C.
-- [ ] 5. Port to run_trader.bat + trader.py (live support) + tests/test_bat_v16c.py + verify_bat_v16c.py.
+- [x] 5a. trader.py live support of the dd throttle + day soft cap (peak persisted in trader_state.json) + tests/test_trader_v16c.py.
+- [ ] 5b. Port the DECISION to run_trader.bat + tests/test_bat_v16c.py + verify_bat_v16c.py (after 4b).
 - [ ] 6. Final backtest `backtest_v16c_final.py` -> FINAL_BACKTEST_V16C.md; report `make_v16c_report.py` -> LESS_DD_V16C.md; README 0k; save.
 
 ## Log (v16c)
+- 2026-10-12 15:20  step 5a DONE (while the CSV is awaited): trader.py carries the two v16c levers of every finalist, same arithmetic
+  as PortfolioSimulator._apply_v16c: Trader._apply_v16c (after every other multiplier, before open_plan; grid legs untouched) ->
+  dd throttle (step / ramp / tf scope / scale 0 = skip; dd = 1 - basis / peak) + day soft cap (equity vs state.risk.day_start_equity,
+  no flatten); Trader.update_peak keeps state.risk["peak_equity"] = running max of the dd_basis (equity|balance), refreshed in
+  check_risk_limits EVERY loop (also when the hard loss limits are off) and persisted to trader_state.json at once -> a restart inside
+  a drawdown keeps throttling (the test caught a missing save on that path - fixed).  Counters dd_scaled / dd_skipped /
+  day_soft_scaled / day_soft_skipped in the state; plan records carry dd_scale + dd_pct_at (as the sim's trade list).  Start-up log
+  lines describe the live levers.  tests/test_trader_v16c.py (4: scale + persistence + restart, tf scope + ramp + skip, day soft cap
+  without flatten, defaults unchanged) -> 190 pass.  NOTE for the live peak: the sim's peak is the running max of the minute equity
+  (closed + floating); the live bot samples it once per loop (~ every few seconds) - same quantity, slightly coarser.
 - 2026-10-12 14:50  step 4a DONE: walkforward_v16c.py -> study_results/v16c_walkforward.csv/.json (logs/v16c_walkforward.log; 116
   variants, split 2026-03-01 on close time, each half's DD on its own equity path, peak reset at the half start).  Ref halves: IS (Sep25-Feb26)
   214 tr / +9 873 $ / PF 2.75 / DD -5.09 / ulcer 1.86; OOS (Mar-Sep26) 232 tr / +23 958 / PF 3.124 / DD -5.55 / ulcer 1.511.

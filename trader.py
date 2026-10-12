@@ -75,6 +75,9 @@ class State:
         # v10 account protection (persisted so a restart cannot reset the limits)
         self.risk: Dict[str, object] = {"start_balance": None, "day": None, "day_start_equity": None,
                                         "daily_halt_day": None, "halted": False, "halt_time": None, "daily_halts": []}
+        # v16c: the account's running peak (equity or balance, TraderConfig.dd_basis) for the drawdown throttle - persisted so a
+        # restart inside a drawdown keeps throttling (the simulator's peak_equity); the day-start equity above serves the day soft cap
+        self.risk.update({"peak_equity": None, "dd_scaled": 0, "dd_skipped": 0, "day_soft_scaled": 0, "day_soft_skipped": 0})
         # v14: closed EDGE plans in close order [tf, net $, r_net, mart_step] - the martingale state is rebuilt from this list
         self.closed: List[list] = []
         # v15: confluence memory [tf, side, zone_top, zone_bottom, epoch seconds the plan left the books, filled]
@@ -189,6 +192,14 @@ class Trader:
                           f"({'|'.join(self.t.fast_fill_tfs) or 'all TFs'}, regime {self.t.fast_fill_regime or 'any'})")
         if self.regime_side:
             self.log.info(f"v16b regime x side risk scale: {self.regime_side}")
+        if self.t.dd_throttle_pct > 0:
+            self.log.info(f"v16c drawdown throttle: new plans x{self.t.dd_throttle_scale} while {self.t.dd_basis} is > "
+                          f"{self.t.dd_throttle_pct} % below its peak"
+                          f"{(' (ramp to x' + str(self.t.dd_throttle_scale) + ' over ' + str(self.t.dd_throttle_ramp) + ' pt)') if self.t.dd_throttle_ramp > 0 else ''} "
+                          f"({'|'.join(self.t.dd_throttle_tfs) or 'all TFs'}); peak in state: {self.state.risk.get('peak_equity')}")
+        if self.t.day_soft_loss_pct > 0:
+            self.log.info(f"v16c day soft cap: new plans x{self.t.day_soft_scale} once equity is {self.t.day_soft_loss_pct} % below "
+                          f"the day-start equity (no flatten)")
         # v14: martingale state rebuilt from the persisted closed-plan list (same code as the simulator)
         self.mart = Martingale.replay(self.t, self.state.closed)
         if self.t.mart_mode:
@@ -495,7 +506,74 @@ class Trader:
         if self.regime_side and plan.regime:             # v16b regime x side scale
             rs *= self.regime_side.get((plan.regime, plan.side), 1.0)
         plan.risk_scale = rs
-        self.open_plan(plan)
+        if self._apply_v16c(plan):                       # v16c drawdown throttle / day soft cap (after every other multiplier)
+            self.open_plan(plan)
+
+    # ------------------------------------------------------------------ v16c drawdown-aware sizing (live)
+    def update_peak(self, equity: float, balance: float) -> float:
+        """keeps state.risk['peak_equity'] = running max of the dd basis (same number as PortfolioSimulator.peak_equity, which is
+        updated every minute); returns the current drawdown from that peak in % (>= 0)."""
+        rk = self.state.risk
+        cur = equity if self.t.dd_basis == "equity" else balance
+        peak = rk.get("peak_equity")
+        if peak is None or cur > float(peak):
+            rk["peak_equity"] = cur
+            peak = cur
+        peak = float(peak)
+        return max(0.0, 100.0 * (1.0 - cur / peak)) if peak > 0 else 0.0
+
+    def dd_throttle_scale(self, dd_pct: float) -> float:
+        """identical to PortfolioSimulator.dd_throttle_scale (step, or linear ramp when dd_throttle_ramp > 0)."""
+        t = self.t
+        if t.dd_throttle_pct <= 0 or dd_pct <= t.dd_throttle_pct:
+            return 1.0
+        if t.dd_throttle_ramp > 0:
+            f = min(1.0, (dd_pct - t.dd_throttle_pct) / t.dd_throttle_ramp)
+            return 1.0 - f * (1.0 - t.dd_throttle_scale)
+        return t.dd_throttle_scale
+
+    def _apply_v16c(self, plan: TradePlan) -> bool:
+        """multiplies plan.risk_scale by the DD throttle and the day soft cap (PortfolioSimulator._apply_v16c rules: the DD is
+        measured on the account's dd_basis vs its persisted peak, the day cap on equity vs the day-start equity).  Returns False
+        when the plan is skipped (scale 0).  Defaults (0) -> untouched."""
+        t, rk = self.t, self.state.risk
+        if not (t.dd_throttle_pct > 0 or t.day_soft_loss_pct > 0) or plan.grid_leg:
+            return True
+        acc = self.b.refresh_account()
+        equity, balance = float(acc.equity), float(acc.balance)
+        dd = self.update_peak(equity, balance)
+        plan.dd_pct_at = round(dd, 3)
+        f = 1.0
+        if t.dd_throttle_pct > 0 and (not t.dd_throttle_tfs or plan.tf in t.dd_throttle_tfs):
+            s = self.dd_throttle_scale(dd)
+            if s < 1.0:
+                if s <= 0:
+                    rk["dd_skipped"] = int(rk.get("dd_skipped", 0)) + 1
+                    self.state.save()
+                    self.log.info(f"skip {plan.key}: drawdown throttle ({dd:.2f} % below peak {float(rk['peak_equity']):.2f})")
+                    return False
+                f *= s
+                rk["dd_scaled"] = int(rk.get("dd_scaled", 0)) + 1
+                self.log.info(f"{plan.key}: drawdown {dd:.2f} % below peak {float(rk['peak_equity']):.2f} -> risk x{s:.3f}")
+        if rk.get("day_start_equity") is None or rk.get("day") != self._server_day():
+            rk["day"], rk["day_start_equity"] = self._server_day(), equity        # first look of the day (limits may be off)
+        if t.day_soft_loss_pct > 0 and float(rk["day_start_equity"]) > 0 and \
+                equity <= float(rk["day_start_equity"]) * (1.0 - t.day_soft_loss_pct / 100.0):
+            if t.day_soft_scale <= 0:
+                rk["day_soft_skipped"] = int(rk.get("day_soft_skipped", 0)) + 1
+                self.state.save()
+                self.log.info(f"skip {plan.key}: day soft cap (equity {equity:.2f} <= {100 - t.day_soft_loss_pct:.1f} % of day start "
+                              f"{float(rk['day_start_equity']):.2f})")
+                return False
+            f *= t.day_soft_scale
+            rk["day_soft_scaled"] = int(rk.get("day_soft_scaled", 0)) + 1
+            self.log.info(f"{plan.key}: day soft cap (equity {equity:.2f} vs day start {float(rk['day_start_equity']):.2f}) "
+                          f"-> risk x{t.day_soft_scale}")
+        if f != 1.0:
+            plan.risk_scale = (plan.risk_scale if plan.risk_scale > 0 else 1.0) * f
+            plan.dd_scale = f
+        self.state.save()
+        return True
 
     def _mirror_cancel_unshown(self, shown_keys: set, slot_shown: dict) -> None:
         # mirror policy: cancel pending orders of POIs no longer shown (positions are never touched)
@@ -708,10 +786,20 @@ class Trader:
         Equity = balance + floating P/L from the terminal.  Returns True when trading is allowed this loop."""
         t, rk = self.t, self.state.risk
         if not (t.max_daily_loss_pct > 0 or t.max_total_loss_pct > 0):
+            if t.dd_throttle_pct > 0:                    # v16c: the peak is tracked every loop even without the hard limits
+                acc = self.b.refresh_account()
+                before = rk.get("peak_equity")
+                self.update_peak(float(acc.equity), float(acc.balance))
+                if rk.get("peak_equity") != before:
+                    self.state.save()                    # a new peak is persisted at once (crash-safe)
             return True
         acc = self.b.refresh_account()
         equity, balance = float(acc.equity), float(acc.balance)
         changed = False
+        if t.dd_throttle_pct > 0:
+            before = rk.get("peak_equity")
+            self.update_peak(equity, balance)
+            changed = changed or (rk.get("peak_equity") != before)
         if rk.get("start_balance") is None:
             rk["start_balance"] = balance
             changed = True
