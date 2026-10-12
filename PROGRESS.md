@@ -43,10 +43,16 @@ Judge (v16c_common.judge16c): less_dd = max DD better by >= 0.25 pt AND OOS max 
 - [x] 5b. run_trader.bat ships the leading candidate DDT3.5_x0.5_htf + tests/test_bat_v16c.py + verify_bat_v16c.py + backtest_v16c_final.py
         + run_v16c_final.sh (the stress of 4b may still re-point the bat: then only the header numbers / study line / the 3 pinned values in
         test_bat_v16c change).
-- [ ] 6a. Final backtest `bash run_v16c_final.sh` (NEEDS THE CSV) -> FINAL_BACKTEST_V16C.md + final_v16c/* + verify_bat_v16c IDENTICAL.
+- [x] 6a. Final backtest `bash run_v16c_final.sh` (NEEDS THE CSV) -> FINAL_BACKTEST_V16C.md + final_v16c/* + verify_bat_v16c IDENTICAL.
 - [ ] 6b. Report `make_v16c_report.py` -> LESS_DD_V16C.md (+ charts), README section 0k, restore.sh hints; final save + archive.
 
 ## Log (v16c)
+- 2026-10-12 17:37  step 6a DONE: `bash run_v16c_final.sh` (logs/v16c_final.log) -> study_results/FINAL_BACKTEST_V16C.md +
+  final_v16c/{v16cA,ref}_{summary.json,trades.csv,equity.csv,monthly.csv,by_tf.csv} + charts/final_v16c_equity.png.  The bat strings
+  replayed over the CSV: v16c-A 445 tr / net +34 092 $ / +340.92 % / max DD -5.07 % (-2 091 $) / PF 2.967 / win 75.5 / sl 24.0 / ulcer
+  1.628 / worst day -2.25 % / OOS net +24 063 / OOS DD -5.07 / OOS PF 3.095 / 13/13 months; 2nd DD -4.65 (ref -5.09), 3rd -4.32 (ref
+  -4.68) -> all top-3 episodes cut, 96 plans throttled.  Reference (bat minus the 3 v16c keys) == FINAL_BACKTEST_V16B 446 / +338.31 /
+  -5.55 EXACT; v16c-A IDENTICAL to study json DDT3.5_x0.5_htf.json; verify_bat_v16c.py IDENTICAL: True.  Both saves pushed.
 - 2026-10-12 17:45  step 4b DONE (session 2 - the previous chatroom died right after the stress sims + judge were pushed in commit 7bbbb3e;
   the CSV was re-uploaded by the user, `bash restore.sh` -> 195 tests pass, 117 grid + 36 stress runs on disk).  run_v16c_stress.sh ran
   the 6 finalists x 6 scenarios (spread_x2, commission_x2, slip_x3, worst_intrabar, risk0.5, risk2; each judged against the v16b-A run of
