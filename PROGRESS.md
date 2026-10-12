@@ -38,7 +38,7 @@ Judge (v16c_common.judge16c): less_dd = max DD better by >= 0.25 pt AND OOS max 
         per-week loss cap.  All computable by the live bot from its own state.
 - [x] 3. Grid `run_v16c_levers.py` (resumable, workers 1) under `run_v16c_all.sh` (autosave) -> study_results/v16c_levers/ + v16c_levers.csv.
 - [x] 4a. Walk-forward of the whole grid (walkforward_v16c.py, result files only) -> v16c_walkforward.csv/.json.
-- [ ] 4b. Stress x6 of the finalists (run_v16c_stress.sh, NEEDS THE CSV) + judge_v16c_stress.py -> DECISION v16c-A / B / C.
+- [x] 4b. Stress x6 of the finalists (run_v16c_stress.sh, NEEDS THE CSV) + judge_v16c_stress.py -> DECISION v16c-A / B / C (log below).
 - [x] 5a. trader.py live support of the dd throttle + day soft cap (peak persisted in trader_state.json) + tests/test_trader_v16c.py.
 - [x] 5b. run_trader.bat ships the leading candidate DDT3.5_x0.5_htf + tests/test_bat_v16c.py + verify_bat_v16c.py + backtest_v16c_final.py
         + run_v16c_final.sh (the stress of 4b may still re-point the bat: then only the header numbers / study line / the 3 pinned values in
@@ -47,6 +47,34 @@ Judge (v16c_common.judge16c): less_dd = max DD better by >= 0.25 pt AND OOS max 
 - [ ] 6b. Report `make_v16c_report.py` -> LESS_DD_V16C.md (+ charts), README section 0k, restore.sh hints; final save + archive.
 
 ## Log (v16c)
+- 2026-10-12 17:45  step 4b DONE (session 2 - the previous chatroom died right after the stress sims + judge were pushed in commit 7bbbb3e;
+  the CSV was re-uploaded by the user, `bash restore.sh` -> 195 tests pass, 117 grid + 36 stress runs on disk).  run_v16c_stress.sh ran
+  the 6 finalists x 6 scenarios (spread_x2, commission_x2, slip_x3, worst_intrabar, risk0.5, risk2; each judged against the v16b-A run of
+  the SAME scenario) -> study_results/v16c_stress.csv / v16c_stress_judged.csv / v16c_stress_summary.csv (judge_v16c_stress.py).
+  Summary (all4 = scenarios passing all 4 judge criteria, score_sum max 24):
+    DDT3.5_x0.5_htf                 all4 5/6  score 22  sum dDD +3.68 pt  sum dNet +6 168 $  min net 96.0 % ref
+    C_DDT3.5_x0.5_htf+DAY1.5_x0.5   all4 4/6  score 21  sum dDD +3.90 pt  sum dNet -4 867 $  min net 96.0 %
+    C_DDT3.5_x0.5_htf+DAY1.5_x0.25  all4 3/6  score 20  sum dDD +4.17 pt  sum dNet -10 540 $ min net 91.7 %
+    DDT3.0_x0.5_htf                 all4 3/6  score 19  sum dDD +3.70 pt  sum dNet +1 072 $  min net 96.0 %
+    C_DDT3.0_x0.5_r2.0+DAY2.0_x0.5  all4 1/6  score 19  sum dDD +5.40 pt  sum dNet -32 965 $ min net 72.3 %
+    DDT3.0_x0.5_r2.0                all4 1/6  score 19  sum dDD +5.30 pt  sum dNet -27 584 $ min net 76.9 %
+  The one miss of DDT3.5_x0.5_htf is risk0.5 (score 2) - a NO-OP scenario, not a failure: at 0.5 % base risk the equity never gets 3.5 %
+  under its peak (the ref's own max DD there is -3.41), so the throttle never fires; the -493 $ (96.0 %) / ulcer +0.03 there is the usual
+  v16c variance of the 1-trade difference in fills (445 vs 446 trades) - EVERY finalist shows the identical risk0.5 row.  In the 5 live
+  scenarios it passes 4/4 each: spread_x2 DD -4.88 vs -5.18 (net 101.3 %), commission_x2 -5.13 vs -5.74 (100.1 %), slip_x3 -5.35 vs
+  -5.98 (99.3 %), worst_intrabar -4.93 vs -5.55 (99.8 %), risk2 -10.46 vs -11.98 (net 106.1 %, worst day -4.84 vs -6.37).  The ramp
+  family cuts the DD most (risk2: -8.8 vs -12.0) but gives up 23-28 % of the net at 2 % risk and fails hold_profit in 4-5 scenarios ->
+  it is a "less DD at a cost" option, not "maintain the profitability".  The DAY soft-cap combos add +0.2 pt DD cut at most and cost
+  net in 2-3 scenarios -> the day cap earns nothing on top of the htf throttle.
+  DECISION:  v16c-A = DDT3.5_x0.5_htf = v16b-A + dd_throttle_pct=3.5, dd_throttle_scale=0.5, dd_throttle_tfs=M15|M20|M30|H1
+  (while the equity (closed + floating) is >= 3.5 % below its running peak, every NEW M15/M20/M30/H1 plan is sized at x0.5; M5/M10 plans
+  and the grid legs untouched; nothing is flattened).  Grid: 445 tr, +340.92 % (ref +338.31), max DD -5.07 % (ref -5.55, -0.48 pt),
+  PF 2.967 (ref 2.999), ulcer 1.628 (1.691), sl 24.0 % (23.8), 13/13 months; walk-forward passes BOTH halves (IS DD -0.44 pt at 101.6 %
+  net, OOS -0.48 pt at 100.4 %); stress 5/6 all4 (best of the 6), the only finalist that NEVER loses more than 4 % of the net in any
+  scenario and gains net in 3 of 6.  v16c-B = C_DDT3.5_x0.5_htf+DAY1.5_x0.5 (same throttle + no new plans after -1.5 % day... x0.5:
+  +0.2 pt more DD cut in some scenarios, 4/6).  v16c-C = DDT3.0_x0.5_r2.0 (ramp 3.0 -> 5.0 %: the deepest DD cut, -1.5 to -3.2 pt at
+  2 % risk, but net 77-99 %) for a user who wants DD first.  run_trader.bat ALREADY ships v16c-A (step 5b was prepared on this
+  candidate) -> no bat / test change needed; continue with 6a.
 - 2026-10-12 15:50  step 5b DONE (ANOTHER SANDBOX RESET mid-step: the four unsaved new files were lost and rewritten; run_trader.bat
   and the test edits survived because they were on disk - the files are now committed BEFORE the test run, not after).  run_trader.bat
   ships v16c-A = DDT3.5_x0.5_htf (new header: what the lever does, why the higher TFs only, the persisted peak, the numbers from the grid
