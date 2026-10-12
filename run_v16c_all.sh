@@ -3,7 +3,7 @@
 #   nohup setsid bash run_v16c_all.sh > logs/v16c_all.log 2>&1 &
 # Every run writes its own json (study_results/v16c_levers/<name>.json); relaunching after a crash continues where it stopped.
 cd "$(dirname "$0")"
-mkdir -p logs study_results/v16c_levers
+mkdir -p logs data study_results/v16c_levers
 CSV=data/xauusd_m1.csv
 [ -f "$CSV" ] || ln -sf /home/user/uploaded_files/XAUUSD.t_M1_202501020100_2026090423581112.csv "$CSV"
 

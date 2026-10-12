@@ -42,6 +42,11 @@ Judge (v16c_common.judge16c): less_dd = max DD better by >= 0.25 pt AND OOS max 
 - [ ] 6. Final backtest `backtest_v16c_final.py` -> FINAL_BACKTEST_V16C.md; report `make_v16c_report.py` -> LESS_DD_V16C.md; README 0k; save.
 
 ## Log (v16c)
+- 2026-10-12 13:25  step 3 LAUNCHED: run_v16c_levers.py (86 singles: DDT x{0.75,0.6,0.5,0.25} at 2.5-4.5 % on equity AND balance
+  basis, ramps r1/r2 at 2.0-3.0, tf scopes m510/htf/nom5, DAY 0.75-2.0 x{0.5,0.25,0}, OR 2.0-4.0 fit/skip/pend, STK control) then
+  the combos stage; under run_v16c_all.sh (autosave every 4 min).  PARITY IDENTICAL on the ref run.  (SANDBOX RESET between the
+  turns again: data/ dir vanished -> run_v16c_all.sh now mkdir -p data; restore.sh relinks the CSV.)  Resume after a crash:
+  `nohup setsid bash run_v16c_all.sh > logs/v16c_all.log 2>&1 &` (skips the jsons on disk).
 - 2026-10-10 14:55  step 2 DONE: four v16c levers in TraderConfig (lubot/execution.py) + PortfolioSimulator._apply_v16c (after every
   other multiplier, before the volume): (1) dd_throttle_pct / dd_throttle_scale / dd_throttle_ramp / dd_basis=equity|balance /
   dd_throttle_tfs (sim keeps peak_equity = running max of the basis, updated every minute = what the live bot stores);
