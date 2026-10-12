@@ -37,11 +37,29 @@ Judge (v16c_common.judge16c): less_dd = max DD better by >= 0.25 pt AND OOS max 
         (sum of open plans' risk), same-side concurrency cap, day-loss soft cap (no new plans after -x % that day, no flatten),
         per-week loss cap.  All computable by the live bot from its own state.
 - [x] 3. Grid `run_v16c_levers.py` (resumable, workers 1) under `run_v16c_all.sh` (autosave) -> study_results/v16c_levers/ + v16c_levers.csv.
-- [ ] 4. Stress x6 + walk-forward of the finalists -> DECISION v16c-A / B / C.
+- [x] 4a. Walk-forward of the whole grid (walkforward_v16c.py, result files only) -> v16c_walkforward.csv/.json.
+- [ ] 4b. Stress x6 of the finalists (run_v16c_stress.sh, NEEDS THE CSV) + judge_v16c_stress.py -> DECISION v16c-A / B / C.
 - [ ] 5. Port to run_trader.bat + trader.py (live support) + tests/test_bat_v16c.py + verify_bat_v16c.py.
 - [ ] 6. Final backtest `backtest_v16c_final.py` -> FINAL_BACKTEST_V16C.md; report `make_v16c_report.py` -> LESS_DD_V16C.md; README 0k; save.
 
 ## Log (v16c)
+- 2026-10-12 14:50  step 4a DONE: walkforward_v16c.py -> study_results/v16c_walkforward.csv/.json (logs/v16c_walkforward.log; 116
+  variants, split 2026-03-01 on close time, each half's DD on its own equity path, peak reset at the half start).  Ref halves: IS (Sep25-Feb26)
+  214 tr / +9 873 $ / PF 2.75 / DD -5.09 / ulcer 1.86; OOS (Mar-Sep26) 232 tr / +23 958 / PF 3.124 / DD -5.55 / ulcer 1.511.
+  IS pass 23, OOS pass 7, BOTH halves 4: DDT3.5_x0.5_htf (IS DD -4.65 = -0.44 pt at 101.6 % net; OOS DD -5.07 = -0.48 pt at 100.4 %),
+  DDT3.0_x0.5_htf (IS -0.44 / 101.6 %; OOS -0.48 / 97.7 %), C_DDT3.5_x0.5_htf+DAY1.5_x0.5 (IS -0.25 / 100.9 %; OOS -0.62 / 99.3 %) and
+  its DAY2.0 twin.  => the htf throttle cuts the DD in BOTH halves independently, with the net held in both - it is not fitted to one
+  episode (IS has episodes #2 #3, OOS has #1 #4).  The ramp family (DDT3.0_x0.5_r2.0, +DAY2.0) passes OOS only (IS DD cut 0.16 pt <
+  0.25 band: the ramp starts at 3.0 but reaches x0.5 only at 5.0 % - the IS episodes bottom at 4.7-5.1).  DDT3.0_x0.25_r2.0 passes
+  neither (IS hold_loss: sl 27.7; OOS net 95.7 %).  DDT4.0_x0.25 (3/4 in the grid) fails both (ulcer up).  The balance-basis throttles pass
+  IS (DD -4.38..-4.73) but NOT OOS (DD -5.67..-5.72, worse than ref): the OOS top episode is the floating one.  The +OR combos pass IS and
+  fail OOS hold_profit (PF 2.96 < 3.024).  Spearman IS->OOS of the deltas over 116 variants: DD rho 0.49, ulcer 0.62, net 0.58 (all
+  p < 1e-7: the gains carry over), PF rho 0.01.  FINALISTS for the stress (4b): DDT3.5_x0.5_htf, DDT3.0_x0.5_htf,
+  C_DDT3.5_x0.5_htf+DAY1.5_x0.5, C_DDT3.5_x0.5_htf+DAY1.5_x0.25, DDT3.0_x0.5_r2.0, C_DDT3.0_x0.5_r2.0+DAY2.0_x0.5 (6 x 6 = 36 sims,
+  ~16 s each -> ~10 min; run_v16c_stress.sh, autosave).  The stress needs the M1 CSV (not in this sandbox) -> ASK THE USER TO RE-UPLOAD
+  /home/user/uploaded_files/XAUUSD.t_M1_202501020100_2026090423581112.csv; meanwhile step 5 (port to bat / trader.py / tests) is
+  prepared for the leading candidate DDT3.5_x0.5_htf (its keys are a superset-free subset of every finalist: the decision only changes
+  the numbers in the bat header, not the code path).
 - 2026-10-12 14:40  SESSION 3 (the previous chat died right after step 3 was pushed: GitHub main fdf0687 = "v16c step 3: lever grid done",
   117 rows in v16c_levers.csv, 117 x {json, trades, equity} on disk; the log line for step 3 was never written).  Recovered: repo present,
   restore.sh (186 tests pass; the M1 CSV is NOT in this sandbox -> the result-file-only steps (3 log, 4a walk-forward) go first; 4b stress,

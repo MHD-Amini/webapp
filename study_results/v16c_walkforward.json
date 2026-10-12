@@ -1,0 +1,80 @@
+{
+ "n_variants": 116,
+ "is_pass": 23,
+ "oos_pass": 7,
+ "both": 4,
+ "spearman": {
+  "d_dd": {
+   "rho": 0.491,
+   "p": 2.1433739749100386e-08
+  },
+  "d_ulcer": {
+   "rho": 0.615,
+   "p": 1.9517232834149147e-13
+  },
+  "d_net": {
+   "rho": 0.581,
+   "p": 8.118107113854299e-12
+  },
+  "d_PF": {
+   "rho": 0.009,
+   "p": 0.9273149400440184
+  }
+ },
+ "is_top": [
+  "DDT3.0_x0.5_bal",
+  "C_DDT3.0_x0.5_htf+OR3.0",
+  "C_DDT3.0_x0.5_htf+OR3.5",
+  "C_DDT3.5_x0.5_htf+OR3.0",
+  "C_DDT3.5_x0.5_htf+OR3.5",
+  "DDT3.0_x0.5_htf",
+  "DDT3.5_x0.5_htf",
+  "DDT3.5_x0.5_bal",
+  "DDT4.0_x0.5_bal",
+  "DDT3.5_x0.75_bal",
+  "DDT4.0_x0.75_bal",
+  "C_DDT3.0_x0.5_htf+DAY1.5_x0.5+OR3.0",
+  "C_DDT3.0_x0.5_htf+DAY1.5_x0.5+OR3.5",
+  "C_DDT3.0_x0.5_htf+DAY1.5_x0.5",
+  "C_DDT3.0_x0.5_htf+DAY2.0_x0.5+OR3.0"
+ ],
+ "is_top_oos_pass": [
+  false,
+  false,
+  false,
+  false,
+  false,
+  true,
+  true,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false
+ ],
+ "ref": {
+  "IS_n": 214.0,
+  "IS_net_$": 9873.0,
+  "IS_R": 68.77,
+  "IS_PF": 2.75,
+  "IS_win_%": 72.4,
+  "IS_sl_%": 26.6,
+  "IS_lost_$": -5641.0,
+  "IS_worst_day_R": -2.04,
+  "IS_dd_%": -5.09,
+  "IS_ulcer": 1.86,
+  "OOS_n": 232.0,
+  "OOS_net_$": 23958.0,
+  "OOS_R": 69.77,
+  "OOS_PF": 3.124,
+  "OOS_win_%": 78.9,
+  "OOS_sl_%": 21.1,
+  "OOS_lost_$": -11280.0,
+  "OOS_worst_day_R": -2.1,
+  "OOS_dd_%": -5.55,
+  "OOS_ulcer": 1.511
+ }
+}
