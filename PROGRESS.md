@@ -1,4 +1,9 @@
-# PROGRESS — v16c REDUCE THE MAX DRAWDOWN % of the v16b-A trader WHILE MAINTAINING THE PROFITABILITY % — IN PROGRESS (2026-10-10, session 1)
+# PROGRESS — v16c REDUCE THE MAX DRAWDOWN % of the v16b-A trader WHILE MAINTAINING THE PROFITABILITY % — COMPLETE (2026-10-10 -> 2026-10-12, 2 sessions)
+
+**RESULT:** `run_trader.bat` ships **v16c-A = v16b-A + `dd_throttle_pct=3.5,dd_throttle_scale=0.5,dd_throttle_tfs=M15|M20|M30|H1`** - full year
+max DD -5.07 % (v16b-A -5.55, -0.48 pt), 2nd/3rd episodes -4.65/-4.32 (-5.09/-4.68), ulcer 1.628 (1.691), net +34 092 $ (+33 831), PF 2.967 (2.999),
+OOS DD -5.07 (-5.55), 13/13 months; walk-forward passes both halves, stress 5/6 all-4.  Reports: `study_results/LESS_DD_V16C.md`,
+`study_results/FINAL_BACKTEST_V16C.md`, README section 0k.  195 tests pass; `verify_bat_v16c.py` IDENTICAL.  Nothing left to do for v16c.
 
 **Recovery (read this first):** `git clone https://github.com/MHD-Amini/webapp.git /home/user/webapp`, `bash restore.sh`
 (relinks the CSV to `data/xauusd_m1.csv`, pip, tests), read this file, continue from the FIRST UNCHECKED step of the v16c plan below.
@@ -44,9 +49,15 @@ Judge (v16c_common.judge16c): less_dd = max DD better by >= 0.25 pt AND OOS max 
         + run_v16c_final.sh (the stress of 4b may still re-point the bat: then only the header numbers / study line / the 3 pinned values in
         test_bat_v16c change).
 - [x] 6a. Final backtest `bash run_v16c_final.sh` (NEEDS THE CSV) -> FINAL_BACKTEST_V16C.md + final_v16c/* + verify_bat_v16c IDENTICAL.
-- [ ] 6b. Report `make_v16c_report.py` -> LESS_DD_V16C.md (+ charts), README section 0k, restore.sh hints; final save + archive.
+- [x] 6b. Report `make_v16c_report.py` -> LESS_DD_V16C.md (+ charts), README section 0k, restore.sh hints; final save + archive.
 
 ## Log (v16c)
+- 2026-10-12 17:50  step 6b DONE - v16c COMPLETE.  `python3 make_v16c_report.py` -> study_results/LESS_DD_V16C.md (72 blocks, every section
+  filled from the result files: answer, method, diagnosis, levers, 117-run grid, walk-forward + stress tables, final backtest slice, files) +
+  charts/v16c_{equity,scatter,monthly,levers}.png.  README: title -> v16c, live command line carries the 3 keys, command table rows for
+  run_v16c_final.sh and the v16c study, section 0k (spec, diagnosis, levers, grid / walk-forward / stress, result table v16b-A vs v16c-A,
+  alternatives B / C, honest reading).  restore.sh: v16c marked complete (36 stress runs expected).  Final checks: 195 tests pass,
+  verify_bat_v16c IDENTICAL: True.  Archive tar.gz -> AI Drive (see below).
 - 2026-10-12 17:37  step 6a DONE: `bash run_v16c_final.sh` (logs/v16c_final.log) -> study_results/FINAL_BACKTEST_V16C.md +
   final_v16c/{v16cA,ref}_{summary.json,trades.csv,equity.csv,monthly.csv,by_tf.csv} + charts/final_v16c_equity.png.  The bat strings
   replayed over the CSV: v16c-A 445 tr / net +34 092 $ / +340.92 % / max DD -5.07 % (-2 091 $) / PF 2.967 / win 75.5 / sl 24.0 / ulcer
