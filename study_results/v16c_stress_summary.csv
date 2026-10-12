@@ -1,0 +1,7 @@
+name,scenarios,less_dd,hold_profit,hold_loss,hold_oos,all4,score_sum,d_dd_pt_sum,d_net_$_sum,net_%ref_min,dd_better_in,oos_dd_ok_in,ulcer_ok_in,net_held_in,months_ok_in
+DDT3.5_x0.5_htf,6,5,5,6,6,5,22,3.68,6168.0,96.0,5,6,5,5,6
+C_DDT3.5_x0.5_htf+DAY1.5_x0.5,6,5,4,6,6,4,21,3.9,-4867.0,96.0,5,6,5,4,6
+C_DDT3.5_x0.5_htf+DAY1.5_x0.25,6,5,3,6,6,3,20,4.17,-10540.0,91.7,5,6,5,4,6
+DDT3.0_x0.5_htf,6,5,3,6,5,3,19,3.7,1072.0,96.0,5,6,5,5,6
+C_DDT3.0_x0.5_r2.0+DAY2.0_x0.5,6,5,2,6,6,1,19,5.4,-32965.0,72.3,5,5,5,3,6
+DDT3.0_x0.5_r2.0,6,5,2,6,6,1,19,5.3,-27584.0,76.9,5,5,5,4,6
