@@ -507,3 +507,299 @@ void CheckHardLimits()
       SaveState();
      }
   }
+
+//--------------------------------------------------------------------
+// GOVERNOR MODE: answer the Python bot's sizing requests through MQL5\Files
+//   request : "<id>;<tf>;<side>;<entry>;<sl>;<risk_scale>;<grid>"
+//   response: "<id>;<multiplier>;<reason>"
+//--------------------------------------------------------------------
+void ServeRequests()
+  {
+   if(!FileIsExist(RequestFile)) return;
+   int h = FileOpen(RequestFile, FILE_READ | FILE_TXT | FILE_ANSI | FILE_SHARE_READ | FILE_SHARE_WRITE);
+   if(h == INVALID_HANDLE) return;
+   string line = "";
+   while(!FileIsEnding(h)) { string l = FileReadString(h); if(StringLen(l) > 0) line = l; }   // the LAST line is the live request
+   FileClose(h);
+   StringTrimLeft(line); StringTrimRight(line);
+   if(StringLen(line) == 0 || line == g_last_request) return;
+   string f[];
+   int n = StringSplit(line, ';', f);
+   if(n < 5) { Print("[v16c] bad request: ", line); g_last_request = line; return; }
+   string id = f[0], tf = f[1];
+   double entry = StringToDouble(f[3]), sl = StringToDouble(f[4]);
+   double rs = (n > 5) ? StringToDouble(f[5]) : 1.0;
+   bool grid = (n > 6) ? (StringToInteger(f[6]) == 1) : false;
+   string why;
+   double mult = DecideMultiplier(tf, entry, sl, rs, grid, why);
+   // the bot's own caps (max_open_positions / max_pending) are checked by the bot; the EA repeats the hard ones here
+   if(mult > 0 && CountOpenPlans() >= MaxOpenPositions && !grid) { mult = 0.0; why = "max open positions"; }
+   int o = FileOpen(ResponseFile, FILE_WRITE | FILE_TXT | FILE_ANSI | FILE_SHARE_READ);
+   if(o != INVALID_HANDLE)
+     {
+      FileWriteString(o, StringFormat("%s;%.6f;%s\n", id, mult, why));
+      FileClose(o);
+     }
+   g_last_request = line;
+   PrintFormat("[v16c] request %s %s %s entry %.2f sl %.2f rs %.3f -> x%.3f %s", id, tf, f[2], entry, sl, rs, mult, why);
+  }
+
+// optional: delete pending orders of the governed magic that would breach the open-risk cap when filled
+void TrimPending()
+  {
+   if(!TrimPendingOrders || MaxOpenRiskPct <= 0) return;
+   double base = (SizeOn == DD_EQUITY) ? g_acc.Equity() : g_acc.Balance();
+   double used = OpenRiskUsd(false), upu = UsdPerPriceUnitPerLot();
+   for(int i = OrdersTotal() - 1; i >= 0; i--)
+     {
+      if(!g_ord.SelectByIndex(i)) continue;
+      if(g_ord.Symbol() != _Symbol) continue;
+      if(g_magic != 0 && g_ord.Magic() != g_magic) continue;
+      if(g_ord.StopLoss() <= 0) continue;
+      double own = MathAbs(g_ord.PriceOpen() - g_ord.StopLoss()) * g_ord.VolumeCurrent() * upu;
+      if(used + own > base * MaxOpenRiskPct / 100.0 + 1e-9)
+        {
+         PrintFormat("[v16c] trim pending #%I64u: open risk %.2f %% + %.2f %% > cap %.2f %%", g_ord.Ticket(), 100 * used / base, 100 * own / base, MaxOpenRiskPct);
+         g_trade.OrderDelete(g_ord.Ticket());
+        }
+      else used += own;
+     }
+  }
+
+//--------------------------------------------------------------------
+// STANDALONE MODE: ladder parsing, simple zone entry, management
+//--------------------------------------------------------------------
+bool ParseLadder()
+  {
+   string lv[], fr[], sa[];
+   int nl = SplitPipe(TpLevelsR, lv), nf = SplitPipe(TpFracs, fr), ns = SplitPipe(SlAfterLeg, sa);
+   if(nl == 0 || nl != nf || nl > 8) { Print("[v16c] bad ladder: ", TpLevelsR, " / ", TpFracs); return false; }
+   double tot = 0;
+   for(int i = 0; i < nl; i++) { g_tp_levels[i] = StringToDouble(lv[i]); g_tp_fracs[i] = StringToDouble(fr[i]); tot += g_tp_fracs[i]; }
+   for(int i = 0; i < nl; i++) g_tp_fracs[i] /= tot;
+   for(int i = 0; i < 8; i++) g_sl_after[i] = EMPTY_VALUE;
+   for(int i = 0; i < ns && i < nl; i++) { string x = sa[i]; StringToLower(x); if(x != "x") g_sl_after[i] = StringToDouble(sa[i]); }
+   g_n_tp = nl;
+   return true;
+  }
+
+double AtrOf(ENUM_TIMEFRAMES tf, int period = 14)
+  {
+   int h = iATR(_Symbol, tf, period);
+   if(h == INVALID_HANDLE) return 0.0;
+   double b[]; ArraySetAsSeries(b, true);
+   if(CopyBuffer(h, 0, 1, 1, b) < 1) return 0.0;
+   return b[0];
+  }
+
+// a very small supply/demand box: the last confirmed swing low (demand) / swing high (supply) candle body + wick on ZoneTf
+bool FindZone(const int side, double &top, double &bottom)
+  {
+   int bars = SwingBars * 2 + 1, look = 200;
+   MqlRates r[]; ArraySetAsSeries(r, true);
+   if(CopyRates(_Symbol, ZoneTf, 0, look, r) < look) return false;
+   for(int i = SwingBars + 1; i < look - SwingBars; i++)
+     {
+      bool ok = true;
+      for(int k = 1; k <= SwingBars && ok; k++)
+        {
+         if(side > 0) ok = (r[i].low <= r[i - k].low && r[i].low <= r[i + k].low);
+         else         ok = (r[i].high >= r[i - k].high && r[i].high >= r[i + k].high);
+        }
+      if(!ok) continue;
+      if(side > 0) { top = MathMax(r[i].open, r[i].close); bottom = r[i].low; }
+      else         { top = r[i].high; bottom = MathMin(r[i].open, r[i].close); }
+      // the zone must still be in front of the price (untested since the swing)
+      bool fresh = true;
+      for(int k = i - 1; k >= 1 && fresh; k--)
+        {
+         if(side > 0 && r[k].low <= top) fresh = false;
+         if(side < 0 && r[k].high >= bottom) fresh = false;
+        }
+      if(fresh) return true;
+     }
+   return false;
+  }
+
+int FindPlanByOrder(ulong tk) { for(int k = 0; k < ArraySize(g_plans); k++) if(g_plans[k].active && g_plans[k].ord_ticket == tk) return k; return -1; }
+int FindPlanByPos(ulong tk)   { for(int k = 0; k < ArraySize(g_plans); k++) if(g_plans[k].active && g_plans[k].pos_ticket == tk) return k; return -1; }
+
+bool HasActivePlan(const int side)
+  {
+   for(int k = 0; k < ArraySize(g_plans); k++) if(g_plans[k].active && g_plans[k].side == side) return true;
+   return false;
+  }
+
+void StandaloneScan()
+  {
+   static datetime last_bar = 0;
+   datetime bt = iTime(_Symbol, ZoneTf, 0);
+   if(bt == last_bar) return;                         // once per closed bar of ZoneTf
+   last_bar = bt;
+   if(g_halted || (g_daily_halt_day != "" && g_daily_halt_day == ServerDay())) return;
+   if(CountOpenPlans() >= MaxOpenPositions || CountPending() >= MaxPendingOrders) return;
+   double atr = AtrOf(ZoneTf);
+   if(atr <= 0) return;
+   string tf = TfName(ZoneTf);
+   for(int side = 1; side >= -1; side -= 2)
+     {
+      if(HasActivePlan(side)) continue;
+      double top, bottom;
+      if(!FindZone(side, top, bottom)) continue;
+      double h = top - bottom;
+      if(h < MinZoneUsd || (MaxZoneAtr > 0 && h > MaxZoneAtr * atr)) continue;
+      double px = (side > 0) ? g_sym.Ask() : g_sym.Bid();
+      double entry = (side > 0) ? top : bottom, sl = (side > 0) ? bottom : top;
+      double dist = (side > 0) ? (px - entry) : (entry - px);
+      if(dist <= 0 || dist > MaxDistanceAtr * atr) continue;     // price must be in front of the entry, not too far
+      string why;
+      double mult = DecideMultiplier(tf, entry, sl, 1.0, false, why);
+      if(mult <= 0) { if(why != "") Print("[v16c] skip ", tf, (side > 0 ? " buy" : " sell"), ": ", why); continue; }
+      double lots = LotsFor(entry, sl, mult);
+      // ladder legs: round every leg down, the last leg takes the remainder; reject if a leg is below the minimum
+      double legs[8]; double sum = 0;
+      for(int i = 0; i < g_n_tp - 1; i++) { legs[i] = RoundVolumeDown(lots * g_tp_fracs[i]); sum += legs[i]; }
+      legs[g_n_tp - 1] = RoundVolumeDown(lots - sum);
+      bool okl = (lots >= g_sym.LotsMin());
+      for(int i = 0; i < g_n_tp && okl; i++) if(legs[i] < g_sym.LotsMin()) okl = false;
+      if(!okl) { PrintFormat("[v16c] %s %s: volume %.2f cannot be split into %d legs", tf, (side > 0 ? "buy" : "sell"), lots, g_n_tp); continue; }
+      // one pending order per LEG (server-side targets), the plan record ties them together
+      int k = ArraySize(g_plans); ArrayResize(g_plans, k + 1);
+      g_plans[k].active = true; g_plans[k].side = side; g_plans[k].entry = entry; g_plans[k].sl = sl; g_plans[k].risk = MathAbs(entry - sl);
+      g_plans[k].n_legs = g_n_tp; g_plans[k].legs_closed = 0; g_plans[k].lots_total = lots; g_plans[k].placed = TimeCurrent();
+      g_plans[k].placed_bar = 0; g_plans[k].dd_scale = mult; g_plans[k].pos_ticket = 0; g_plans[k].ord_ticket = 0;
+      g_trade.SetExpertMagicNumber(OwnMagic);
+      bool any = false;
+      for(int i = 0; i < g_n_tp; i++)
+        {
+         double tp = entry + side * g_tp_levels[i] * g_plans[k].risk;
+         g_plans[k].tps[i] = NormalizeDouble(tp, _Digits); g_plans[k].lots_leg[i] = legs[i];
+         string cm = StringFormat("LU %s %s L%d", tf, (side > 0 ? "B" : "S"), i + 1);
+         bool ok = (side > 0) ? g_trade.BuyLimit(legs[i], NormalizeDouble(entry, _Digits), _Symbol, NormalizeDouble(sl, _Digits), g_plans[k].tps[i], ORDER_TIME_GTC, 0, cm)
+                              : g_trade.SellLimit(legs[i], NormalizeDouble(entry, _Digits), _Symbol, NormalizeDouble(sl, _Digits), g_plans[k].tps[i], ORDER_TIME_GTC, 0, cm);
+         if(ok) { any = true; if(i == 0) g_plans[k].ord_ticket = g_trade.ResultOrder(); }
+         else PrintFormat("[v16c] limit leg %d FAILED %d %s", i + 1, g_trade.ResultRetcode(), g_trade.ResultRetcodeDescription());
+        }
+      if(!any) g_plans[k].active = false;
+      else PrintFormat("[v16c] PLACED %s %s entry %.2f sl %.2f lots %.2f (x%.3f %s) zone %.2f-%.2f", tf, (side > 0 ? "buy" : "sell"),
+                       entry, sl, lots, mult, why, bottom, top);
+     }
+  }
+
+// ladder management: when leg k closes at its target, move the stop of the remaining legs to sl_after_leg[k]; expire old pendings
+void StandaloneManage()
+  {
+   for(int k = 0; k < ArraySize(g_plans); k++)
+     {
+      if(!g_plans[k].active) continue;
+      // legs still pending / open with this plan's entry & side & magic
+      int n_pending = 0, n_open = 0; double best_sl = 0;
+      for(int i = OrdersTotal() - 1; i >= 0; i--)
+         if(g_ord.SelectByIndex(i) && g_ord.Symbol() == _Symbol && g_ord.Magic() == OwnMagic
+            && MathAbs(g_ord.PriceOpen() - g_plans[k].entry) < _Point * 0.5) n_pending++;
+      for(int i = PositionsTotal() - 1; i >= 0; i--)
+         if(g_pos.SelectByIndex(i) && g_pos.Symbol() == _Symbol && g_pos.Magic() == OwnMagic
+            && MathAbs(g_pos.PriceOpen() - g_plans[k].entry) < g_plans[k].risk * 0.2) n_open++;
+      if(n_pending == 0 && n_open == 0) { g_plans[k].active = false; continue; }
+      // expire a plan whose orders never filled after MaxPendingBars bars of ZoneTf
+      if(n_open == 0 && n_pending > 0)
+        {
+         int age_bars = iBarShift(_Symbol, ZoneTf, g_plans[k].placed, false);
+         if(age_bars >= MaxPendingBars)
+           {
+            for(int i = OrdersTotal() - 1; i >= 0; i--)
+               if(g_ord.SelectByIndex(i) && g_ord.Symbol() == _Symbol && g_ord.Magic() == OwnMagic
+                  && MathAbs(g_ord.PriceOpen() - g_plans[k].entry) < _Point * 0.5) g_trade.OrderDelete(g_ord.Ticket());
+            g_plans[k].active = false; continue;
+           }
+         continue;
+        }
+      // once any leg has filled, the unfilled pending legs are cancelled (the sim fills all legs at once)
+      if(n_open > 0 && n_pending > 0)
+         for(int i = OrdersTotal() - 1; i >= 0; i--)
+            if(g_ord.SelectByIndex(i) && g_ord.Symbol() == _Symbol && g_ord.Magic() == OwnMagic
+               && MathAbs(g_ord.PriceOpen() - g_plans[k].entry) < _Point * 0.5) g_trade.OrderDelete(g_ord.Ticket());
+      // legs closed so far = legs placed - legs open
+      int closed = g_plans[k].n_legs - n_open;
+      if(closed > g_plans[k].legs_closed)
+        {
+         g_plans[k].legs_closed = closed;
+         int idx = closed - 1;                           // the k-th leg closed -> sl_after_leg[idx]
+         if(idx >= 0 && idx < 8 && g_sl_after[idx] != EMPTY_VALUE)
+           {
+            double new_sl = NormalizeDouble(g_plans[k].entry + g_plans[k].side * g_sl_after[idx] * g_plans[k].risk, _Digits);
+            for(int i = PositionsTotal() - 1; i >= 0; i--)
+              {
+               if(!g_pos.SelectByIndex(i) || g_pos.Symbol() != _Symbol || g_pos.Magic() != OwnMagic) continue;
+               if(MathAbs(g_pos.PriceOpen() - g_plans[k].entry) >= g_plans[k].risk * 0.2) continue;
+               double cur = g_pos.StopLoss();
+               bool tighter = (g_plans[k].side > 0) ? (new_sl > cur) : (cur <= 0 || new_sl < cur);   // stops only ever tighten
+               if(tighter) g_trade.PositionModify(g_pos.Ticket(), new_sl, g_pos.TakeProfit());
+              }
+            PrintFormat("[v16c] plan %d: leg %d closed -> stop of the rest %.2f (%.1f R)", k, closed, new_sl, g_sl_after[idx]);
+           }
+        }
+     }
+  }
+
+//--------------------------------------------------------------------
+// EVENTS
+//--------------------------------------------------------------------
+int OnInit()
+  {
+   if(!g_sym.Name(_Symbol)) { Print("[v16c] symbol init failed"); return INIT_FAILED; }
+   g_sym.Refresh();
+   g_magic = (Mode == MODE_GOVERNOR) ? GovernMagic : OwnMagic;
+   g_trade.SetExpertMagicNumber(g_magic);
+   g_trade.SetDeviationInPoints(Slippage);
+   g_trade.SetTypeFillingBySymbol(_Symbol);
+   SplitPipe(DdThrottleTfs, g_dd_tfs);
+   if(Mode == MODE_STANDALONE && !ParseLadder()) return INIT_PARAMETERS_INCORRECT;
+   LoadState();
+   if(g_start_balance <= 0) g_start_balance = g_acc.Balance();
+   if(g_peak <= 0) g_peak = CurBasis(DdBasis);
+   RollDay();
+   PrintFormat("[v16c] %s | magic %I64d | risk %.2f %% of %s | DD throttle %.2f %% x%.2f%s on %s (%s) | day soft %.2f x%.2f | open-risk cap %.2f %% (%s) | streak %d x%.2f | limits day %.1f total %.1f | peak %.2f",
+               (Mode == MODE_GOVERNOR ? "GOVERNOR" : "STANDALONE"), g_magic, RiskPct, (SizeOn == DD_EQUITY ? "equity" : "balance"),
+               DdThrottlePct, DdThrottleScale, (DdThrottleRamp > 0 ? StringFormat(" ramp %.1f", DdThrottleRamp) : ""),
+               (DdBasis == DD_EQUITY ? "equity" : "balance"), (DdThrottleTfs == "" ? "all TFs" : DdThrottleTfs),
+               DaySoftLossPct, DaySoftScale, MaxOpenRiskPct, (OpenRiskMode == OR_FIT ? "fit" : "skip"), StreakN, StreakScale,
+               MaxDailyLossPct, MaxTotalLossPct, g_peak);
+   EventSetTimer(1);
+   return INIT_SUCCEEDED;
+  }
+
+void OnDeinit(const int reason) { EventKillTimer(); SaveState(); }
+
+void OnTick()
+  {
+   g_sym.RefreshRates();
+   RollDay();
+   UpdatePeak();
+   CheckHardLimits();
+   if(Mode == MODE_STANDALONE) { StandaloneScan(); StandaloneManage(); }
+   else TrimPending();
+  }
+
+void OnTimer()
+  {
+   // the file protocol and the history scan do not need a tick (quiet markets / weekends keep the peak and the day state correct)
+   RollDay();
+   UpdatePeak();
+   UpdateStreakFromHistory();
+   if(Mode == MODE_GOVERNOR) ServeRequests();
+   static int n = 0;
+   if(++n % 60 == 0) SaveState();
+   if(n % 300 == 0)
+      PrintFormat("[v16c] eq %.2f bal %.2f peak %.2f dd %.2f %% (throttle %s) day_start %.2f open %d pend %d open_risk %.2f %% | dd_scaled %d skipped %d day_soft %d/%d or %d/%d streak %d",
+                  g_acc.Equity(), g_acc.Balance(), g_peak, DdNow(), (DdThrottleScaleFor(DdNow()) < 1.0 ? "ON" : "off"), g_day_start,
+                  CountOpenPlans(), CountPending(), 100.0 * OpenRiskUsd(false) / MathMax(1.0, g_acc.Equity()),
+                  g_dd_scaled, g_dd_skipped, g_day_soft_scaled, g_day_soft_skipped, g_or_scaled, g_or_skipped, g_streak_scaled);
+  }
+
+// a position closed / opened: refresh the streak state promptly and keep the peak exact
+void OnTradeTransaction(const MqlTradeTransaction &trans, const MqlTradeRequest &request, const MqlTradeResult &result)
+  {
+   if(trans.type == TRADE_TRANSACTION_DEAL_ADD) { UpdatePeak(); UpdateStreakFromHistory(); }
+  }
+//+------------------------------------------------------------------+
