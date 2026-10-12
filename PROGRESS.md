@@ -36,12 +36,39 @@ Judge (v16c_common.judge16c): less_dd = max DD better by >= 0.25 pt AND OOS max 
         dd_throttle (risk x s while equity is > x % below its peak), streak throttle (after k losses in N days), max open risk % eq
         (sum of open plans' risk), same-side concurrency cap, day-loss soft cap (no new plans after -x % that day, no flatten),
         per-week loss cap.  All computable by the live bot from its own state.
-- [ ] 3. Grid `run_v16c_levers.py` (resumable, workers 1) under `run_v16c_all.sh` (autosave) -> study_results/v16c_levers/ + v16c_levers.csv.
+- [x] 3. Grid `run_v16c_levers.py` (resumable, workers 1) under `run_v16c_all.sh` (autosave) -> study_results/v16c_levers/ + v16c_levers.csv.
 - [ ] 4. Stress x6 + walk-forward of the finalists -> DECISION v16c-A / B / C.
 - [ ] 5. Port to run_trader.bat + trader.py (live support) + tests/test_bat_v16c.py + verify_bat_v16c.py.
 - [ ] 6. Final backtest `backtest_v16c_final.py` -> FINAL_BACKTEST_V16C.md; report `make_v16c_report.py` -> LESS_DD_V16C.md; README 0k; save.
 
 ## Log (v16c)
+- 2026-10-12 14:40  SESSION 3 (the previous chat died right after step 3 was pushed: GitHub main fdf0687 = "v16c step 3: lever grid done",
+  117 rows in v16c_levers.csv, 117 x {json, trades, equity} on disk; the log line for step 3 was never written).  Recovered: repo present,
+  restore.sh (186 tests pass; the M1 CSV is NOT in this sandbox -> the result-file-only steps (3 log, 4a walk-forward) go first; 4b stress,
+  6a final backtest wait for the CSV re-upload).  Continuing at step 4.
+- 2026-10-12 13:56  step 3 DONE: 117 variants (86 singles + 30 combos + ref; study_results/v16c_levers.csv, one json + trade list + equity
+  per run in study_results/v16c_levers/).  Parity ref IDENTICAL (446 / +33 831 / -5.55 / PF 2.999).  SEVEN variants score 4/4 (less_dd +
+  hold_profit + hold_loss + hold_oos), ALL from one family = the equity-DD throttle on the HIGHER timeframes or with a ramp:
+  * DDT3.5_x0.5_htf (risk x0.5 on M15|M20|M30|H1 plans while equity > 3.5 % under its peak; M5/M10 untouched): 445 tr / +34 092 $
+    (100.8 % of ref) / DD -5.07 (-0.48 pt) / PF 2.967 / sl 24.0 / wd -2.25 (better) / ulcer 1.628 (better) / OOS +24 063 (100.4 %) /
+    OOS PF 3.095 / 13/13; the three episodes 5.07 / 4.65 / 4.32.  DDT3.0_x0.5_htf: +33 427 / DD -5.07 / PF 2.930.
+  * + day soft cap: C_DDT3.5_x0.5_htf+DAY1.5_x0.5 (new plans x0.5 after the day is -1.5 % eq; no flatten): 445 / +33 747 (99.8 %) /
+    DD -4.93 (-0.62 pt) / PF 2.964 / sl 24.0 / wd -2.30 / ulcer 1.624 / OOS +23 784 (99.3 %) / OOS PF 3.093 / 13/13 = THE DEEPEST CUT
+    AT 4/4 (DAY2.0 identical: the cap only fires on the same days; DAY1.5_x0.25: -4.95 at 99.3 %).
+  * ramp: DDT3.0_x0.5_r2.0 (risk x1 -> x0.5 linearly from 3.0 % to 5.0 % DD, all TFs): 446 / +34 126 (100.9 %) / DD -5.15 (-0.40) /
+    PF 3.008 / wd -2.35; + DAY2.0_x0.5 -> -5.11 at 100.8 %.
+  * WHY htf: the M5/M10 plans are the ones that RECOVER the drawdowns (the diag: trades closed > 2 % under water earn +3.2 k$); throttling
+    every TF (DDT3.5_x0.5 all TFs) cuts the DD to -4.96 but costs 5.6 % of the net and raises the ulcer to 1.75 -> 2/4; m510-only throttle
+    is the WORST scope (DD -5.89, net 88 %); nom5 (M10+) -4.98 at 94.7 %.  The BALANCE basis never moves the max DD (the top episode is
+    the floating one: #1 2026-08-06 is -3.80 realised + -1.74 floating) -> 3/4 at DD -5.55..-5.72.
+  * NOT a lever on its own: day soft cap alone (DAY1.5_x0.5 -5.58: only episodes of several days matter), open-risk fit/skip (OR -5.55..
+    -5.88, net 94-95 %, PF 2.87-2.91: it scales exactly the confluence winners), pending-cancel open-risk mode (OR_pend: 391-423 trades,
+    net 53-71 %), streak throttle (STK: DD unchanged), hard day cap x0 (DAY_x0.0: worst day -2.60, DD 5.62).  The deep throttles
+    (x0.25, 2.0-2.5 % thresholds, r1.0 ramps) reach DD -4.2..-4.6 but give up 13-64 % of the net -> 0-1/4.
+  * Adding OR to the 4/4 combos drops the PF below the band (2.88, -0.12) -> 2/4.
+  FINALISTS for step 4 (stress x6 + walk-forward): DDT3.5_x0.5_htf, DDT3.0_x0.5_htf, C_DDT3.5_x0.5_htf+DAY1.5_x0.5,
+  C_DDT3.5_x0.5_htf+DAY1.5_x0.25, DDT3.0_x0.5_r2.0, C_DDT3.0_x0.5_r2.0+DAY2.0_x0.5, DDT3.0_x0.25_r2.0 (3/4: DD -4.81 at 97.05 % = the
+  band edge, as the "more DD cut" alternative), DDT4.0_x0.25 (3/4: DD -4.93 but ulcer 1.85 > ref).
 - 2026-10-12 13:25  step 3 LAUNCHED: run_v16c_levers.py (86 singles: DDT x{0.75,0.6,0.5,0.25} at 2.5-4.5 % on equity AND balance
   basis, ramps r1/r2 at 2.0-3.0, tf scopes m510/htf/nom5, DAY 0.75-2.0 x{0.5,0.25,0}, OR 2.0-4.0 fit/skip/pend, STK control) then
   the combos stage; under run_v16c_all.sh (autosave every 4 min).  PARITY IDENTICAL on the ref run.  (SANDBOX RESET between the
